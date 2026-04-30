@@ -1,12 +1,427 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0D0D0D" />
-  <title>Survivor Ligue 1</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#0D0D0D"/>
+<title>Survivor Ligue 1</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0D0D0D;color:#F2F2F2;font-family:system-ui,sans-serif;min-height:100vh;}
+.app{max-width:390px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+.hero{text-align:center;padding:50px 24px 32px;background:linear-gradient(180deg,#0a1a0a,#0D0D0D);}
+.hero .ball{font-size:64px;}
+.hero h1{font-size:48px;font-weight:900;letter-spacing:3px;line-height:1;}
+.hero h1 span{color:#39E979;}
+.hero p{font-size:14px;color:#888;margin-top:8px;}
+.sec{padding:0 18px 24px;}
+.btn{width:100%;padding:14px 20px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;}
+.btn-g{background:#39E979;color:#000;}
+.btn-o{background:transparent;color:#F2F2F2;border:1.5px solid #2E2E2E;}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:14px 16px;color:#F2F2F2;font-size:16px;width:100%;outline:none;margin-bottom:8px;}
+.tabs-toggle{display:flex;background:#1A1A1A;border-radius:12px;padding:4px;margin-bottom:16px;}
+.tabs-toggle button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;}
+.tabs-toggle button.active{background:#222;color:#F2F2F2;}
+.tabs-toggle button:not(.active){background:transparent;color:#888;}
+.card{background:#1A1A1A;border:1px solid #2E2E2E;border-radius:12px;margin-bottom:12px;overflow:hidden;}
+.row{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid #2E2E2E;gap:10px;}
+.row:last-child{border-bottom:none;}
+.av{width:34px;height:34px;border-radius:50%;background:#333;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;}
+.badge{border-radius:99px;padding:3px 9px;font-size:12px;font-weight:700;}
+.badge-g{background:rgba(57,233,121,0.12);color:#39E979;}
+.badge-r{background:rgba(255,68,68,0.12);color:#FF4444;}
+.err{background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);border-radius:10px;padding:10px 14px;color:#FF4444;margin-bottom:12px;font-size:14px;}
+.timer-box{background:#1a1100;border:1.5px solid rgba(255,208,0,0.35);border-radius:12px;padding:14px 16px;text-align:center;margin-bottom:10px;}
+.timer-lbl{font-size:11px;color:#FFD000;letter-spacing:1.5px;font-weight:600;margin-bottom:4px;}
+.timer-val{font-size:42px;font-weight:900;color:#FFD000;letter-spacing:2px;}
+.timer-sub{font-size:12px;color:#888;margin-top:4px;}
+.nav{display:flex;background:#111;border-top:1px solid #2E2E2E;flex-shrink:0;position:sticky;bottom:0;}
+.nav button{flex:1;padding:10px 0 12px;background:transparent;border:none;color:#888;font-size:10px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.nav button.active{color:#39E979;}
+.nav button span{font-size:20px;}
+.screen{display:none;flex:1;overflow-y:auto;}
+.screen.active{display:flex;flex-direction:column;}
+.code-box{display:flex;align-items:center;justify-content:center;background:#1A1A1A;border:1px solid #2E2E2E;border-radius:12px;padding:14px 20px;gap:12px;margin-bottom:16px;}
+.code-txt{font-size:32px;font-weight:900;letter-spacing:8px;color:#39E979;}
+.copy-btn{background:#222;border:1px solid #2E2E2E;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:16px;color:#F2F2F2;}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#39E979;color:#000;font-weight:700;padding:10px 22px;border-radius:99px;font-size:14px;z-index:999;display:none;white-space:nowrap;}
+.winner-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;gap:16px;}
+.sec-label{font-size:11px;color:#888;font-weight:700;letter-spacing:1.5px;margin-bottom:8px;text-transform:uppercase;}
+</style>
 </head>
 <body>
-  <div id="root"></div>
-</body>
-</html>
+<div class="app" id="app">
+
+<!-- AUTH -->
+<div class="screen active" id="screen-auth">
+  <div class="hero">
+    <div class="ball">⚽</div>
+    <h1>SURVIVOR<br><span>LIGUE 1</span></h1>
+    <p>Sois le dernier survivant !</p>
+  </div>
+  <div class="sec">
+    <div class="tabs-toggle">
+      <button class="active" onclick="setAuthMode('login')" id="btn-login">Connexion</button>
+      <button onclick="setAuthMode('signup')" id="btn-signup">Inscription</button>
+    </div>
+    <div id="signup-field" style="display:none">
+      <input type="text" id="auth-pseudo" placeholder="Ton pseudo"/>
+    </div>
+    <input type="email" id="auth-email" placeholder="Email"/>
+    <input type="password" id="auth-pwd" placeholder="Mot de passe"/>
+    <div class="err" id="auth-err" style="display:none"></div>
+    <button class="btn btn-g" onclick="authSubmit()">SE CONNECTER</button>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="screen" id="screen-home">
+  <div class="hero">
+    <div class="ball">⚽</div>
+    <h1>SURVIVOR<br><span>LIGUE 1</span></h1>
+    <p>Sois le dernier survivant !</p>
+  </div>
+  <div class="sec">
+    <button class="btn btn-g" onclick="createLobby()">⊕ CRÉER UNE LIGUE</button>
+    <p style="text-align:center;font-size:12px;color:#888;margin-bottom:8px;">Entrer un code</p>
+    <input type="text" id="join-code" placeholder="X X X X X X" maxlength="6" oninput="this.value=this.value.toUpperCase()" style="text-align:center;font-size:24px;letter-spacing:8px;color:#39E979;"/>
+    <div class="err" id="join-err" style="display:none"></div>
+    <button class="btn btn-g" onclick="joinLobby()" id="btn-join" disabled>REJOINDRE</button>
+    <button class="btn btn-o" onclick="logout()">⏻ Déconnexion</button>
+  </div>
+</div>
+
+<!-- LOBBY -->
+<div class="screen" id="screen-lobby">
+  <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;">
+    <button onclick="leaveLobby()" style="background:none;border:none;color:#F2F2F2;font-size:22px;cursor:pointer;margin-right:8px;">←</button>
+    <div style="flex:1;text-align:center;font-weight:700;" id="lobby-name">Ma ligue</div>
+  </div>
+  <div style="padding:18px;flex:1;overflow-y:auto;">
+    <p class="sec-label">CODE DE LA LIGUE</p>
+    <div class="code-box">
+      <span class="code-txt" id="lobby-code">XXXXXX</span>
+      <button class="copy-btn" onclick="copyCode()">📋</button>
+    </div>
+    <p class="sec-label">JOUEURS</p>
+    <div class="card" id="lobby-players"></div>
+    <div style="margin-top:12px;">
+      <button class="btn btn-g" onclick="startGame()" id="btn-start">LANCER LA PARTIE</button>
+      <p style="text-align:center;color:#888;font-size:14px;display:none;" id="wait-host">En attente que l'admin lance...</p>
+    </div>
+  </div>
+</div>
+
+<!-- PICKING -->
+<div class="screen" id="screen-picking">
+  <div style="text-align:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;">
+    <div style="font-weight:700;" id="pick-round">Journée 12</div>
+    <div style="font-size:11px;color:#888;">Ligue 1</div>
+  </div>
+  <div style="padding:18px;flex:1;overflow-y:auto;">
+    <div class="timer-box">
+      <div class="timer-lbl">⏱ DEADLINE</div>
+      <div class="timer-val" id="timer">02:14:32</div>
+      <div class="timer-sub">avant le premier match (15:00)</div>
+    </div>
+    <div id="my-pick-box" style="display:none;background:rgba(57,233,121,0.08);border:1px solid rgba(57,233,121,0.3);border-radius:12px;padding:12px;display:none;align-items:center;gap:10px;margin-bottom:10px;">
+      <span id="my-pick-logo" style="font-size:24px;"></span>
+      <div>
+        <div style="font-weight:700;" id="my-pick-name"></div>
+        <div style="font-size:12px;color:#39E979;">✓ Sélection validée</div>
+      </div>
+    </div>
+    <p class="sec-label">CHOISIS TON ÉQUIPE</p>
+    <div class="card" id="fixtures-list"></div>
+    <div id="used-teams-box" style="margin-top:10px;display:none;">
+      <p class="sec-label">ÉQUIPES DÉJÀ UTILISÉES</p>
+      <div id="used-teams-chips" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+    </div>
+    <div style="margin-top:12px;" id="host-controls"></div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="screen" id="screen-results">
+  <div style="text-align:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;font-weight:700;font-size:18px;" id="results-title">Résultats</div>
+  <div style="padding:18px;flex:1;overflow-y:auto;">
+    <div class="card" id="results-list"></div>
+    <p style="text-align:center;font-weight:700;font-size:18px;margin:16px 0;" id="alive-count"></p>
+    <button class="btn btn-g" onclick="nextRound()" id="btn-next-round" style="display:none;">JOURNÉE SUIVANTE →</button>
+    <p style="text-align:center;color:#888;" id="wait-next" style="display:none;"></p>
+  </div>
+</div>
+
+<!-- WINNER -->
+<div class="screen" id="screen-winner">
+  <div class="winner-screen">
+    <div style="font-size:80px;">🏆</div>
+    <div style="font-size:14px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:2px;">SAISON TERMINÉE !</div>
+    <div style="font-size:36px;font-weight:900;color:#39E979;" id="winner-name">🏆 Steven 🏆</div>
+    <div style="font-size:14px;color:#888;">est le dernier survivant !</div>
+    <div style="background:rgba(57,233,121,0.08);border:1px solid rgba(57,233,121,0.3);border-radius:12px;padding:16px;width:100%;text-align:center;">
+      <div style="font-size:28px;font-weight:900;color:#39E979;">+1 POINT</div>
+    </div>
+    <button class="btn btn-g" onclick="replayGame()" id="btn-replay" style="display:none;">🔁 REJOUER</button>
+    <button class="btn btn-o" onclick="leaveLobby()">← QUITTER</button>
+  </div>
+</div>
+
+<!-- RESULTATS TAB -->
+<div class="screen" id="screen-resultats">
+  <div style="padding:14px 18px;border-bottom:1px solid #2E2E2E;font-weight:700;font-size:18px;">État de la partie</div>
+  <div style="padding:18px;flex:1;overflow-y:auto;" id="resultats-content"></div>
+</div>
+
+<!-- CLASSEMENT TAB -->
+<div class="screen" id="screen-classement">
+  <div style="padding:14px 18px;border-bottom:1px solid #2E2E2E;">
+    <div style="font-weight:700;font-size:18px;">Classement général</div>
+    <div style="font-size:12px;color:#888;">Toutes saisons confondues</div>
+  </div>
+  <div style="padding:18px;flex:1;overflow-y:auto;">
+    <div class="card" id="classement-list"></div>
+  </div>
+</div>
+
+<!-- PROFIL TAB -->
+<div class="screen" id="screen-profil">
+  <div style="padding:18px;flex:1;overflow-y:auto;">
+    <div style="text-align:center;padding:20px 0;">
+      <div style="width:72px;height:72px;border-radius:50%;background:#333;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin:0 auto 12px;" id="profil-av">S</div>
+      <div style="font-size:24px;font-weight:900;" id="profil-name">Steven</div>
+      <div style="font-size:13px;color:#888;margin-top:4px;" id="profil-email"></div>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="row"><span style="flex:1;font-weight:600;">Points totaux</span><span style="color:#39E979;font-weight:700;" id="profil-pts">0 pts</span></div>
+      <div class="row"><span style="flex:1;font-weight:600;">Statut</span><span class="badge badge-g" id="profil-status">En vie</span></div>
+    </div>
+    <button class="btn btn-o" onclick="logout()">⏻ SE DÉCONNECTER</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV (only when in lobby) -->
+<nav class="nav" id="bottom-nav" style="display:none;">
+  <button class="active" onclick="navTo('accueil')" id="nav-accueil"><span>🏠</span>Accueil</button>
+  <button onclick="navTo('resultats')" id="nav-resultats"><span>📋</span>Résultats</button>
+  <button onclick="navTo('classement')" id="nav-classement"><span>🏆</span>Classement</button>
+  <button onclick="navTo('profil')" id="nav-profil"><span>👤</span>Profil</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+var TEAMS = [
+  {id:"psg",name:"PSG",logo:"🔵"},
+  {id:"om",name:"Marseille",logo:"🩵"},
+  {id:"mon",name:"Monaco",logo:"🔴"},
+  {id:"lil",name:"Lille",logo:"🔴"},
+  {id:"nic",name:"Nice",logo:"🔴"},
+  {id:"oly",name:"Lyon",logo:"🔵"},
+  {id:"ren",name:"Rennes",logo:"🔴"},
+  {id:"len",name:"Lens",logo:"🟡"},
+  {id:"str",name:"Strasbourg",logo:"🔵"},
+  {id:"nan",name:"Nantes",logo:"🟡"},
+];
+var FIXTURES = [
+  {home:"psg",away:"nan",day:"Sam. 15:00"},
+  {home:"om",away:"ren",day:"Sam. 17:00"},
+  {home:"mon",away:"lil",day:"Sam. 19:00"},
+  {home:"nic",away:"str",day:"Dim. 13:00"},
+  {home:"oly",away:"len",day:"Dim. 15:00"},
+];
+
+var currentUser = null;
+var currentLobby = null;
+var currentNav = "accueil";
+var timerInterval = null;
+
+function sGet(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}
+function sSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function genCode(){var c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",r="";for(var i=0;i<6;i++)r+=c[Math.floor(Math.random()*c.length)];return r;}
+function getTeam(id){return TEAMS.find(function(t){return t.id===id;})||{name:"?",logo:"⚽"};}
+
+function showToast(msg){
+  var t=document.getElementById("toast");
+  t.textContent=msg;t.style.display="block";
+  setTimeout(function(){t.style.display="none";},2500);
+}
+
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});
+  var el=document.getElementById("screen-"+id);
+  if(el)el.classList.add("active");
+}
+
+function setAuthMode(mode){
+  var isSignup=mode==="signup";
+  document.getElementById("signup-field").style.display=isSignup?"block":"none";
+  document.getElementById("btn-login").className=isSignup?"":"active";
+  document.getElementById("btn-signup").className=isSignup?"active":"";
+  document.getElementById("auth-err").style.display="none";
+  var btn=document.querySelector("#screen-auth .btn-g");
+  btn.textContent=isSignup?"CRÉER MON COMPTE":"SE CONNECTER";
+  btn.onclick=authSubmit;
+  document.getElementById("auth-err").dataset.mode=mode;
+}
+
+function authSubmit(){
+  var mode=document.getElementById("btn-signup").className==="active"?"signup":"login";
+  var email=document.getElementById("auth-email").value.trim();
+  var pwd=document.getElementById("auth-pwd").value;
+  var errEl=document.getElementById("auth-err");
+  errEl.style.display="none";
+  if(!email||!pwd){errEl.textContent="Remplis tous les champs.";errEl.style.display="block";return;}
+  var users=sGet("users")||[];
+  if(mode==="signup"){
+    var pseudo=document.getElementById("auth-pseudo").value.trim();
+    if(!pseudo){errEl.textContent="Choisis un pseudo.";errEl.style.display="block";return;}
+    if(users.find(function(u){return u.email===email;})){errEl.textContent="Email déjà utilisé.";errEl.style.display="block";return;}
+    var nu={uid:genCode(),pseudo:pseudo,email:email,pwd:pwd,points:0};
+    sSet("users",users.concat([nu]));
+    currentUser=nu;sSet("currentUser",nu);
+    goHome();
+  } else {
+    var found=users.find(function(u){return u.email===email&&u.pwd===pwd;});
+    if(!found){errEl.textContent="Email ou mot de passe incorrect.";errEl.style.display="block";return;}
+    currentUser=found;sSet("currentUser",found);
+    goHome();
+  }
+}
+
+function goHome(){
+  showScreen("home");
+  document.getElementById("bottom-nav").style.display="none";
+  document.getElementById("join-code").addEventListener("input",function(){
+    document.getElementById("btn-join").disabled=this.value.length<5;
+  });
+}
+
+function logout(){
+  currentUser=null;currentLobby=null;
+  sSet("currentUser",null);sSet("currentLobby",null);
+  showScreen("auth");
+  document.getElementById("bottom-nav").style.display="none";
+}
+
+function createLobby(){
+  var c=genCode();
+  var lobby={
+    code:c,name:"Ligue de "+currentUser.pseudo,host:currentUser.uid,
+    status:"waiting",round:12,deadline:Date.now()+7632000,
+    players:[{uid:currentUser.uid,pseudo:currentUser.pseudo,alive:true,pick:null,result:null,usedTeams:[],points:0}],
+    history:[]
+  };
+  var all=sGet("lobbies")||{};all[c]=lobby;sSet("lobbies",all);
+  currentLobby=lobby;sSet("currentLobby",lobby);
+  openLobby();
+}
+
+function joinLobby(){
+  var c=document.getElementById("join-code").value.trim().toUpperCase();
+  var all=sGet("lobbies")||{};
+  var errEl=document.getElementById("join-err");
+  if(!all[c]){errEl.textContent="Code introuvable.";errEl.style.display="block";return;}
+  errEl.style.display="none";
+  var lob=all[c];
+  if(!lob.players.find(function(p){return p.uid===currentUser.uid;})){
+    lob.players.push({uid:currentUser.uid,pseudo:currentUser.pseudo,alive:true,pick:null,result:null,usedTeams:[],points:0});
+    all[c]=lob;sSet("lobbies",all);
+  }
+  currentLobby=lob;sSet("currentLobby",lob);
+  openLobby();
+}
+
+function openLobby(){
+  document.getElementById("bottom-nav").style.display="flex";
+  navTo("accueil");
+  renderLobby();
+}
+
+function leaveLobby(){
+  currentLobby=null;sSet("currentLobby",null);
+  document.getElementById("bottom-nav").style.display="none";
+  showScreen("home");
+}
+
+function saveLobby(){
+  var all=sGet("lobbies")||{};
+  all[currentLobby.code]=currentLobby;
+  sSet("lobbies",all);sSet("currentLobby",currentLobby);
+}
+
+function navTo(tab){
+  currentNav=tab;
+  document.querySelectorAll(".nav button").forEach(function(b){b.classList.remove("active");});
+  document.getElementById("nav-"+tab).classList.add("active");
+  if(tab==="accueil") renderAccueil();
+  else if(tab==="resultats") renderResultats();
+  else if(tab==="classement") renderClassement();
+  else if(tab==="profil") renderProfil();
+}
+
+function renderAccueil(){
+  var s=currentLobby.status;
+  if(s==="waiting") renderLobby();
+  else if(s==="picking"||s==="closed") renderPicking();
+  else if(s==="roundEnd") renderResults();
+  else if(s==="finished") renderWinner();
+}
+
+function renderLobby(){
+  showScreen("lobby");
+  document.getElementById("lobby-name").textContent=currentLobby.name;
+  document.getElementById("lobby-code").textContent=currentLobby.code;
+  var el=document.getElementById("lobby-players");
+  el.innerHTML="";
+  currentLobby.players.forEach(function(p){
+    el.innerHTML+='<div class="row"><div class="av">'+p.pseudo[0].toUpperCase()+'</div><span style="flex:1;font-weight:600;">'+p.pseudo+(p.uid===currentLobby.host?' <span style="font-size:11px;color:#888;">Admin</span>':'')+'</span><span style="color:#39E979;font-weight:700;">'+p.points+' pts</span><span class="badge badge-g">Prêt</span></div>';
+  });
+  var isHost=currentLobby.host===currentUser.uid;
+  document.getElementById("btn-start").style.display=isHost?"block":"none";
+  document.getElementById("wait-host")||0;
+}
+
+function copyCode(){
+  if(navigator.clipboard)navigator.clipboard.writeText(currentLobby.code);
+  showToast("Code copié !");
+}
+
+function startGame(){
+  currentLobby.status="picking";
+  currentLobby.deadline=Date.now()+7632000;
+  saveLobby();renderPicking();
+}
+
+function renderPicking(){
+  showScreen("picking");
+  document.getElementById("pick-round").textContent="Journée "+currentLobby.round;
+  var me=currentLobby.players.find(function(p){return p.uid===currentUser.uid;});
+  var myPick=me?me.pick:null;
+  var usedTeams=me?(me.usedTeams||[]):[];
+
+  if(timerInterval)clearInterval(timerInterval);
+  timerInterval=setInterval(function(){
+    var d=Math.max(0,(currentLobby.deadline||0)-Date.now());
+    var h=Math.floor(d/3600000),m=Math.floor((d%3600000)/60000),s=Math.floor((d%60000)/1000);
+    document.getElementById("timer").textContent=(h<10?"0"+h:h)+":"+(m<10?"0"+m:m)+":"+(s<10?"0"+s:s);
+  },1000);
+
+  var pickBox=document.getElementById("my-pick-box");
+  if(myPick){
+    var t=getTeam(myPick);
+    document.getElementById("my-pick-logo").textContent=t.logo;
+    document.getElementById("my-pick-name").textContent=t.name;
+    pickBox.style.display="flex";
+  } else {
+    pickBox.style.display="none";
+  }
+
+  var fl=document.getElementById("fixtures-list");
+  fl.innerHTML="";
+  FIXTURES.forEach(function(fix){
+    [{id:fix.home,time:fix.day},{id:fix.away,time:"—"}].forEach(function(item){
+      var t=getTeam(item.id);
+      var sel=
