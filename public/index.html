@@ -268,7 +268,7 @@ function setAuthMode(mode){
 }
 
 function authSubmit(){
-  var mode=document.getElementById("btn-signup").className==="active"?"signup":"login";
+  var var mode=document.getElementById("btn-signup").classList.contains("active")?"signup":"login";
   var email=document.getElementById("auth-email").value.trim();
   var pwd=document.getElementById("auth-pwd").value;
   var errEl=document.getElementById("auth-err");
