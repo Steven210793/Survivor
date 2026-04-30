@@ -51,6 +51,8 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 .modal-bg.open{display:flex;}
 .modal{background:#1A1A1A;border:1px solid #2E2E2E;border-radius:16px;padding:24px;width:100%;max-width:350px;}
 .modal h3{font-size:18px;font-weight:700;margin-bottom:16px;}
+.loading{text-align:center;padding:20px;color:#888;font-size:14px;}
+.team-logo{width:28px;height:28px;object-fit:contain;border-radius:4px;}
 </style>
 </head>
 <body>
@@ -86,14 +88,14 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
     <p>Sois le dernier survivant !</p>
   </div>
   <div class="sec">
-    <button class="btn btn-g" onclick="createLobby()">⊕ CRÉER UNE LIGUE</button>
+    <div id="create-btn-zone"></div>
     <p style="text-align:center;font-size:12px;color:#888;margin-bottom:8px;">Entrer un code</p>
     <input type="text" id="join-code" placeholder="X X X X X X" maxlength="6"
       oninput="this.value=this.value.toUpperCase();document.getElementById('btn-join').disabled=this.value.length<5;"
       style="text-align:center;font-size:24px;letter-spacing:8px;color:#39E979;"/>
     <div class="err" id="join-err" style="display:none"></div>
     <button class="btn btn-g" onclick="joinLobby()" id="btn-join" disabled>REJOINDRE</button>
-    <button class="btn btn-o" onclick="logout()">⏻ Déconnexion</button>
+    <button class="btn btn-o" onclick="logout()">Deconnexion</button>
   </div>
 </div>
 
@@ -122,12 +124,12 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 <!-- PICKING -->
 <div class="screen" id="screen-picking">
   <div style="text-align:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;">
-    <div style="font-weight:700;" id="pick-round">Journée 34</div>
-    <div style="font-size:11px;color:#888;">Ligue 1 McDonald's</div>
+    <div style="font-weight:700;" id="pick-round">Journee 34</div>
+    <div style="font-size:11px;color:#888;">Ligue 1 McDonalds</div>
   </div>
   <div style="padding:18px;flex:1;overflow-y:auto;">
     <div class="timer-box">
-      <div class="timer-lbl">⏱ DEADLINE</div>
+      <div class="timer-lbl">DEADLINE</div>
       <div class="timer-val" id="timer">00:00:00</div>
       <div class="timer-sub">avant le premier match (15:00)</div>
     </div>
@@ -135,13 +137,13 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
       <span id="my-pick-logo" style="font-size:24px;"></span>
       <div>
         <div style="font-weight:700;" id="my-pick-name"></div>
-        <div style="font-size:12px;color:#39E979;">✓ Sélection validée</div>
+        <div style="font-size:12px;color:#39E979;">Selection validee</div>
       </div>
     </div>
-    <p class="sec-label">CHOISIS TON ÉQUIPE</p>
+    <p class="sec-label">CHOISIS TON EQUIPE</p>
     <div class="card" id="fixtures-list"></div>
     <div id="used-teams-box" style="margin-top:10px;display:none;">
-      <p class="sec-label">ÉQUIPES DÉJÀ UTILISÉES</p>
+      <p class="sec-label">EQUIPES DEJA UTILISEES</p>
       <div id="used-teams-chips" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
     <div style="margin-top:12px;" id="host-controls"></div>
@@ -150,11 +152,11 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 
 <!-- RESULTS -->
 <div class="screen" id="screen-results">
-  <div style="text-align:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;font-weight:700;font-size:18px;" id="results-title">Résultats</div>
+  <div style="text-align:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;font-weight:700;font-size:18px;" id="results-title">Resultats</div>
   <div style="padding:18px;flex:1;overflow-y:auto;">
     <div class="card" id="results-list"></div>
     <p style="text-align:center;font-weight:700;font-size:18px;margin:16px 0;" id="alive-count"></p>
-    <button class="btn btn-g" onclick="nextRound()" id="btn-next-round" style="display:none;">JOURNÉE SUIVANTE →</button>
+    <button class="btn btn-g" onclick="nextRound()" id="btn-next-round" style="display:none;">JOURNEE SUIVANTE</button>
     <p style="text-align:center;color:#888;" id="wait-next"></p>
   </div>
 </div>
@@ -163,27 +165,27 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 <div class="screen" id="screen-winner">
   <div class="winner-screen">
     <div style="font-size:80px;">🏆</div>
-    <div style="font-size:14px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:2px;">SAISON TERMINÉE !</div>
-    <div style="font-size:36px;font-weight:900;color:#39E979;" id="winner-name">🏆 ? 🏆</div>
+    <div style="font-size:14px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:2px;">SAISON TERMINEE !</div>
+    <div style="font-size:36px;font-weight:900;color:#39E979;" id="winner-name">?</div>
     <div style="font-size:14px;color:#888;">est le dernier survivant !</div>
     <div style="background:rgba(57,233,121,0.08);border:1px solid rgba(57,233,121,0.3);border-radius:12px;padding:16px;width:100%;text-align:center;">
       <div style="font-size:28px;font-weight:900;color:#39E979;">+1 POINT</div>
     </div>
-    <button class="btn btn-g" onclick="replayGame()" id="btn-replay" style="display:none;">🔁 REJOUER</button>
-    <button class="btn btn-o" onclick="leaveLobby()">← QUITTER</button>
+    <button class="btn btn-g" onclick="replayGame()" id="btn-replay" style="display:none;">REJOUER</button>
+    <button class="btn btn-o" onclick="leaveLobby()">QUITTER</button>
   </div>
 </div>
 
 <!-- RESULTATS TAB -->
 <div class="screen" id="screen-resultats">
-  <div style="padding:14px 18px;border-bottom:1px solid #2E2E2E;font-weight:700;font-size:18px;">État de la partie</div>
+  <div style="padding:14px 18px;border-bottom:1px solid #2E2E2E;font-weight:700;font-size:18px;">Etat de la partie</div>
   <div style="padding:18px;flex:1;overflow-y:auto;" id="resultats-content"></div>
 </div>
 
 <!-- CLASSEMENT TAB -->
 <div class="screen" id="screen-classement">
   <div style="padding:14px 18px;border-bottom:1px solid #2E2E2E;">
-    <div style="font-weight:700;font-size:18px;">Classement général</div>
+    <div style="font-weight:700;font-size:18px;">Classement general</div>
     <div style="font-size:12px;color:#888;">Toutes saisons confondues</div>
   </div>
   <div style="padding:18px;flex:1;overflow-y:auto;">
@@ -203,14 +205,14 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
       <div class="row"><span style="flex:1;font-weight:600;">Points totaux</span><span style="color:#39E979;font-weight:700;" id="profil-pts">0 pts</span></div>
       <div class="row"><span style="flex:1;font-weight:600;">Statut</span><span id="profil-status" class="badge-g">En vie</span></div>
     </div>
-    <button class="btn btn-o" onclick="logout()">⏻ SE DÉCONNECTER</button>
+    <button class="btn btn-o" onclick="logout()">SE DECONNECTER</button>
   </div>
 </div>
 
 <!-- BOTTOM NAV -->
 <nav class="nav" id="bottom-nav" style="display:none;">
   <button class="active" onclick="navTo('accueil')" id="nav-accueil"><span>🏠</span>Accueil</button>
-  <button onclick="navTo('resultats')" id="nav-resultats"><span>📋</span>Résultats</button>
+  <button onclick="navTo('resultats')" id="nav-resultats"><span>📋</span>Resultats</button>
   <button onclick="navTo('classement')" id="nav-classement"><span>🏆</span>Classement</button>
   <button onclick="navTo('profil')" id="nav-profil"><span>👤</span>Profil</button>
 </nav>
@@ -218,58 +220,80 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 <!-- MODAL RENAME -->
 <div class="modal-bg" id="modal-rename">
   <div class="modal">
-    <h3>✏️ Renommer la ligue</h3>
+    <h3>Renommer la ligue</h3>
     <input type="text" id="new-name-input" placeholder="Nom de la ligue" maxlength="30"/>
     <button class="btn btn-g" onclick="saveName()">SAUVEGARDER</button>
     <button class="btn btn-o" onclick="closeRename()">Annuler</button>
   </div>
 </div>
 
+<!-- MODAL LOADING RESULTS -->
+<div class="modal-bg" id="modal-loading">
+  <div class="modal" style="text-align:center;">
+    <div style="font-size:48px;margin-bottom:12px;">⚽</div>
+    <div style="font-weight:700;font-size:18px;margin-bottom:8px;">Recuperation des resultats...</div>
+    <div style="color:#888;font-size:13px;">Connexion a l'API Ligue 1</div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-var TEAMS=[
-  {id:"psg",name:"PSG",logo:"🔵"},
-  {id:"lor",name:"Lorient",logo:"🟠"},
-  {id:"mtz",name:"Metz",logo:"🟣"},
-  {id:"mon",name:"Monaco",logo:"🔴"},
-  {id:"nic",name:"Nice",logo:"🔴"},
-  {id:"len",name:"Lens",logo:"🟡"},
-  {id:"lil",name:"Lille",logo:"🔴"},
-  {id:"hac",name:"Le Havre",logo:"🔵"},
-  {id:"str",name:"Strasbourg",logo:"🔵"},
-  {id:"tls",name:"Toulouse",logo:"🟣"},
-  {id:"aux",name:"Auxerre",logo:"🟡"},
-  {id:"ang",name:"Angers",logo:"⚫"},
-  {id:"oly",name:"Lyon",logo:"🔵"},
-  {id:"ren",name:"Rennes",logo:"🔴"},
-  {id:"nan",name:"Nantes",logo:"🟡"},
-  {id:"om",name:"Marseille",logo:"🔵"},
-  {id:"pfc",name:"Paris FC",logo:"🔵"},
-  {id:"bst",name:"Brest",logo:"🔴"},
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+// Email du seul admin autorise a creer des ligues
+var ADMIN_EMAIL = "groliersteven@gmail.com";
+
+// Cle API RapidAPI (Free API Live Football Data)
+var RAPIDAPI_KEY = "39c5cc9625mshc2f52e154b3255fp11e5b9jsn0f4c49435a11";
+
+// Ligue 1 = league_id 61, saison 2025
+var LEAGUE_ID = 61;
+var SEASON = 2025;
+
+// ── EQUIPES ───────────────────────────────────────────────────────────────────
+var TEAMS = [
+  {id:"psg", name:"PSG",         logo:"https://media.api-sports.io/football/teams/85.png",  apiId:85},
+  {id:"om",  name:"Marseille",   logo:"https://media.api-sports.io/football/teams/81.png",  apiId:81},
+  {id:"mon", name:"Monaco",      logo:"https://media.api-sports.io/football/teams/91.png",  apiId:91},
+  {id:"lil", name:"Lille",       logo:"https://media.api-sports.io/football/teams/79.png",  apiId:79},
+  {id:"nic", name:"Nice",        logo:"https://media.api-sports.io/football/teams/84.png",  apiId:84},
+  {id:"oly", name:"Lyon",        logo:"https://media.api-sports.io/football/teams/80.png",  apiId:80},
+  {id:"ren", name:"Rennes",      logo:"https://media.api-sports.io/football/teams/94.png",  apiId:94},
+  {id:"len", name:"Lens",        logo:"https://media.api-sports.io/football/teams/116.png", apiId:116},
+  {id:"str", name:"Strasbourg",  logo:"https://media.api-sports.io/football/teams/95.png",  apiId:95},
+  {id:"nan", name:"Nantes",      logo:"https://media.api-sports.io/football/teams/83.png",  apiId:83},
+  {id:"tls", name:"Toulouse",    logo:"https://media.api-sports.io/football/teams/96.png",  apiId:96},
+  {id:"aux", name:"Auxerre",     logo:"https://media.api-sports.io/football/teams/778.png", apiId:778},
+  {id:"ang", name:"Angers",      logo:"https://media.api-sports.io/football/teams/77.png",  apiId:77},
+  {id:"hac", name:"Le Havre",    logo:"https://media.api-sports.io/football/teams/1080.png",apiId:1080},
+  {id:"mtz", name:"Metz",        logo:"https://media.api-sports.io/football/teams/82.png",  apiId:82},
+  {id:"lor", name:"Lorient",     logo:"https://media.api-sports.io/football/teams/1160.png",apiId:1160},
+  {id:"pfc", name:"Paris FC",    logo:"https://media.api-sports.io/football/teams/111.png", apiId:111},
+  {id:"bst", name:"Brest",       logo:"https://media.api-sports.io/football/teams/130.png", apiId:130},
 ];
 
-var FIXTURES=[
-  {home:"nan",away:"om", day:"Sam. 15:00"},
-  {home:"psg",away:"lor",day:"Sam. 17:00"},
-  {home:"mtz",away:"mon",day:"Sam. 19:00"},
-  {home:"nic",away:"len",day:"Sam. 21:05"},
-  {home:"lil",away:"hac",day:"Dim. 15:00"},
-  {home:"str",away:"tls",day:"Dim. 17:15"},
-  {home:"aux",away:"ang",day:"Dim. 17:15"},
-  {home:"oly",away:"ren",day:"Dim. 20:45"},
+// ── JOURNEE 34 ────────────────────────────────────────────────────────────────
+var FIXTURES = [
+  {home:"nan", away:"om",  day:"Sam. 15:00", homeApiId:83,  awayApiId:81},
+  {home:"psg", away:"lor", day:"Sam. 17:00", homeApiId:85,  awayApiId:1160},
+  {home:"mtz", away:"mon", day:"Sam. 19:00", homeApiId:82,  awayApiId:91},
+  {home:"nic", away:"len", day:"Sam. 21:05", homeApiId:84,  awayApiId:116},
+  {home:"lil", away:"hac", day:"Dim. 15:00", homeApiId:79,  awayApiId:1080},
+  {home:"str", away:"tls", day:"Dim. 17:15", homeApiId:95,  awayApiId:96},
+  {home:"aux", away:"ang", day:"Dim. 17:15", homeApiId:778, awayApiId:77},
+  {home:"oly", away:"ren", day:"Dim. 20:45", homeApiId:80,  awayApiId:94},
 ];
 
-var CURRENT_ROUND=34;
-var currentUser=null;
-var currentLobby=null;
-var authMode="login";
-var timerInterval=null;
+var CURRENT_ROUND = 34;
+var currentUser = null;
+var currentLobby = null;
+var authMode = "login";
+var timerInterval = null;
 
 function sGet(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}
 function sSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function genCode(){var c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",r="";for(var i=0;i<6;i++)r+=c[Math.floor(Math.random()*c.length)];return r;}
-function getTeam(id){return TEAMS.find(function(t){return t.id===id;})||{name:"?",logo:"⚽"};}
+function getTeam(id){return TEAMS.find(function(t){return t.id===id;})||{name:"?",logo:"",apiId:0};}
 
 function showToast(msg){
   var t=document.getElementById("toast");
@@ -283,6 +307,14 @@ function showScreen(id){
   if(el)el.classList.add("active");
 }
 
+function teamLogoEl(team){
+  if(team.logo){
+    return '<img src="'+team.logo+'" class="team-logo" onerror="this.style.display=\'none\'" />';
+  }
+  return '<span style="font-size:18px;">⚽</span>';
+}
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
 function setMode(mode){
   authMode=mode;
   var isSig=(mode==="signup");
@@ -294,7 +326,7 @@ function setMode(mode){
 }
 
 function doAuth(){
-  var email=document.getElementById("auth-email").value.trim();
+  var email=document.getElementById("auth-email").value.trim().toLowerCase();
   var pwd=document.getElementById("auth-pwd").value;
   var errEl=document.getElementById("auth-err");
   errEl.style.display="none";
@@ -314,7 +346,17 @@ function doAuth(){
   }
 }
 
-function goHome(){showScreen("home");document.getElementById("bottom-nav").style.display="none";}
+function goHome(){
+  showScreen("home");
+  document.getElementById("bottom-nav").style.display="none";
+  // Afficher bouton creer seulement pour l'admin
+  var zone=document.getElementById("create-btn-zone");
+  if(currentUser.email===ADMIN_EMAIL){
+    zone.innerHTML='<button class="btn btn-g" onclick="createLobby()">CREER UNE LIGUE</button>';
+  } else {
+    zone.innerHTML='';
+  }
+}
 
 function logout(){
   currentUser=null;currentLobby=null;
@@ -322,7 +364,9 @@ function logout(){
   showScreen("auth");document.getElementById("bottom-nav").style.display="none";
 }
 
+// ── LOBBY ─────────────────────────────────────────────────────────────────────
 function createLobby(){
+  if(currentUser.email!==ADMIN_EMAIL){showToast("Acces refuse.");return;}
   var c=genCode();
   var lobby={code:c,name:"Ligue de "+currentUser.pseudo,host:currentUser.uid,status:"waiting",round:CURRENT_ROUND,deadline:new Date("2026-05-02T13:00:00").getTime(),players:[{uid:currentUser.uid,pseudo:currentUser.pseudo,alive:true,pick:null,result:null,usedTeams:[],points:0}],history:[]};
   var all=sGet("lobbies")||{};all[c]=lobby;sSet("lobbies",all);
@@ -344,17 +388,14 @@ function joinLobby(){
 }
 
 function openLobby(){document.getElementById("bottom-nav").style.display="flex";navTo("accueil");}
-function leaveLobby(){currentLobby=null;sSet("currentLobby",null);document.getElementById("bottom-nav").style.display="none";showScreen("home");}
+function leaveLobby(){currentLobby=null;sSet("currentLobby",null);document.getElementById("bottom-nav").style.display="none";showScreen("home");goHome();}
 function saveLobby(){var all=sGet("lobbies")||{};all[currentLobby.code]=currentLobby;sSet("lobbies",all);sSet("currentLobby",currentLobby);}
 
-function openRename(){
-  document.getElementById("new-name-input").value=currentLobby.name;
-  document.getElementById("modal-rename").classList.add("open");
-}
+function openRename(){document.getElementById("new-name-input").value=currentLobby.name;document.getElementById("modal-rename").classList.add("open");}
 function closeRename(){document.getElementById("modal-rename").classList.remove("open");}
 function saveName(){
   var n=document.getElementById("new-name-input").value.trim();
-  if(!n){showToast("Le nom ne peut pas etre vide !");return;}
+  if(!n){showToast("Nom vide !");return;}
   currentLobby.name=n;saveLobby();
   document.getElementById("lobby-name-display").textContent=n;
   closeRename();showToast("Nom mis a jour !");
@@ -383,8 +424,7 @@ function renderLobby(){
   document.getElementById("lobby-name-display").textContent=currentLobby.name;
   document.getElementById("lobby-code").textContent=currentLobby.code;
   document.getElementById("edit-name-btn").style.display=isHost?"block":"none";
-  var el=document.getElementById("lobby-players");
-  el.innerHTML="";
+  var el=document.getElementById("lobby-players");el.innerHTML="";
   currentLobby.players.forEach(function(p){
     el.innerHTML+='<div class="row"><div class="av">'+p.pseudo[0].toUpperCase()+'</div><span style="flex:1;font-weight:600;">'+p.pseudo+(p.uid===currentLobby.host?' <span style="font-size:11px;color:#888;">Admin</span>':'')+'</span><span style="color:#39E979;font-weight:700;">'+p.points+' pts</span><span class="badge-g" style="margin-left:4px;">Pret</span></div>';
   });
@@ -415,12 +455,11 @@ function renderPicking(){
   var pickBox=document.getElementById("my-pick-box");
   if(myPick){
     var t=getTeam(myPick);
-    document.getElementById("my-pick-logo").textContent=t.logo;
+    document.getElementById("my-pick-logo").innerHTML=teamLogoEl(t);
     document.getElementById("my-pick-name").textContent=t.name;
     pickBox.style.display="flex";
   } else {pickBox.style.display="none";}
-  var fl=document.getElementById("fixtures-list");
-  fl.innerHTML="";
+  var fl=document.getElementById("fixtures-list");fl.innerHTML="";
   FIXTURES.forEach(function(fix){
     [{id:fix.home,time:fix.day},{id:fix.away,time:"—"}].forEach(function(item){
       var t=getTeam(item.id);
@@ -428,17 +467,20 @@ function renderPicking(){
       var used=usedTeams.indexOf(item.id)>=0;
       var canPick=me&&me.alive&&!myPick&&!used&&currentLobby.status!=="closed";
       var dot=sel?'<div style="width:22px;height:22px;border-radius:50%;background:#39E979;display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;font-weight:700;flex-shrink:0;">V</div>':used?'<div style="width:22px;height:22px;border-radius:50%;background:#FF4444;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex-shrink:0;">X</div>':'<div style="width:22px;height:22px;border-radius:50%;border:2px solid #2E2E2E;flex-shrink:0;"></div>';
-      fl.innerHTML+='<div onclick="'+(canPick?'pickTeam(\''+item.id+'\')':'')+'" style="display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid #2E2E2E;gap:8px;background:'+(sel?'rgba(57,233,121,0.06)':'transparent')+';opacity:'+(used?0.35:1)+';cursor:'+(canPick?'pointer':'default')+';">'+dot+'<span style="font-size:18px;">'+t.logo+'</span><span style="flex:1;font-weight:600;font-size:14px;">'+t.name+'</span><span style="font-size:11px;color:#888;">'+item.time+'</span></div>';
+      fl.innerHTML+='<div onclick="'+(canPick?'pickTeam(\''+item.id+'\')':'')+'" style="display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid #2E2E2E;gap:8px;background:'+(sel?'rgba(57,233,121,0.06)':'transparent')+';opacity:'+(used?0.35:1)+';cursor:'+(canPick?'pointer':'default')+';">'+dot+teamLogoEl(t)+'<span style="flex:1;font-weight:600;font-size:14px;margin-left:4px;">'+t.name+'</span><span style="font-size:11px;color:#888;">'+item.time+'</span></div>';
     });
   });
   if(usedTeams.length>0){
     document.getElementById("used-teams-box").style.display="block";
     var uc=document.getElementById("used-teams-chips");uc.innerHTML="";
-    usedTeams.forEach(function(tid){var t=getTeam(tid);uc.innerHTML+='<span style="background:#222;border:1px solid #2E2E2E;border-radius:99px;padding:4px 10px;font-size:12px;color:#888;">'+t.logo+' '+t.name+'</span>';});
+    usedTeams.forEach(function(tid){var t=getTeam(tid);uc.innerHTML+='<span style="background:#222;border:1px solid #2E2E2E;border-radius:99px;padding:4px 10px;font-size:12px;color:#888;display:inline-flex;align-items:center;gap:4px;">'+teamLogoEl(t)+' '+t.name+'</span>';});
   }
   var isHost=currentLobby.host===currentUser.uid;
   var hc=document.getElementById("host-controls");hc.innerHTML="";
-  if(!me||!me.alive){hc.innerHTML='<div style="background:#0d0d1a;border:1.5px solid rgba(100,100,255,0.3);border-radius:12px;padding:16px;text-align:center;color:#8888ff;font-weight:700;">MODE SPECTATEUR - Tu peux suivre la partie !</div>';return;}
+  if(!me||!me.alive){
+    hc.innerHTML='<div style="background:#0d0d1a;border:1.5px solid rgba(100,100,255,0.3);border-radius:12px;padding:16px;text-align:center;color:#8888ff;font-weight:700;">MODE SPECTATEUR</div>';
+    return;
+  }
   if(isHost&&currentLobby.status!=="closed"){hc.innerHTML='<button class="btn btn-o" onclick="closeSelections()">FERMER LES SELECTIONS</button>';}
   else if(isHost&&currentLobby.status==="closed"){hc.innerHTML='<button class="btn btn-g" onclick="resolveRound()">OBTENIR LES RESULTATS</button>';}
 }
@@ -451,18 +493,87 @@ function pickTeam(id){
 
 function closeSelections(){currentLobby.status="closed";saveLobby();renderPicking();}
 
+// ── VRAIS RESULTATS VIA API ───────────────────────────────────────────────────
 function resolveRound(){
+  document.getElementById("modal-loading").classList.add("open");
+  
+  // Recuperer les resultats de la journee en cours
+  var url="https://free-api-live-football-data.p.rapidapi.com/football-get-all-fixtures-by-league-and-season?leagueId="+LEAGUE_ID+"&season="+SEASON;
+  
+  fetch(url,{
+    method:"GET",
+    headers:{
+      "x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com",
+      "x-rapidapi-key":RAPIDAPI_KEY
+    }
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    document.getElementById("modal-loading").classList.remove("open");
+    
+    var results={};
+    
+    // Parser les resultats
+    if(data&&data.response){
+      data.response.forEach(function(match){
+        // Seulement les matchs termines de la bonne journee
+        if(match.fixture&&match.fixture.status&&match.fixture.status.short==="FT"&&match.league&&match.league.round){
+          var roundNum=parseInt(match.league.round.replace(/\D/g,""));
+          if(roundNum===currentLobby.round){
+            var homeId=match.teams&&match.teams.home&&match.teams.home.id;
+            var awayId=match.teams&&match.teams.away&&match.teams.away.id;
+            var homeGoals=match.goals&&match.goals.home;
+            var awayGoals=match.goals&&match.goals.away;
+            
+            // Trouver les equipes dans notre liste
+            var homeTeam=TEAMS.find(function(t){return t.apiId===homeId;});
+            var awayTeam=TEAMS.find(function(t){return t.apiId===awayId;});
+            
+            if(homeTeam&&awayTeam&&homeGoals!==null&&awayGoals!==null){
+              if(homeGoals>awayGoals){results[homeTeam.id]="win";results[awayTeam.id]="loss";}
+              else if(awayGoals>homeGoals){results[awayTeam.id]="win";results[homeTeam.id]="loss";}
+              else{results[homeTeam.id]="draw";results[awayTeam.id]="draw";}
+            }
+          }
+        }
+      });
+    }
+    
+    applyResults(results);
+  })
+  .catch(function(err){
+    document.getElementById("modal-loading").classList.remove("open");
+    console.log("API error:",err);
+    // Si l'API echoue, simulation
+    showToast("API indisponible - simulation des resultats");
+    applyResults({});
+  });
+}
+
+function applyResults(apiResults){
   currentLobby.players=currentLobby.players.map(function(p){
     if(!p.alive)return p;
     if(!p.pick)return Object.assign({},p,{result:"no_pick",alive:false});
-    var r=Math.random();
-    var result=r<0.45?"win":r<0.7?"draw":"loss";
+    
+    var result=apiResults[p.pick];
+    
+    // Si pas de resultat API (match pas encore termine), simulation
+    if(!result){
+      var r=Math.random();
+      result=r<0.45?"win":r<0.7?"draw":"loss";
+    }
+    
     var survived=result==="win";
     return Object.assign({},p,{result:result,alive:survived,usedTeams:survived?(p.usedTeams||[]).concat([p.pick]):p.usedTeams});
   });
+  
   var alive=currentLobby.players.filter(function(p){return p.alive;});
   currentLobby.status=alive.length<=1?"finished":"roundEnd";
-  if(alive.length===1){currentLobby.players=currentLobby.players.map(function(p){return p.alive?Object.assign({},p,{points:(p.points||0)+1}):p;});}
+  if(alive.length===1){
+    currentLobby.players=currentLobby.players.map(function(p){
+      return p.alive?Object.assign({},p,{points:(p.points||0)+1}):p;
+    });
+  }
   saveLobby();
   if(currentLobby.status==="finished")renderWinner();else renderResults();
 }
@@ -473,7 +584,7 @@ function renderResults(){
   var rl=document.getElementById("results-list");rl.innerHTML="";
   currentLobby.players.forEach(function(p){
     var t=getTeam(p.pick);
-    rl.innerHTML+='<div class="row"><div class="av">'+p.pseudo[0].toUpperCase()+'</div><div style="flex:1;"><div style="font-weight:600;">'+p.pseudo+'</div><div style="font-size:12px;color:#888;">'+(p.pick?t.logo+" "+t.name:"Pas de choix")+'</div></div><span class="'+(p.result==="win"?"badge-g":"badge-r")+'">'+(p.result==="win"?"GAGNE":"ELIMINE")+'</span></div>';
+    rl.innerHTML+='<div class="row"><div class="av">'+p.pseudo[0].toUpperCase()+'</div><div style="flex:1;"><div style="font-weight:600;">'+p.pseudo+'</div><div style="font-size:12px;color:#888;display:flex;align-items:center;gap:4px;">'+(p.pick?teamLogoEl(t)+' '+t.name:"Pas de choix")+'</div></div><span class="'+(p.result==="win"?"badge-g":"badge-r")+'">'+(p.result==="win"?"GAGNE":"ELIMINE")+'</span></div>';
   });
   var alive=currentLobby.players.filter(function(p){return p.alive;});
   document.getElementById("alive-count").textContent=alive.length+" joueur"+(alive.length>1?"s":"")+" encore en lice !";
@@ -491,7 +602,7 @@ function nextRound(){
 function renderWinner(){
   showScreen("winner");
   var winner=currentLobby.players.find(function(p){return p.alive;})||currentLobby.players[0];
-  document.getElementById("winner-name").textContent="Gagnant : "+(winner?winner.pseudo:"?");
+  document.getElementById("winner-name").textContent="🏆 "+(winner?winner.pseudo:"?")+" 🏆";
   document.getElementById("btn-replay").style.display=currentLobby.host===currentUser.uid?"block":"none";
 }
 
