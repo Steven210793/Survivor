@@ -51,8 +51,9 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 .modal-bg.open{display:flex;}
 .modal{background:#1A1A1A;border:1px solid #2E2E2E;border-radius:16px;padding:24px;width:100%;max-width:350px;}
 .modal h3{font-size:18px;font-weight:700;margin-bottom:16px;}
-.loading{text-align:center;padding:20px;color:#888;font-size:14px;}
 .team-logo{width:28px;height:28px;object-fit:contain;border-radius:4px;}
+.phrase-win{background:rgba(57,233,121,0.08);border:1px solid rgba(57,233,121,0.25);border-radius:10px;padding:10px 14px;color:#39E979;font-size:13px;font-style:italic;margin-top:4px;}
+.phrase-loss{background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.25);border-radius:10px;padding:10px 14px;color:#FF6666;font-size:13px;font-style:italic;margin-top:4px;}
 </style>
 </head>
 <body>
@@ -134,10 +135,10 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
       <div class="timer-sub">avant le premier match (15:00)</div>
     </div>
     <div id="my-pick-box" style="display:none;background:rgba(57,233,121,0.08);border:1px solid rgba(57,233,121,0.3);border-radius:12px;padding:12px;align-items:center;gap:10px;margin-bottom:10px;">
-      <span id="my-pick-logo" style="font-size:24px;"></span>
+      <span id="my-pick-logo"></span>
       <div>
         <div style="font-weight:700;" id="my-pick-name"></div>
-        <div style="font-size:12px;color:#39E979;">Selection validee</div>
+        <div style="font-size:12px;color:#39E979;">Selection validee !</div>
       </div>
     </div>
     <p class="sec-label">CHOISIS TON EQUIPE</p>
@@ -168,6 +169,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
     <div style="font-size:14px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:2px;">SAISON TERMINEE !</div>
     <div style="font-size:36px;font-weight:900;color:#39E979;" id="winner-name">?</div>
     <div style="font-size:14px;color:#888;">est le dernier survivant !</div>
+    <div style="font-size:20px;font-style:italic;color:#aaa;" id="winner-phrase"></div>
     <div style="background:rgba(57,233,121,0.08);border:1px solid rgba(57,233,121,0.3);border-radius:12px;padding:16px;width:100%;text-align:center;">
       <div style="font-size:28px;font-weight:900;color:#39E979;">+1 POINT</div>
     </div>
@@ -227,7 +229,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
   </div>
 </div>
 
-<!-- MODAL LOADING RESULTS -->
+<!-- MODAL LOADING -->
 <div class="modal-bg" id="modal-loading">
   <div class="modal" style="text-align:center;">
     <div style="font-size:48px;margin-bottom:12px;">⚽</div>
@@ -239,40 +241,74 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 <div class="toast" id="toast"></div>
 
 <script>
-// ── CONFIG ────────────────────────────────────────────────────────────────────
-// Email du seul admin autorise a creer des ligues
 var ADMIN_EMAIL = "groliersteven@gmail.com";
-
-// Cle API RapidAPI (Free API Live Football Data)
 var RAPIDAPI_KEY = "39c5cc9625mshc2f52e154b3255fp11e5b9jsn0f4c49435a11";
-
-// Ligue 1 = league_id 61, saison 2025
 var LEAGUE_ID = 61;
 var SEASON = 2025;
 
-// ── EQUIPES ───────────────────────────────────────────────────────────────────
-var TEAMS = [
-  {id:"psg", name:"PSG",         logo:"https://media.api-sports.io/football/teams/85.png",  apiId:85},
-  {id:"om",  name:"Marseille",   logo:"https://media.api-sports.io/football/teams/81.png",  apiId:81},
-  {id:"mon", name:"Monaco",      logo:"https://media.api-sports.io/football/teams/91.png",  apiId:91},
-  {id:"lil", name:"Lille",       logo:"https://media.api-sports.io/football/teams/79.png",  apiId:79},
-  {id:"nic", name:"Nice",        logo:"https://media.api-sports.io/football/teams/84.png",  apiId:84},
-  {id:"oly", name:"Lyon",        logo:"https://media.api-sports.io/football/teams/80.png",  apiId:80},
-  {id:"ren", name:"Rennes",      logo:"https://media.api-sports.io/football/teams/94.png",  apiId:94},
-  {id:"len", name:"Lens",        logo:"https://media.api-sports.io/football/teams/116.png", apiId:116},
-  {id:"str", name:"Strasbourg",  logo:"https://media.api-sports.io/football/teams/95.png",  apiId:95},
-  {id:"nan", name:"Nantes",      logo:"https://media.api-sports.io/football/teams/83.png",  apiId:83},
-  {id:"tls", name:"Toulouse",    logo:"https://media.api-sports.io/football/teams/96.png",  apiId:96},
-  {id:"aux", name:"Auxerre",     logo:"https://media.api-sports.io/football/teams/778.png", apiId:778},
-  {id:"ang", name:"Angers",      logo:"https://media.api-sports.io/football/teams/77.png",  apiId:77},
-  {id:"hac", name:"Le Havre",    logo:"https://media.api-sports.io/football/teams/1080.png",apiId:1080},
-  {id:"mtz", name:"Metz",        logo:"https://media.api-sports.io/football/teams/82.png",  apiId:82},
-  {id:"lor", name:"Lorient",     logo:"https://media.api-sports.io/football/teams/1160.png",apiId:1160},
-  {id:"pfc", name:"Paris FC",    logo:"https://media.api-sports.io/football/teams/111.png", apiId:111},
-  {id:"bst", name:"Brest",       logo:"https://media.api-sports.io/football/teams/130.png", apiId:130},
+// ── PHRASES ───────────────────────────────────────────────────────────────────
+var PHRASES_WIN = [
+  "Sang froid ! Tu passes a la journee suivante 🧊",
+  "Le beast ! Ton equipe a assure 💪",
+  "Solide ! Tu survis encore une semaine ⚽",
+  "On te voit venir champion... 👀",
+  "Tu as du nez, bien joue ! 🎯",
+  "Encore en vie ! Les autres tremblent 😤",
 ];
 
-// ── JOURNEE 34 ────────────────────────────────────────────────────────────────
+var PHRASES_LOSS = [
+  "C'est termine pour toi... Rentre chez toi 😂",
+  "Meme mon chat aurait fait un meilleur choix 🐱",
+  "Tu peux aller regarder Netflix maintenant 📺",
+  "GG l'ami, la prochaine fois choisis mieux 💀",
+  "Eliminé ! Bon au moins t'as essayé... 😬",
+  "T'aurais du choisir pile ou face, ca aurait ete pareil 🪙",
+  "La honte... Vraiment la honte 🫣",
+  "On aurait pu te prevenir mais c'etait trop drole a regarder 😏",
+];
+
+var PHRASES_DRAW = [
+  "Un nul ?! Vraiment ?! T'as choisi la mauvaise equipe mon gars 😭",
+  "Match nul = elimine. Dur mais c'est les regles ! 🤷",
+  "Ton equipe n'a meme pas gagne... Classique 😒",
+];
+
+var PHRASES_NO_PICK = [
+  "T'as meme pas choisi d'equipe... Respect du neant 🫥",
+  "Oublier de jouer c'est un talent rare 🤔",
+  "La prochaine fois, ouvre l'appli peut-etre ? 📱",
+];
+
+var PHRASES_WINNER = [
+  "Le dernier survivant ! Legende vivante !",
+  "Indestructible ! Personne ne peut t'arreter !",
+  "Champion de la survie ! Les autres peuvent pleurer !",
+];
+
+function getPhrase(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+// ── EQUIPES ───────────────────────────────────────────────────────────────────
+var TEAMS = [
+  {id:"psg", name:"PSG",        logo:"https://media.api-sports.io/football/teams/85.png",  apiId:85},
+  {id:"om",  name:"Marseille",  logo:"https://media.api-sports.io/football/teams/81.png",  apiId:81},
+  {id:"mon", name:"Monaco",     logo:"https://media.api-sports.io/football/teams/91.png",  apiId:91},
+  {id:"lil", name:"Lille",      logo:"https://media.api-sports.io/football/teams/79.png",  apiId:79},
+  {id:"nic", name:"Nice",       logo:"https://media.api-sports.io/football/teams/84.png",  apiId:84},
+  {id:"oly", name:"Lyon",       logo:"https://media.api-sports.io/football/teams/80.png",  apiId:80},
+  {id:"ren", name:"Rennes",     logo:"https://media.api-sports.io/football/teams/94.png",  apiId:94},
+  {id:"len", name:"Lens",       logo:"https://media.api-sports.io/football/teams/116.png", apiId:116},
+  {id:"str", name:"Strasbourg", logo:"https://media.api-sports.io/football/teams/95.png",  apiId:95},
+  {id:"nan", name:"Nantes",     logo:"https://media.api-sports.io/football/teams/83.png",  apiId:83},
+  {id:"tls", name:"Toulouse",   logo:"https://media.api-sports.io/football/teams/96.png",  apiId:96},
+  {id:"aux", name:"Auxerre",    logo:"https://media.api-sports.io/football/teams/778.png", apiId:778},
+  {id:"ang", name:"Angers",     logo:"https://media.api-sports.io/football/teams/77.png",  apiId:77},
+  {id:"hac", name:"Le Havre",   logo:"https://media.api-sports.io/football/teams/1080.png",apiId:1080},
+  {id:"mtz", name:"Metz",       logo:"https://media.api-sports.io/football/teams/82.png",  apiId:82},
+  {id:"lor", name:"Lorient",    logo:"https://media.api-sports.io/football/teams/1160.png",apiId:1160},
+  {id:"pfc", name:"Paris FC",   logo:"https://media.api-sports.io/football/teams/111.png", apiId:111},
+  {id:"bst", name:"Brest",      logo:"https://media.api-sports.io/football/teams/130.png", apiId:130},
+];
+
 var FIXTURES = [
   {home:"nan", away:"om",  day:"Sam. 15:00", homeApiId:83,  awayApiId:81},
   {home:"psg", away:"lor", day:"Sam. 17:00", homeApiId:85,  awayApiId:1160},
@@ -308,13 +344,10 @@ function showScreen(id){
 }
 
 function teamLogoEl(team){
-  if(team.logo){
-    return '<img src="'+team.logo+'" class="team-logo" onerror="this.style.display=\'none\'" />';
-  }
+  if(team&&team.logo){return '<img src="'+team.logo+'" class="team-logo" onerror="this.style.display=\'none\'" />';}
   return '<span style="font-size:18px;">⚽</span>';
 }
 
-// ── AUTH ──────────────────────────────────────────────────────────────────────
 function setMode(mode){
   authMode=mode;
   var isSig=(mode==="signup");
@@ -349,7 +382,6 @@ function doAuth(){
 function goHome(){
   showScreen("home");
   document.getElementById("bottom-nav").style.display="none";
-  // Afficher bouton creer seulement pour l'admin
   var zone=document.getElementById("create-btn-zone");
   if(currentUser.email===ADMIN_EMAIL){
     zone.innerHTML='<button class="btn btn-g" onclick="createLobby()">CREER UNE LIGUE</button>';
@@ -364,7 +396,6 @@ function logout(){
   showScreen("auth");document.getElementById("bottom-nav").style.display="none";
 }
 
-// ── LOBBY ─────────────────────────────────────────────────────────────────────
 function createLobby(){
   if(currentUser.email!==ADMIN_EMAIL){showToast("Acces refuse.");return;}
   var c=genCode();
@@ -388,7 +419,7 @@ function joinLobby(){
 }
 
 function openLobby(){document.getElementById("bottom-nav").style.display="flex";navTo("accueil");}
-function leaveLobby(){currentLobby=null;sSet("currentLobby",null);document.getElementById("bottom-nav").style.display="none";showScreen("home");goHome();}
+function leaveLobby(){currentLobby=null;sSet("currentLobby",null);document.getElementById("bottom-nav").style.display="none";goHome();}
 function saveLobby(){var all=sGet("lobbies")||{};all[currentLobby.code]=currentLobby;sSet("lobbies",all);sSet("currentLobby",currentLobby);}
 
 function openRename(){document.getElementById("new-name-input").value=currentLobby.name;document.getElementById("modal-rename").classList.add("open");}
@@ -478,7 +509,7 @@ function renderPicking(){
   var isHost=currentLobby.host===currentUser.uid;
   var hc=document.getElementById("host-controls");hc.innerHTML="";
   if(!me||!me.alive){
-    hc.innerHTML='<div style="background:#0d0d1a;border:1.5px solid rgba(100,100,255,0.3);border-radius:12px;padding:16px;text-align:center;color:#8888ff;font-weight:700;">MODE SPECTATEUR</div>';
+    hc.innerHTML='<div style="background:#0d0d1a;border:1.5px solid rgba(100,100,255,0.3);border-radius:12px;padding:16px;text-align:center;color:#8888ff;font-weight:700;">MODE SPECTATEUR - Tu peux suivre la partie !</div>';
     return;
   }
   if(isHost&&currentLobby.status!=="closed"){hc.innerHTML='<button class="btn btn-o" onclick="closeSelections()">FERMER LES SELECTIONS</button>';}
@@ -493,30 +524,17 @@ function pickTeam(id){
 
 function closeSelections(){currentLobby.status="closed";saveLobby();renderPicking();}
 
-// ── VRAIS RESULTATS VIA API ───────────────────────────────────────────────────
 function resolveRound(){
+  if(currentUser.email!==ADMIN_EMAIL){showToast("Acces refuse.");return;}
   document.getElementById("modal-loading").classList.add("open");
-  
-  // Recuperer les resultats de la journee en cours
   var url="https://free-api-live-football-data.p.rapidapi.com/football-get-all-fixtures-by-league-and-season?leagueId="+LEAGUE_ID+"&season="+SEASON;
-  
-  fetch(url,{
-    method:"GET",
-    headers:{
-      "x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com",
-      "x-rapidapi-key":RAPIDAPI_KEY
-    }
-  })
+  fetch(url,{method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}})
   .then(function(r){return r.json();})
   .then(function(data){
     document.getElementById("modal-loading").classList.remove("open");
-    
     var results={};
-    
-    // Parser les resultats
     if(data&&data.response){
       data.response.forEach(function(match){
-        // Seulement les matchs termines de la bonne journee
         if(match.fixture&&match.fixture.status&&match.fixture.status.short==="FT"&&match.league&&match.league.round){
           var roundNum=parseInt(match.league.round.replace(/\D/g,""));
           if(roundNum===currentLobby.round){
@@ -524,11 +542,8 @@ function resolveRound(){
             var awayId=match.teams&&match.teams.away&&match.teams.away.id;
             var homeGoals=match.goals&&match.goals.home;
             var awayGoals=match.goals&&match.goals.away;
-            
-            // Trouver les equipes dans notre liste
             var homeTeam=TEAMS.find(function(t){return t.apiId===homeId;});
             var awayTeam=TEAMS.find(function(t){return t.apiId===awayId;});
-            
             if(homeTeam&&awayTeam&&homeGoals!==null&&awayGoals!==null){
               if(homeGoals>awayGoals){results[homeTeam.id]="win";results[awayTeam.id]="loss";}
               else if(awayGoals>homeGoals){results[awayTeam.id]="win";results[homeTeam.id]="loss";}
@@ -538,14 +553,11 @@ function resolveRound(){
         }
       });
     }
-    
     applyResults(results);
   })
-  .catch(function(err){
+  .catch(function(){
     document.getElementById("modal-loading").classList.remove("open");
-    console.log("API error:",err);
-    // Si l'API echoue, simulation
-    showToast("API indisponible - simulation des resultats");
+    showToast("API indisponible - simulation");
     applyResults({});
   });
 }
@@ -553,27 +565,19 @@ function resolveRound(){
 function applyResults(apiResults){
   currentLobby.players=currentLobby.players.map(function(p){
     if(!p.alive)return p;
-    if(!p.pick)return Object.assign({},p,{result:"no_pick",alive:false});
-    
+    if(!p.pick)return Object.assign({},p,{result:"no_pick",alive:false,phrase:getPhrase(PHRASES_NO_PICK)});
     var result=apiResults[p.pick];
-    
-    // Si pas de resultat API (match pas encore termine), simulation
-    if(!result){
-      var r=Math.random();
-      result=r<0.45?"win":r<0.7?"draw":"loss";
-    }
-    
+    if(!result){var r=Math.random();result=r<0.45?"win":r<0.7?"draw":"loss";}
     var survived=result==="win";
-    return Object.assign({},p,{result:result,alive:survived,usedTeams:survived?(p.usedTeams||[]).concat([p.pick]):p.usedTeams});
+    var phrase="";
+    if(result==="win")phrase=getPhrase(PHRASES_WIN);
+    else if(result==="draw")phrase=getPhrase(PHRASES_DRAW);
+    else phrase=getPhrase(PHRASES_LOSS);
+    return Object.assign({},p,{result:result,alive:survived,phrase:phrase,usedTeams:survived?(p.usedTeams||[]).concat([p.pick]):p.usedTeams});
   });
-  
   var alive=currentLobby.players.filter(function(p){return p.alive;});
   currentLobby.status=alive.length<=1?"finished":"roundEnd";
-  if(alive.length===1){
-    currentLobby.players=currentLobby.players.map(function(p){
-      return p.alive?Object.assign({},p,{points:(p.points||0)+1}):p;
-    });
-  }
+  if(alive.length===1){currentLobby.players=currentLobby.players.map(function(p){return p.alive?Object.assign({},p,{points:(p.points||0)+1}):p;});}
   saveLobby();
   if(currentLobby.status==="finished")renderWinner();else renderResults();
 }
@@ -584,7 +588,9 @@ function renderResults(){
   var rl=document.getElementById("results-list");rl.innerHTML="";
   currentLobby.players.forEach(function(p){
     var t=getTeam(p.pick);
-    rl.innerHTML+='<div class="row"><div class="av">'+p.pseudo[0].toUpperCase()+'</div><div style="flex:1;"><div style="font-weight:600;">'+p.pseudo+'</div><div style="font-size:12px;color:#888;display:flex;align-items:center;gap:4px;">'+(p.pick?teamLogoEl(t)+' '+t.name:"Pas de choix")+'</div></div><span class="'+(p.result==="win"?"badge-g":"badge-r")+'">'+(p.result==="win"?"GAGNE":"ELIMINE")+'</span></div>';
+    var isWin=p.result==="win";
+    var phraseHtml=p.phrase?'<div class="'+(isWin?"phrase-win":"phrase-loss")+'">'+p.phrase+'</div>':'';
+    rl.innerHTML+='<div style="padding:12px 16px;border-bottom:1px solid #2E2E2E;"><div style="display:flex;align-items:center;gap:10px;"><div class="av">'+p.pseudo[0].toUpperCase()+'</div><div style="flex:1;"><div style="font-weight:600;">'+p.pseudo+'</div><div style="font-size:12px;color:#888;display:flex;align-items:center;gap:4px;">'+(p.pick?teamLogoEl(t)+' '+t.name:"Pas de choix")+'</div></div><span class="'+(isWin?"badge-g":"badge-r")+'">'+(isWin?"GAGNE":"ELIMINE")+'</span></div>'+phraseHtml+'</div>';
   });
   var alive=currentLobby.players.filter(function(p){return p.alive;});
   document.getElementById("alive-count").textContent=alive.length+" joueur"+(alive.length>1?"s":"")+" encore en lice !";
@@ -595,7 +601,7 @@ function renderResults(){
 
 function nextRound(){
   currentLobby.round+=1;currentLobby.status="picking";currentLobby.deadline=Date.now()+3600000;
-  currentLobby.players=currentLobby.players.map(function(p){return Object.assign({},p,{pick:null,result:null});});
+  currentLobby.players=currentLobby.players.map(function(p){return Object.assign({},p,{pick:null,result:null,phrase:null});});
   saveLobby();renderPicking();
 }
 
@@ -603,12 +609,13 @@ function renderWinner(){
   showScreen("winner");
   var winner=currentLobby.players.find(function(p){return p.alive;})||currentLobby.players[0];
   document.getElementById("winner-name").textContent="🏆 "+(winner?winner.pseudo:"?")+" 🏆";
+  document.getElementById("winner-phrase").textContent=getPhrase(PHRASES_WINNER);
   document.getElementById("btn-replay").style.display=currentLobby.host===currentUser.uid?"block":"none";
 }
 
 function replayGame(){
   currentLobby.status="waiting";currentLobby.round=CURRENT_ROUND;currentLobby.history=[];
-  currentLobby.players=currentLobby.players.map(function(p){return Object.assign({},p,{alive:true,pick:null,result:null,usedTeams:[]});});
+  currentLobby.players=currentLobby.players.map(function(p){return Object.assign({},p,{alive:true,pick:null,result:null,usedTeams:[],phrase:null});});
   saveLobby();renderLobby();
 }
 
