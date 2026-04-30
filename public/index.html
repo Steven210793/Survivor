@@ -23,6 +23,7 @@ body{background:#0D0D0D;color:#F2F2F2;font-family:system-ui,sans-serif;min-heigh
 .btn-g{background:#39E979;color:#000;}
 .btn-o{background:transparent;color:#F2F2F2;border:1.5px solid #2E2E2E;}
 .btn-b{background:transparent;color:#4A90E2;border:1.5px solid #4A90E2;}
+.btn-r{background:#FF4444;color:#fff;}
 .btn:disabled{opacity:0.4;cursor:not-allowed;}
 input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:14px 16px;color:#F2F2F2;font-size:16px;width:100%;outline:none;margin-bottom:8px;}
 .tabs-toggle{display:flex;background:#1A1A1A;border-radius:12px;padding:4px;margin-bottom:16px;}
@@ -37,7 +38,6 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 .badge-r{background:rgba(255,68,68,0.12);color:#FF4444;border-radius:99px;padding:3px 9px;font-size:12px;font-weight:700;}
 .badge-y{background:rgba(255,208,0,0.12);color:#FFD000;border-radius:99px;padding:3px 9px;font-size:12px;font-weight:700;}
 .err{background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);border-radius:10px;padding:10px 14px;color:#FF4444;margin-bottom:12px;font-size:14px;}
-.info-box{background:rgba(74,144,226,0.1);border:1px solid rgba(74,144,226,0.3);border-radius:10px;padding:10px 14px;color:#4A90E2;margin-bottom:12px;font-size:13px;}
 .timer-box{background:#1a1100;border:1.5px solid rgba(255,208,0,0.35);border-radius:12px;padding:14px 16px;text-align:center;margin-bottom:10px;}
 .timer-lbl{font-size:11px;color:#FFD000;letter-spacing:1.5px;font-weight:600;margin-bottom:4px;}
 .timer-val{font-size:42px;font-weight:900;color:#FFD000;letter-spacing:2px;}
@@ -61,10 +61,10 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 .team-logo{width:28px;height:28px;object-fit:contain;border-radius:4px;}
 .phrase-win{background:rgba(57,233,121,0.08);border:1px solid rgba(57,233,121,0.25);border-radius:10px;padding:8px 12px;color:#39E979;font-size:12px;font-style:italic;margin-top:6px;}
 .phrase-loss{background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.25);border-radius:10px;padding:8px 12px;color:#FF6666;font-size:12px;font-style:italic;margin-top:6px;}
-.stat-card{background:#1A1A1A;border:1px solid #2E2E2E;border-radius:12px;padding:16px;margin-bottom:12px;text-align:center;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.stat-card{background:#1A1A1A;border:1px solid #2E2E2E;border-radius:12px;padding:16px;text-align:center;}
 .stat-num{font-size:32px;font-weight:900;color:#39E979;}
 .stat-label{font-size:12px;color:#888;margin-top:4px;}
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
 .add-home-banner{background:rgba(74,144,226,0.08);border:1px solid rgba(74,144,226,0.25);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 </style>
 </head>
@@ -188,8 +188,22 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
     <div style="background:rgba(57,233,121,0.08);border:1px solid rgba(57,233,121,0.3);border-radius:12px;padding:16px;width:100%;text-align:center;">
       <div style="font-size:28px;font-weight:900;color:#39E979;">+1 POINT</div>
     </div>
-    <button class="btn btn-g" onclick="replayGame()" id="btn-replay" style="display:none;">REJOUER</button>
-    <button class="btn btn-o" onclick="leaveLobby()">QUITTER</button>
+    <button class="btn btn-g" onclick="replayGame()" id="btn-replay-winner" style="display:none;">NOUVELLE SAISON</button>
+  </div>
+</div>
+
+<!-- NOBODY SURVIVED -->
+<div class="screen" id="screen-nobody">
+  <div class="winner-screen">
+    <div style="font-size:80px;">💀</div>
+    <div style="font-size:14px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:2px;">SAISON TERMINEE !</div>
+    <div style="font-size:28px;font-weight:900;color:#FF4444;">Personne n'a survecu !</div>
+    <div style="font-size:14px;color:#888;">Vous avez tous perdu en meme temps... 😂</div>
+    <div style="background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.3);border-radius:12px;padding:16px;width:100%;text-align:center;">
+      <div style="font-size:18px;color:#FF4444;font-style:italic;">Aucun point attribue cette saison !</div>
+    </div>
+    <div class="card" style="width:100%;" id="nobody-results"></div>
+    <button class="btn btn-g" onclick="replayGame()" id="btn-replay-nobody" style="display:none;">NOUVELLE SAISON</button>
   </div>
 </div>
 
@@ -358,65 +372,48 @@ function teamLogoEl(team){
   return '<span style="font-size:16px;">⚽</span>';
 }
 
-// ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
 function requestNotifPermission(){
-  if(!("Notification" in window)){showToast("Notifications non supportees sur ce navigateur");return;}
+  if(!("Notification" in window)){showToast("Notifications non supportees");return;}
   Notification.requestPermission().then(function(perm){
-    if(perm==="granted"){
-      showToast("Notifications activees !");
-      scheduleDeadlineNotif();
-    } else {
-      showToast("Notifications refusees");
-    }
+    if(perm==="granted"){showToast("Notifications activees !");scheduleDeadlineNotif();}
+    else{showToast("Notifications refusees");}
   });
 }
 
 function scheduleDeadlineNotif(){
   if(!currentLobby||notifScheduled)return;
   if(Notification.permission!=="granted")return;
-  var deadline=currentLobby.deadline;
-  var notifTime=deadline-(30*60*1000); // 30 min avant
+  var notifTime=currentLobby.deadline-(30*60*1000);
   var now=Date.now();
   if(notifTime>now){
     notifScheduled=true;
-    var delay=notifTime-now;
     setTimeout(function(){
-      new Notification("⚽ Survivor Ligue 1 - Plus que 30 minutes !", {
+      new Notification("Survivor Ligue 1 - Plus que 30 minutes !",{
         body:"La deadline ferme dans 30 min ! Choisis vite ton equipe.",
         icon:"https://media.api-sports.io/football/leagues/61.png"
       });
-    },delay);
+    },notifTime-now);
     showToast("Rappel programme 30 min avant la deadline !");
-  } else {
-    showToast("La deadline est deja passee");
   }
 }
 
-// ── ADD TO HOME SCREEN ────────────────────────────────────────────────────────
 function showAddHomePrompt(){
   var zone=document.getElementById("add-home-zone");
-  // iOS Safari
   var isIOS=/iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
   var isAndroid=/android/.test(navigator.userAgent.toLowerCase());
   if(isIOS){
-    zone.innerHTML='<div class="add-home-banner"><span style="font-size:24px;">📱</span><div><div style="font-weight:700;font-size:13px;">Ajouter a l\'ecran d\'accueil</div><div style="font-size:11px;color:#888;margin-top:2px;">Appuie sur <b>Partager</b> puis "Sur l\'ecran d\'accueil"</div></div></div>';
+    zone.innerHTML='<div class="add-home-banner"><span style="font-size:24px;">📱</span><div><div style="font-weight:700;font-size:13px;">Ajouter a l\'ecran d\'accueil</div><div style="font-size:11px;color:#888;margin-top:2px;">Appuie sur Partager puis "Sur l\'ecran d\'accueil"</div></div></div>';
   } else if(isAndroid){
-    zone.innerHTML='<div class="add-home-banner"><span style="font-size:24px;">📱</span><div><div style="font-weight:700;font-size:13px;">Ajouter a l\'ecran d\'accueil</div><div style="font-size:11px;color:#888;margin-top:2px;">Appuie sur le menu (3 points) puis "Ajouter a l\'ecran d\'accueil"</div></div></div>';
+    zone.innerHTML='<div class="add-home-banner"><span style="font-size:24px;">📱</span><div><div style="font-weight:700;font-size:13px;">Ajouter a l\'ecran d\'accueil</div><div style="font-size:11px;color:#888;margin-top:2px;">Menu (3 points) puis "Ajouter a l\'ecran d\'accueil"</div></div></div>';
   }
 }
 
-// ── PARTAGER LA LIGUE ─────────────────────────────────────────────────────────
 function shareLigue(){
   var msg="Rejoins ma ligue Survivor Ligue 1 !\nCode : "+currentLobby.code+"\n"+APP_URL;
-  if(navigator.share){
-    navigator.share({title:"Survivor Ligue 1",text:msg,url:APP_URL}).catch(function(){});
-  } else {
-    navigator.clipboard&&navigator.clipboard.writeText(msg);
-    showToast("Lien copie !");
-  }
+  if(navigator.share){navigator.share({title:"Survivor Ligue 1",text:msg,url:APP_URL}).catch(function(){});}
+  else{navigator.clipboard&&navigator.clipboard.writeText(msg);showToast("Lien copie !");}
 }
 
-// ── AUTH ──────────────────────────────────────────────────────────────────────
 function setMode(mode){
   authMode=mode;
   var isSig=(mode==="signup");
@@ -453,12 +450,8 @@ function goHome(){
   document.getElementById("bottom-nav").style.display="none";
   var zone=document.getElementById("create-btn-zone");
   if(currentUser.email===ADMIN_EMAIL){
-    zone.innerHTML='<button class="btn btn-g" onclick="createLobby()">CREER UNE LIGUE</button>';
-    // Bouton notif pour admin
-    zone.innerHTML+='<button class="btn btn-b" onclick="requestNotifPermission()" style="margin-bottom:10px;">🔔 Activer les rappels</button>';
-  } else {
-    zone.innerHTML='';
-  }
+    zone.innerHTML='<button class="btn btn-g" onclick="createLobby()">CREER UNE LIGUE</button><button class="btn btn-b" onclick="requestNotifPermission()" style="margin-bottom:10px;">🔔 Activer les rappels</button>';
+  } else {zone.innerHTML='';}
   showAddHomePrompt();
 }
 
@@ -490,10 +483,7 @@ function joinLobby(){
   currentLobby=lob;sSet("currentLobby",lob);openLobby();
 }
 
-function openLobby(){
-  document.getElementById("bottom-nav").style.display="flex";
-  navTo("accueil");
-}
+function openLobby(){document.getElementById("bottom-nav").style.display="flex";navTo("accueil");}
 
 function leaveLobby(){
   currentLobby=null;notifScheduled=false;
@@ -533,6 +523,7 @@ function renderAccueil(){
   else if(s==="picking"||s==="closed")renderPicking();
   else if(s==="roundEnd")renderResults();
   else if(s==="finished")renderWinner();
+  else if(s==="nobody")renderNobody();
 }
 
 function renderLobby(){
@@ -541,15 +532,8 @@ function renderLobby(){
   document.getElementById("lobby-name-display").textContent=currentLobby.name;
   document.getElementById("lobby-code").textContent=currentLobby.code;
   document.getElementById("edit-name-btn").style.display=isHost?"block":"none";
-
-  // Bouton partager (admin seulement)
   var shareZone=document.getElementById("share-zone");
-  if(isHost){
-    shareZone.innerHTML='<button class="btn btn-b" onclick="shareLigue()" style="margin-bottom:16px;">📤 Partager le lien de la ligue</button>';
-  } else {
-    shareZone.innerHTML='';
-  }
-
+  shareZone.innerHTML=isHost?'<button class="btn btn-b" onclick="shareLigue()" style="margin-bottom:16px;">📤 Partager le lien de la ligue</button>':'';
   var el=document.getElementById("lobby-players");el.innerHTML="";
   currentLobby.players.forEach(function(p){
     el.innerHTML+='<div class="row"><div class="av">'+p.pseudo[0].toUpperCase()+'</div><span style="flex:1;font-weight:600;">'+p.pseudo+(p.uid===currentLobby.host?' <span style="font-size:11px;color:#888;">Admin</span>':'')+'</span><span style="color:#39E979;font-weight:700;">'+p.points+' pts</span><span class="badge-g" style="margin-left:4px;">Pret</span></div>';
@@ -558,17 +542,12 @@ function renderLobby(){
   document.getElementById("wait-host").style.display=isHost?"none":"block";
 }
 
-function copyCode(){
-  if(navigator.clipboard)navigator.clipboard.writeText(currentLobby.code);
-  showToast("Code copie !");
-}
+function copyCode(){if(navigator.clipboard)navigator.clipboard.writeText(currentLobby.code);showToast("Code copie !");}
 
 function startGame(){
   currentLobby.status="picking";
   currentLobby.deadline=new Date("2026-05-02T13:00:00").getTime();
-  saveLobby();
-  scheduleDeadlineNotif();
-  renderPicking();
+  saveLobby();scheduleDeadlineNotif();renderPicking();
 }
 
 function renderPicking(){
@@ -578,14 +557,12 @@ function renderPicking(){
   var myPick=me?me.pick:null;
   var usedTeams=me?(me.usedTeams||[]):[];
   var closed=currentLobby.status==="closed";
-
   if(timerInterval)clearInterval(timerInterval);
   timerInterval=setInterval(function(){
     var d=Math.max(0,(currentLobby.deadline||0)-Date.now());
     var h=Math.floor(d/3600000),m=Math.floor((d%3600000)/60000),s=Math.floor((d%60000)/1000);
     document.getElementById("timer").textContent=(h<10?"0"+h:h)+":"+(m<10?"0"+m:m)+":"+(s<10?"0"+s:s);
   },1000);
-
   var pickBox=document.getElementById("my-pick-box");
   if(myPick){
     var t=getTeam(myPick);
@@ -593,8 +570,6 @@ function renderPicking(){
     document.getElementById("my-pick-name").textContent=t.name;
     pickBox.style.display="flex";
   } else {pickBox.style.display="none";}
-
-  // Choix des autres — visible seulement apres la deadline
   var othersZone=document.getElementById("others-picks-zone");
   if(closed){
     var others=currentLobby.players.filter(function(p){return p.uid!==currentUser.uid&&p.alive;});
@@ -610,10 +585,7 @@ function renderPicking(){
       html+='</div></div>';
       othersZone.innerHTML=html;
     }
-  } else {
-    othersZone.innerHTML='';
-  }
-
+  } else {othersZone.innerHTML='';}
   var fl=document.getElementById("fixtures-list");fl.innerHTML="";
   FIXTURES.forEach(function(fix){
     [{id:fix.home,time:fix.day},{id:fix.away,time:"—"}].forEach(function(item){
@@ -625,19 +597,14 @@ function renderPicking(){
       fl.innerHTML+='<div onclick="'+(canPick?'pickTeam(\''+item.id+'\')':'')+'" style="display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid #2E2E2E;gap:8px;background:'+(sel?'rgba(57,233,121,0.06)':'transparent')+';opacity:'+(used?0.35:1)+';cursor:'+(canPick?'pointer':'default')+';">'+dot+teamLogoEl(t)+'<span style="flex:1;font-weight:600;font-size:14px;margin-left:4px;">'+t.name+'</span><span style="font-size:11px;color:#888;">'+item.time+'</span></div>';
     });
   });
-
   if(usedTeams.length>0){
     document.getElementById("used-teams-box").style.display="block";
     var uc=document.getElementById("used-teams-chips");uc.innerHTML="";
     usedTeams.forEach(function(tid){var t=getTeam(tid);uc.innerHTML+='<span style="background:#222;border:1px solid #2E2E2E;border-radius:99px;padding:4px 10px;font-size:12px;color:#888;display:inline-flex;align-items:center;gap:4px;">'+teamLogoEl(t)+' '+t.name+'</span>';});
   }
-
   var isHost=currentLobby.host===currentUser.uid;
   var hc=document.getElementById("host-controls");hc.innerHTML="";
-  if(!me||!me.alive){
-    hc.innerHTML='<div style="background:#0d0d1a;border:1.5px solid rgba(100,100,255,0.3);border-radius:12px;padding:16px;text-align:center;color:#8888ff;font-weight:700;">MODE SPECTATEUR</div>';
-    return;
-  }
+  if(!me||!me.alive){hc.innerHTML='<div style="background:#0d0d1a;border:1.5px solid rgba(100,100,255,0.3);border-radius:12px;padding:16px;text-align:center;color:#8888ff;font-weight:700;">MODE SPECTATEUR</div>';return;}
   if(isHost&&!closed){hc.innerHTML='<button class="btn btn-o" onclick="closeSelections()">FERMER LES SELECTIONS</button>';}
   else if(isHost&&closed){hc.innerHTML='<button class="btn btn-g" onclick="resolveRound()">OBTENIR LES RESULTATS</button>';}
 }
@@ -697,7 +664,6 @@ function applyResults(apiResults){
     if(!result){var r=Math.random();result=r<0.45?"win":r<0.7?"draw":"loss";}
     var survived=result==="win";
     var phrase=result==="win"?getPhrase(PHRASES_WIN):result==="draw"?getPhrase(PHRASES_DRAW):getPhrase(PHRASES_LOSS);
-    // Mettre a jour les stats du joueur
     var userIdx=users.findIndex(function(u){return u.uid===p.uid;});
     if(userIdx>=0){
       users[userIdx].totalGames=(users[userIdx].totalGames||0)+1;
@@ -712,15 +678,35 @@ function applyResults(apiResults){
     return Object.assign({},p,{result:result,alive:survived,phrase:phrase,usedTeams:survived?(p.usedTeams||[]).concat([p.pick]):p.usedTeams});
   });
   sSet("users",users);
-  // Mettre a jour currentUser
   var updatedUser=users.find(function(u){return u.uid===currentUser.uid;});
   if(updatedUser){currentUser=updatedUser;sSet("currentUser",updatedUser);}
 
   var alive=currentLobby.players.filter(function(p){return p.alive;});
-  currentLobby.status=alive.length<=1?"finished":"roundEnd";
-  if(alive.length===1){currentLobby.players=currentLobby.players.map(function(p){return p.alive?Object.assign({},p,{points:(p.points||0)+1}):p;});}
+
+  // ── CAS PERSONNE N'A SURVECU ──
+  if(alive.length===0){
+    currentLobby.status="nobody";
+    // Pas de point attribue
+    saveLobby();
+    renderNobody();
+    return;
+  }
+
+  // ── CAS 1 SURVIVANT ──
+  if(alive.length===1){
+    currentLobby.status="finished";
+    currentLobby.players=currentLobby.players.map(function(p){
+      return p.alive?Object.assign({},p,{points:(p.points||0)+1}):p;
+    });
+    saveLobby();
+    renderWinner();
+    return;
+  }
+
+  // ── CAS PLUSIEURS SURVIVANTS ──
+  currentLobby.status="roundEnd";
   saveLobby();
-  if(currentLobby.status==="finished")renderWinner();else renderResults();
+  renderResults();
 }
 
 function renderResults(){
@@ -741,8 +727,7 @@ function renderResults(){
 }
 
 function nextRound(){
-  currentLobby.round+=1;currentLobby.status="picking";currentLobby.deadline=Date.now()+3600000;
-  notifScheduled=false;
+  currentLobby.round+=1;currentLobby.status="picking";currentLobby.deadline=Date.now()+3600000;notifScheduled=false;
   currentLobby.players=currentLobby.players.map(function(p){return Object.assign({},p,{pick:null,result:null,phrase:null});});
   saveLobby();scheduleDeadlineNotif();renderPicking();
 }
@@ -752,13 +737,41 @@ function renderWinner(){
   var winner=currentLobby.players.find(function(p){return p.alive;})||currentLobby.players[0];
   document.getElementById("winner-name").textContent="🏆 "+(winner?winner.pseudo:"?")+" 🏆";
   document.getElementById("winner-phrase").textContent=getPhrase(PHRASES_WINNER);
-  document.getElementById("btn-replay").style.display=currentLobby.host===currentUser.uid?"block":"none";
+  document.getElementById("btn-replay-winner").style.display=currentLobby.host===currentUser.uid?"block":"none";
 }
 
+// ── NOUVEL ECRAN : PERSONNE N'A SURVECU ──────────────────────────────────────
+function renderNobody(){
+  showScreen("nobody");
+  var nr=document.getElementById("nobody-results");nr.innerHTML="";
+  currentLobby.players.forEach(function(p){
+    var t=getTeam(p.pick);
+    nr.innerHTML+='<div style="padding:12px 16px;border-bottom:1px solid #2E2E2E;"><div style="display:flex;align-items:center;gap:10px;"><div class="av">'+p.pseudo[0].toUpperCase()+'</div><div style="flex:1;"><div style="font-weight:600;">'+p.pseudo+'</div><div style="font-size:12px;color:#888;">'+(p.pick?t.name:"Pas de choix")+'</div></div><span class="badge-r">ELIMINE</span></div>'+(p.phrase?'<div class="phrase-loss">'+p.phrase+'</div>':'')+'</div>';
+  });
+  document.getElementById("btn-replay-nobody").style.display=currentLobby.host===currentUser.uid?"block":"none";
+}
+
+// ── REJOUER — SANS QUITTER LA LIGUE ──────────────────────────────────────────
 function replayGame(){
-  currentLobby.status="waiting";currentLobby.round=CURRENT_ROUND;currentLobby.history=[];notifScheduled=false;
-  currentLobby.players=currentLobby.players.map(function(p){return Object.assign({},p,{alive:true,pick:null,result:null,usedTeams:[],phrase:null});});
-  saveLobby();renderLobby();
+  // Remet tout le monde en vie, equipes utilisees a zero, points conserves
+  currentLobby.status="waiting";
+  currentLobby.round=CURRENT_ROUND;
+  currentLobby.history=[];
+  notifScheduled=false;
+  currentLobby.players=currentLobby.players.map(function(p){
+    return Object.assign({},p,{
+      alive:true,
+      isSpectator:false,
+      pick:null,
+      result:null,
+      usedTeams:[], // equipes remises a zero
+      phrase:null
+      // points conserves !
+    });
+  });
+  saveLobby();
+  // On reste dans la ligue, on va direct au lobby
+  navTo("accueil");
 }
 
 function renderResultats(){
@@ -794,25 +807,20 @@ function renderProfil(){
   var me=currentLobby.players.find(function(p){return p.uid===currentUser.uid;});
   var users=sGet("users")||[];
   var fullUser=users.find(function(u){return u.uid===currentUser.uid;})||currentUser;
-
   document.getElementById("profil-av").textContent=currentUser.pseudo[0].toUpperCase();
   document.getElementById("profil-name").textContent=currentUser.pseudo;
   document.getElementById("profil-email").textContent=currentUser.email;
-
-  // Stats
   var totalGames=fullUser.totalGames||0;
   var totalWins=fullUser.totalWins||0;
   var winRate=totalGames>0?Math.round((totalWins/totalGames)*100):0;
   var bestStreak=fullUser.bestStreak||0;
   var currentStreak=fullUser.currentStreak||0;
   var points=me?me.points||0:0;
-
   document.getElementById("stats-grid").innerHTML=
     '<div class="stat-card"><div class="stat-num">'+points+'</div><div class="stat-label">Points totaux</div></div>'+
     '<div class="stat-card"><div class="stat-num">'+winRate+'%</div><div class="stat-label">Taux de survie</div></div>'+
     '<div class="stat-card"><div class="stat-num">'+bestStreak+'</div><div class="stat-label">Meilleure serie</div></div>'+
     '<div class="stat-card"><div class="stat-num">'+currentStreak+'</div><div class="stat-label">Serie en cours</div></div>';
-
   document.getElementById("profil-details").innerHTML=
     '<div class="row"><span style="flex:1;font-weight:600;">Parties jouees</span><span style="color:#888;">'+totalGames+'</span></div>'+
     '<div class="row"><span style="flex:1;font-weight:600;">Victoires</span><span style="color:#39E979;font-weight:700;">'+totalWins+'</span></div>'+
