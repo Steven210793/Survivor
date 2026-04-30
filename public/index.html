@@ -47,11 +47,16 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#39E979;color:#000;font-weight:700;padding:10px 22px;border-radius:99px;font-size:14px;z-index:999;display:none;white-space:nowrap;}
 .winner-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;gap:16px;}
 .sec-label{font-size:11px;color:#888;font-weight:700;letter-spacing:1.5px;margin-bottom:8px;text-transform:uppercase;}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.open{display:flex;}
+.modal{background:#1A1A1A;border:1px solid #2E2E2E;border-radius:16px;padding:24px;width:100%;max-width:350px;}
+.modal h3{font-size:18px;font-weight:700;margin-bottom:16px;}
 </style>
 </head>
 <body>
-<div class="app" id="app">
+<div class="app">
 
+<!-- AUTH -->
 <div class="screen active" id="screen-auth">
   <div class="hero">
     <div class="ball">⚽</div>
@@ -73,6 +78,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
   </div>
 </div>
 
+<!-- HOME -->
 <div class="screen" id="screen-home">
   <div class="hero">
     <div class="ball">⚽</div>
@@ -82,17 +88,21 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
   <div class="sec">
     <button class="btn btn-g" onclick="createLobby()">⊕ CRÉER UNE LIGUE</button>
     <p style="text-align:center;font-size:12px;color:#888;margin-bottom:8px;">Entrer un code</p>
-    <input type="text" id="join-code" placeholder="X X X X X X" maxlength="6" oninput="this.value=this.value.toUpperCase();document.getElementById('btn-join').disabled=this.value.length<5;" style="text-align:center;font-size:24px;letter-spacing:8px;color:#39E979;"/>
+    <input type="text" id="join-code" placeholder="X X X X X X" maxlength="6"
+      oninput="this.value=this.value.toUpperCase();document.getElementById('btn-join').disabled=this.value.length<5;"
+      style="text-align:center;font-size:24px;letter-spacing:8px;color:#39E979;"/>
     <div class="err" id="join-err" style="display:none"></div>
     <button class="btn btn-g" onclick="joinLobby()" id="btn-join" disabled>REJOINDRE</button>
     <button class="btn btn-o" onclick="logout()">⏻ Déconnexion</button>
   </div>
 </div>
 
+<!-- LOBBY -->
 <div class="screen" id="screen-lobby">
   <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;">
     <button onclick="leaveLobby()" style="background:none;border:none;color:#F2F2F2;font-size:22px;cursor:pointer;margin-right:8px;">←</button>
-    <div style="flex:1;text-align:center;font-weight:700;" id="lobby-name">Ma ligue</div>
+    <div style="flex:1;text-align:center;font-weight:700;" id="lobby-name-display">Ma ligue</div>
+    <button id="edit-name-btn" onclick="openRename()" style="background:none;border:none;font-size:18px;cursor:pointer;display:none;">✏️</button>
   </div>
   <div style="padding:18px;flex:1;overflow-y:auto;">
     <p class="sec-label">CODE DE LA LIGUE</p>
@@ -104,20 +114,21 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
     <div class="card" id="lobby-players"></div>
     <div style="margin-top:12px;">
       <button class="btn btn-g" onclick="startGame()" id="btn-start" style="display:none;">LANCER LA PARTIE</button>
-      <p style="text-align:center;color:#888;font-size:14px;" id="wait-host" style="display:none;">En attente que l'admin lance...</p>
+      <p style="text-align:center;color:#888;font-size:14px;" id="wait-host">En attente que l'admin lance...</p>
     </div>
   </div>
 </div>
 
+<!-- PICKING -->
 <div class="screen" id="screen-picking">
   <div style="text-align:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;">
-    <div style="font-weight:700;" id="pick-round">Journée 12</div>
-    <div style="font-size:11px;color:#888;">Ligue 1</div>
+    <div style="font-weight:700;" id="pick-round">Journée 34</div>
+    <div style="font-size:11px;color:#888;">Ligue 1 McDonald's</div>
   </div>
   <div style="padding:18px;flex:1;overflow-y:auto;">
     <div class="timer-box">
       <div class="timer-lbl">⏱ DEADLINE</div>
-      <div class="timer-val" id="timer">02:14:32</div>
+      <div class="timer-val" id="timer">00:00:00</div>
       <div class="timer-sub">avant le premier match (15:00)</div>
     </div>
     <div id="my-pick-box" style="display:none;background:rgba(57,233,121,0.08);border:1px solid rgba(57,233,121,0.3);border-radius:12px;padding:12px;align-items:center;gap:10px;margin-bottom:10px;">
@@ -137,6 +148,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
   </div>
 </div>
 
+<!-- RESULTS -->
 <div class="screen" id="screen-results">
   <div style="text-align:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;font-weight:700;font-size:18px;" id="results-title">Résultats</div>
   <div style="padding:18px;flex:1;overflow-y:auto;">
@@ -147,6 +159,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
   </div>
 </div>
 
+<!-- WINNER -->
 <div class="screen" id="screen-winner">
   <div class="winner-screen">
     <div style="font-size:80px;">🏆</div>
@@ -161,11 +174,13 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
   </div>
 </div>
 
+<!-- RESULTATS TAB -->
 <div class="screen" id="screen-resultats">
   <div style="padding:14px 18px;border-bottom:1px solid #2E2E2E;font-weight:700;font-size:18px;">État de la partie</div>
   <div style="padding:18px;flex:1;overflow-y:auto;" id="resultats-content"></div>
 </div>
 
+<!-- CLASSEMENT TAB -->
 <div class="screen" id="screen-classement">
   <div style="padding:14px 18px;border-bottom:1px solid #2E2E2E;">
     <div style="font-weight:700;font-size:18px;">Classement général</div>
@@ -176,6 +191,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
   </div>
 </div>
 
+<!-- PROFIL TAB -->
 <div class="screen" id="screen-profil">
   <div style="padding:18px;flex:1;overflow-y:auto;">
     <div style="text-align:center;padding:20px 0;">
@@ -191,6 +207,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
   </div>
 </div>
 
+<!-- BOTTOM NAV -->
 <nav class="nav" id="bottom-nav" style="display:none;">
   <button class="active" onclick="navTo('accueil')" id="nav-accueil"><span>🏠</span>Accueil</button>
   <button onclick="navTo('resultats')" id="nav-resultats"><span>📋</span>Résultats</button>
@@ -198,13 +215,52 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
   <button onclick="navTo('profil')" id="nav-profil"><span>👤</span>Profil</button>
 </nav>
 
-<div class="toast" id="toast"></div>
+<!-- MODAL RENAME -->
+<div class="modal-bg" id="modal-rename">
+  <div class="modal">
+    <h3>✏️ Renommer la ligue</h3>
+    <input type="text" id="new-name-input" placeholder="Nom de la ligue" maxlength="30"/>
+    <button class="btn btn-g" onclick="saveName()">SAUVEGARDER</button>
+    <button class="btn btn-o" onclick="closeRename()">Annuler</button>
+  </div>
 </div>
 
-<script>
-var TEAMS=[{id:"psg",name:"PSG",logo:"🔵"},{id:"om",name:"Marseille",logo:"🔵"},{id:"mon",name:"Monaco",logo:"🔴"},{id:"lil",name:"Lille",logo:"🔴"},{id:"nic",name:"Nice",logo:"🔴"},{id:"oly",name:"Lyon",logo:"🔵"},{id:"ren",name:"Rennes",logo:"🔴"},{id:"len",name:"Lens",logo:"🟡"},{id:"str",name:"Strasbourg",logo:"🔵"},{id:"nan",name:"Nantes",logo:"🟡"}];
-var FIXTURES=[{home:"psg",away:"nan",day:"Sam. 15:00"},{home:"om",away:"ren",day:"Sam. 17:00"},{home:"mon",away:"lil",day:"Sam. 19:00"},{home:"nic",away:"str",day:"Dim. 13:00"},{home:"oly",away:"len",day:"Dim. 15:00"}];
+<div class="toast" id="toast"></div>
 
+<script>
+var TEAMS=[
+  {id:"psg",name:"PSG",logo:"🔵"},
+  {id:"lor",name:"Lorient",logo:"🟠"},
+  {id:"mtz",name:"Metz",logo:"🟣"},
+  {id:"mon",name:"Monaco",logo:"🔴"},
+  {id:"nic",name:"Nice",logo:"🔴"},
+  {id:"len",name:"Lens",logo:"🟡"},
+  {id:"lil",name:"Lille",logo:"🔴"},
+  {id:"hac",name:"Le Havre",logo:"🔵"},
+  {id:"str",name:"Strasbourg",logo:"🔵"},
+  {id:"tls",name:"Toulouse",logo:"🟣"},
+  {id:"aux",name:"Auxerre",logo:"🟡"},
+  {id:"ang",name:"Angers",logo:"⚫"},
+  {id:"oly",name:"Lyon",logo:"🔵"},
+  {id:"ren",name:"Rennes",logo:"🔴"},
+  {id:"nan",name:"Nantes",logo:"🟡"},
+  {id:"om",name:"Marseille",logo:"🔵"},
+  {id:"pfc",name:"Paris FC",logo:"🔵"},
+  {id:"bst",name:"Brest",logo:"🔴"},
+];
+
+var FIXTURES=[
+  {home:"nan",away:"om", day:"Sam. 15:00"},
+  {home:"psg",away:"lor",day:"Sam. 17:00"},
+  {home:"mtz",away:"mon",day:"Sam. 19:00"},
+  {home:"nic",away:"len",day:"Sam. 21:05"},
+  {home:"lil",away:"hac",day:"Dim. 15:00"},
+  {home:"str",away:"tls",day:"Dim. 17:15"},
+  {home:"aux",away:"ang",day:"Dim. 17:15"},
+  {home:"oly",away:"ren",day:"Dim. 20:45"},
+];
+
+var CURRENT_ROUND=34;
 var currentUser=null;
 var currentLobby=null;
 var authMode="login";
@@ -229,11 +285,11 @@ function showScreen(id){
 
 function setMode(mode){
   authMode=mode;
-  var isSignup=(mode==="signup");
-  document.getElementById("signup-field").style.display=isSignup?"block":"none";
-  document.getElementById("btn-login").className=isSignup?"tab-inactive":"tab-active";
-  document.getElementById("btn-signup").className=isSignup?"tab-active":"tab-inactive";
-  document.getElementById("auth-btn").textContent=isSignup?"CRÉER MON COMPTE":"SE CONNECTER";
+  var isSig=(mode==="signup");
+  document.getElementById("signup-field").style.display=isSig?"block":"none";
+  document.getElementById("btn-login").className=isSig?"tab-inactive":"tab-active";
+  document.getElementById("btn-signup").className=isSig?"tab-active":"tab-inactive";
+  document.getElementById("auth-btn").textContent=isSig?"CREER MON COMPTE":"SE CONNECTER";
   document.getElementById("auth-err").style.display="none";
 }
 
@@ -247,37 +303,30 @@ function doAuth(){
   if(authMode==="signup"){
     var pseudo=document.getElementById("auth-pseudo").value.trim();
     if(!pseudo){errEl.textContent="Choisis un pseudo.";errEl.style.display="block";return;}
-    if(users.find(function(u){return u.email===email;})){errEl.textContent="Email déjà utilisé.";errEl.style.display="block";return;}
+    if(users.find(function(u){return u.email===email;})){errEl.textContent="Email deja utilise.";errEl.style.display="block";return;}
     var nu={uid:genCode(),pseudo:pseudo,email:email,pwd:pwd,points:0};
     sSet("users",users.concat([nu]));
-    currentUser=nu;sSet("currentUser",nu);
-    goHome();
+    currentUser=nu;sSet("currentUser",nu);goHome();
   } else {
     var found=users.find(function(u){return u.email===email&&u.pwd===pwd;});
     if(!found){errEl.textContent="Email ou mot de passe incorrect.";errEl.style.display="block";return;}
-    currentUser=found;sSet("currentUser",found);
-    goHome();
+    currentUser=found;sSet("currentUser",found);goHome();
   }
 }
 
-function goHome(){
-  showScreen("home");
-  document.getElementById("bottom-nav").style.display="none";
-}
+function goHome(){showScreen("home");document.getElementById("bottom-nav").style.display="none";}
 
 function logout(){
   currentUser=null;currentLobby=null;
   sSet("currentUser",null);sSet("currentLobby",null);
-  showScreen("auth");
-  document.getElementById("bottom-nav").style.display="none";
+  showScreen("auth");document.getElementById("bottom-nav").style.display="none";
 }
 
 function createLobby(){
   var c=genCode();
-  var lobby={code:c,name:"Ligue de "+currentUser.pseudo,host:currentUser.uid,status:"waiting",round:12,deadline:Date.now()+7632000,players:[{uid:currentUser.uid,pseudo:currentUser.pseudo,alive:true,pick:null,result:null,usedTeams:[],points:0}],history:[]};
+  var lobby={code:c,name:"Ligue de "+currentUser.pseudo,host:currentUser.uid,status:"waiting",round:CURRENT_ROUND,deadline:new Date("2026-05-02T13:00:00").getTime(),players:[{uid:currentUser.uid,pseudo:currentUser.pseudo,alive:true,pick:null,result:null,usedTeams:[],points:0}],history:[]};
   var all=sGet("lobbies")||{};all[c]=lobby;sSet("lobbies",all);
-  currentLobby=lobby;sSet("currentLobby",lobby);
-  openLobby();
+  currentLobby=lobby;sSet("currentLobby",lobby);openLobby();
 }
 
 function joinLobby(){
@@ -291,25 +340,24 @@ function joinLobby(){
     lob.players.push({uid:currentUser.uid,pseudo:currentUser.pseudo,alive:true,pick:null,result:null,usedTeams:[],points:0});
     all[c]=lob;sSet("lobbies",all);
   }
-  currentLobby=lob;sSet("currentLobby",lob);
-  openLobby();
+  currentLobby=lob;sSet("currentLobby",lob);openLobby();
 }
 
-function openLobby(){
-  document.getElementById("bottom-nav").style.display="flex";
-  navTo("accueil");
-}
+function openLobby(){document.getElementById("bottom-nav").style.display="flex";navTo("accueil");}
+function leaveLobby(){currentLobby=null;sSet("currentLobby",null);document.getElementById("bottom-nav").style.display="none";showScreen("home");}
+function saveLobby(){var all=sGet("lobbies")||{};all[currentLobby.code]=currentLobby;sSet("lobbies",all);sSet("currentLobby",currentLobby);}
 
-function leaveLobby(){
-  currentLobby=null;sSet("currentLobby",null);
-  document.getElementById("bottom-nav").style.display="none";
-  showScreen("home");
+function openRename(){
+  document.getElementById("new-name-input").value=currentLobby.name;
+  document.getElementById("modal-rename").classList.add("open");
 }
-
-function saveLobby(){
-  var all=sGet("lobbies")||{};
-  all[currentLobby.code]=currentLobby;
-  sSet("lobbies",all);sSet("currentLobby",currentLobby);
+function closeRename(){document.getElementById("modal-rename").classList.remove("open");}
+function saveName(){
+  var n=document.getElementById("new-name-input").value.trim();
+  if(!n){showToast("Le nom ne peut pas etre vide !");return;}
+  currentLobby.name=n;saveLobby();
+  document.getElementById("lobby-name-display").textContent=n;
+  closeRename();showToast("Nom mis a jour !");
 }
 
 function navTo(tab){
@@ -331,32 +379,30 @@ function renderAccueil(){
 
 function renderLobby(){
   showScreen("lobby");
-  document.getElementById("lobby-name").textContent=currentLobby.name;
+  var isHost=currentLobby.host===currentUser.uid;
+  document.getElementById("lobby-name-display").textContent=currentLobby.name;
   document.getElementById("lobby-code").textContent=currentLobby.code;
+  document.getElementById("edit-name-btn").style.display=isHost?"block":"none";
   var el=document.getElementById("lobby-players");
   el.innerHTML="";
   currentLobby.players.forEach(function(p){
-    el.innerHTML+='<div class="row"><div class="av">'+p.pseudo[0].toUpperCase()+'</div><span style="flex:1;font-weight:600;">'+p.pseudo+(p.uid===currentLobby.host?' <span style="font-size:11px;color:#888;">Admin</span>':'')+'</span><span style="color:#39E979;font-weight:700;">'+p.points+' pts</span><span class="badge-g" style="margin-left:4px;">Prêt</span></div>';
+    el.innerHTML+='<div class="row"><div class="av">'+p.pseudo[0].toUpperCase()+'</div><span style="flex:1;font-weight:600;">'+p.pseudo+(p.uid===currentLobby.host?' <span style="font-size:11px;color:#888;">Admin</span>':'')+'</span><span style="color:#39E979;font-weight:700;">'+p.points+' pts</span><span class="badge-g" style="margin-left:4px;">Pret</span></div>';
   });
-  var isHost=currentLobby.host===currentUser.uid;
   document.getElementById("btn-start").style.display=isHost?"block":"none";
   document.getElementById("wait-host").style.display=isHost?"none":"block";
 }
 
-function copyCode(){
-  if(navigator.clipboard)navigator.clipboard.writeText(currentLobby.code);
-  showToast("Code copié !");
-}
+function copyCode(){if(navigator.clipboard)navigator.clipboard.writeText(currentLobby.code);showToast("Code copie !");}
 
 function startGame(){
   currentLobby.status="picking";
-  currentLobby.deadline=Date.now()+7632000;
+  currentLobby.deadline=new Date("2026-05-02T13:00:00").getTime();
   saveLobby();renderPicking();
 }
 
 function renderPicking(){
   showScreen("picking");
-  document.getElementById("pick-round").textContent="Journée "+currentLobby.round;
+  document.getElementById("pick-round").textContent="Journee "+currentLobby.round;
   var me=currentLobby.players.find(function(p){return p.uid===currentUser.uid;});
   var myPick=me?me.pick:null;
   var usedTeams=me?(me.usedTeams||[]):[];
@@ -372,9 +418,7 @@ function renderPicking(){
     document.getElementById("my-pick-logo").textContent=t.logo;
     document.getElementById("my-pick-name").textContent=t.name;
     pickBox.style.display="flex";
-  } else {
-    pickBox.style.display="none";
-  }
+  } else {pickBox.style.display="none";}
   var fl=document.getElementById("fixtures-list");
   fl.innerHTML="";
   FIXTURES.forEach(function(fix){
@@ -383,36 +427,26 @@ function renderPicking(){
       var sel=myPick===item.id;
       var used=usedTeams.indexOf(item.id)>=0;
       var canPick=me&&me.alive&&!myPick&&!used&&currentLobby.status!=="closed";
-      var dot=sel?'<div style="width:22px;height:22px;border-radius:50%;background:#39E979;display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;font-weight:700;flex-shrink:0;">✓</div>':used?'<div style="width:22px;height:22px;border-radius:50%;background:#FF4444;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex-shrink:0;">✗</div>':'<div style="width:22px;height:22px;border-radius:50%;border:2px solid #2E2E2E;flex-shrink:0;"></div>';
+      var dot=sel?'<div style="width:22px;height:22px;border-radius:50%;background:#39E979;display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;font-weight:700;flex-shrink:0;">V</div>':used?'<div style="width:22px;height:22px;border-radius:50%;background:#FF4444;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex-shrink:0;">X</div>':'<div style="width:22px;height:22px;border-radius:50%;border:2px solid #2E2E2E;flex-shrink:0;"></div>';
       fl.innerHTML+='<div onclick="'+(canPick?'pickTeam(\''+item.id+'\')':'')+'" style="display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid #2E2E2E;gap:8px;background:'+(sel?'rgba(57,233,121,0.06)':'transparent')+';opacity:'+(used?0.35:1)+';cursor:'+(canPick?'pointer':'default')+';">'+dot+'<span style="font-size:18px;">'+t.logo+'</span><span style="flex:1;font-weight:600;font-size:14px;">'+t.name+'</span><span style="font-size:11px;color:#888;">'+item.time+'</span></div>';
     });
   });
   if(usedTeams.length>0){
-    var ub=document.getElementById("used-teams-box");
-    ub.style.display="block";
-    var uc=document.getElementById("used-teams-chips");
-    uc.innerHTML="";
-    usedTeams.forEach(function(tid){
-      var t=getTeam(tid);
-      uc.innerHTML+='<span style="background:#222;border:1px solid #2E2E2E;border-radius:99px;padding:4px 10px;font-size:12px;color:#888;">'+t.logo+' '+t.name+'</span>';
-    });
+    document.getElementById("used-teams-box").style.display="block";
+    var uc=document.getElementById("used-teams-chips");uc.innerHTML="";
+    usedTeams.forEach(function(tid){var t=getTeam(tid);uc.innerHTML+='<span style="background:#222;border:1px solid #2E2E2E;border-radius:99px;padding:4px 10px;font-size:12px;color:#888;">'+t.logo+' '+t.name+'</span>';});
   }
   var isHost=currentLobby.host===currentUser.uid;
-  var hc=document.getElementById("host-controls");
-  hc.innerHTML="";
-  if(isHost&&currentLobby.status!=="closed"){
-    hc.innerHTML='<button class="btn btn-o" onclick="closeSelections()">🔒 FERMER LES SÉLECTIONS</button>';
-  } else if(isHost&&currentLobby.status==="closed"){
-    hc.innerHTML='<button class="btn btn-g" onclick="resolveRound()">🏁 OBTENIR LES RÉSULTATS</button>';
-  }
+  var hc=document.getElementById("host-controls");hc.innerHTML="";
+  if(!me||!me.alive){hc.innerHTML='<div style="background:#0d0d1a;border:1.5px solid rgba(100,100,255,0.3);border-radius:12px;padding:16px;text-align:center;color:#8888ff;font-weight:700;">MODE SPECTATEUR - Tu peux suivre la partie !</div>';return;}
+  if(isHost&&currentLobby.status!=="closed"){hc.innerHTML='<button class="btn btn-o" onclick="closeSelections()">FERMER LES SELECTIONS</button>';}
+  else if(isHost&&currentLobby.status==="closed"){hc.innerHTML='<button class="btn btn-g" onclick="resolveRound()">OBTENIR LES RESULTATS</button>';}
 }
 
 function pickTeam(id){
   var me=currentLobby.players.find(function(p){return p.uid===currentUser.uid;});
   if(!me||!me.alive||me.pick||currentLobby.status==="closed")return;
-  me.pick=id;saveLobby();
-  showToast(getTeam(id).name+" sélectionné ✓");
-  renderPicking();
+  me.pick=id;saveLobby();showToast(getTeam(id).name+" selectionne !");renderPicking();
 }
 
 function closeSelections(){currentLobby.status="closed";saveLobby();renderPicking();}
@@ -428,27 +462,21 @@ function resolveRound(){
   });
   var alive=currentLobby.players.filter(function(p){return p.alive;});
   currentLobby.status=alive.length<=1?"finished":"roundEnd";
-  if(alive.length===1){
-    currentLobby.players=currentLobby.players.map(function(p){
-      return p.alive?Object.assign({},p,{points:(p.points||0)+1}):p;
-    });
-  }
+  if(alive.length===1){currentLobby.players=currentLobby.players.map(function(p){return p.alive?Object.assign({},p,{points:(p.points||0)+1}):p;});}
   saveLobby();
-  if(currentLobby.status==="finished")renderWinner();
-  else renderResults();
+  if(currentLobby.status==="finished")renderWinner();else renderResults();
 }
 
 function renderResults(){
   showScreen("results");
-  document.getElementById("results-title").textContent="Résultats — Journée "+currentLobby.round;
-  var rl=document.getElementById("results-list");
-  rl.innerHTML="";
+  document.getElementById("results-title").textContent="Resultats - Journee "+currentLobby.round;
+  var rl=document.getElementById("results-list");rl.innerHTML="";
   currentLobby.players.forEach(function(p){
     var t=getTeam(p.pick);
-    rl.innerHTML+='<div class="row"><div class="av">'+p.pseudo[0].toUpperCase()+'</div><div style="flex:1;"><div style="font-weight:600;">'+p.pseudo+'</div><div style="font-size:12px;color:#888;">'+(p.pick?t.logo+" "+t.name:"Pas de choix")+'</div></div><span class="'+(p.result==="win"?"badge-g":"badge-r")+'">'+(p.result==="win"?"✓ GAGNÉ":"✗ ÉLIMINÉ")+'</span></div>';
+    rl.innerHTML+='<div class="row"><div class="av">'+p.pseudo[0].toUpperCase()+'</div><div style="flex:1;"><div style="font-weight:600;">'+p.pseudo+'</div><div style="font-size:12px;color:#888;">'+(p.pick?t.logo+" "+t.name:"Pas de choix")+'</div></div><span class="'+(p.result==="win"?"badge-g":"badge-r")+'">'+(p.result==="win"?"GAGNE":"ELIMINE")+'</span></div>';
   });
   var alive=currentLobby.players.filter(function(p){return p.alive;});
-  document.getElementById("alive-count").textContent="💪 "+alive.length+" joueur"+(alive.length>1?"s":"")+" encore en lice !";
+  document.getElementById("alive-count").textContent=alive.length+" joueur"+(alive.length>1?"s":"")+" encore en lice !";
   var isHost=currentLobby.host===currentUser.uid;
   document.getElementById("btn-next-round").style.display=isHost?"block":"none";
   document.getElementById("wait-next").textContent=isHost?"":"En attente de l'admin...";
@@ -463,12 +491,12 @@ function nextRound(){
 function renderWinner(){
   showScreen("winner");
   var winner=currentLobby.players.find(function(p){return p.alive;})||currentLobby.players[0];
-  document.getElementById("winner-name").textContent="🏆 "+(winner?winner.pseudo:"?")+" 🏆";
+  document.getElementById("winner-name").textContent="Gagnant : "+(winner?winner.pseudo:"?");
   document.getElementById("btn-replay").style.display=currentLobby.host===currentUser.uid?"block":"none";
 }
 
 function replayGame(){
-  currentLobby.status="waiting";currentLobby.round=12;currentLobby.history=[];
+  currentLobby.status="waiting";currentLobby.round=CURRENT_ROUND;currentLobby.history=[];
   currentLobby.players=currentLobby.players.map(function(p){return Object.assign({},p,{alive:true,pick:null,result:null,usedTeams:[]});});
   saveLobby();renderLobby();
 }
@@ -480,22 +508,21 @@ function renderResultats(){
   var html="";
   if(alive.length>0){
     html+='<p class="sec-label" style="color:#39E979;">SURVIVANTS ('+alive.length+')</p><div class="card" style="margin-bottom:16px;">';
-    alive.forEach(function(p){html+='<div class="row"><div style="width:8px;height:8px;border-radius:50%;background:#39E979;"></div><div class="av">'+p.pseudo[0].toUpperCase()+'</div><span style="flex:1;font-weight:600;">'+p.pseudo+'</span></div>';});
+    alive.forEach(function(p){html+='<div class="row"><div style="width:8px;height:8px;border-radius:50%;background:#39E979;flex-shrink:0;"></div><div class="av">'+p.pseudo[0].toUpperCase()+'</div><span style="flex:1;font-weight:600;">'+p.pseudo+'</span></div>';});
     html+='</div>';
   }
   if(elim.length>0){
-    html+='<p class="sec-label">ÉLIMINÉS ('+elim.length+')</p><div class="card">';
-    elim.forEach(function(p){html+='<div class="row" style="opacity:0.55;"><div class="av">'+p.pseudo[0].toUpperCase()+'</div><span style="flex:1;font-weight:600;">'+p.pseudo+'</span><span class="badge-r">Éliminé</span></div>';});
+    html+='<p class="sec-label">ELIMINES ('+elim.length+')</p><div class="card">';
+    elim.forEach(function(p){html+='<div class="row" style="opacity:0.55;"><div class="av">'+p.pseudo[0].toUpperCase()+'</div><span style="flex:1;font-weight:600;">'+p.pseudo+'</span><span class="badge-r">Elimine</span></div>';});
     html+='</div>';
   }
-  document.getElementById("resultats-content").innerHTML=html;
+  document.getElementById("resultats-content").innerHTML=html||'<p style="color:#888;text-align:center;">Aucun joueur.</p>';
 }
 
 function renderClassement(){
   showScreen("classement");
   var sorted=currentLobby.players.slice().sort(function(a,b){return(b.points||0)-(a.points||0);});
-  var cl=document.getElementById("classement-list");
-  cl.innerHTML="";
+  var cl=document.getElementById("classement-list");cl.innerHTML="";
   sorted.forEach(function(p,i){
     var color=i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":"#888";
     cl.innerHTML+='<div class="row"><span style="font-size:18px;font-weight:900;width:28px;text-align:center;color:'+color+';">'+(i+1)+'</span><div class="av">'+p.pseudo[0].toUpperCase()+'</div><span style="flex:1;font-weight:600;">'+p.pseudo+'</span><span style="color:#39E979;font-weight:700;">'+(p.points||0)+' pts</span>'+(i===0?'<span>👑</span>':'')+'</div>';
@@ -509,26 +536,17 @@ function renderProfil(){
   document.getElementById("profil-name").textContent=currentUser.pseudo;
   document.getElementById("profil-email").textContent=currentUser.email;
   document.getElementById("profil-pts").textContent=(me?me.points||0:0)+" pts";
-  var statusEl=document.getElementById("profil-status");
-  statusEl.textContent=me&&me.alive?"En vie":"Éliminé";
-  statusEl.className=me&&me.alive?"badge-g":"badge-r";
+  var st=document.getElementById("profil-status");
+  st.textContent=me&&me.alive?"En vie":"Elimine";
+  st.className=me&&me.alive?"badge-g":"badge-r";
 }
 
 window.onload=function(){
-  var savedUser=sGet("currentUser");
-  var savedLobby=sGet("currentLobby");
-  if(savedUser){
-    currentUser=savedUser;
-    if(savedLobby){
-      currentLobby=savedLobby;
-      openLobby();
-    } else {
-      goHome();
-    }
-  } else {
-    showScreen("auth");
-  }
+  var su=sGet("currentUser");var sl=sGet("currentLobby");
+  if(su){currentUser=su;if(sl){currentLobby=sl;openLobby();}else{goHome();}}
+  else{showScreen("auth");}
 };
 </script>
+</div>
 </body>
 </html>
