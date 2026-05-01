@@ -154,6 +154,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 <div class="screen" id="screen-picking">
   <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;flex-shrink:0;">
     <div style="flex:1;text-align:center;font-weight:700;" id="pick-round">Journee 34</div>
+    <button onclick="requestNotifPermission()" style="background:none;border:none;color:#FFD000;font-size:20px;cursor:pointer;" title="Activer les rappels">🔔</button>
     <button onclick="shareLigue()" style="background:none;border:none;color:#4A90E2;font-size:20px;cursor:pointer;">📤</button>
   </div>
   <div style="padding:18px;flex:1;overflow-y:auto;padding-bottom:80px;">
@@ -563,7 +564,10 @@ function renderLobby(){
   document.getElementById("wait-host").style.display=isHost?"none":"block";
 }
 
-window.startGame=async function(){await saveFs({status:"picking",deadline:new Date("2026-05-09T13:00:00").getTime()});};
+window.startGame=async function(){
+  await saveFs({status:"picking",deadline:new Date("2026-05-02T15:00:00").getTime()});
+  scheduleNotif();
+};
 
 // ── PICKING SCREEN ────────────────────────────────────────────────────────────
 function renderPicking(){
@@ -836,8 +840,43 @@ async function renderProfil(){
 
 window.requestNotifPermission=function(){
   if(!("Notification" in window))return showToast("Notifications non supportees");
-  Notification.requestPermission().then(p=>showToast(p==="granted"?"Notifications activees !":"Notifications refusees"));
+  Notification.requestPermission().then(p=>{
+    if(p==="granted"){showToast("Notifications activees !");scheduleNotif();}
+    else showToast("Notifications refusees");
+  });
 };
+
+function scheduleNotif(){
+  if(!currentLobby||Notification.permission!=="granted")return;
+  const deadline=currentLobby.deadline;
+  const now=Date.now();
+
+  // Notif 30 min avant pour TOUS les joueurs
+  const notif30=deadline-(30*60*1000);
+  if(notif30>now){
+    setTimeout(()=>{
+      new Notification("⚽ Survivor - T'as choisi ton equipe ?",{
+        body:"Le premier match commence dans 30 minutes ! Fonce valider ton choix.",
+        icon:"https://i.imgur.com/HSHTdzU.png"
+      });
+    },notif30-now);
+  }
+
+  // Notif 9 min avant UNIQUEMENT pour l'admin
+  if(currentUser&&currentUser.email===ADMIN_EMAIL){
+    const notif9=deadline-(9*60*1000);
+    if(notif9>now){
+      setTimeout(()=>{
+        new Notification("🔒 Survivor ADMIN - Ferme les selections !",{
+          body:"Le premier match commence dans 9 minutes ! Va fermer les selections.",
+          icon:"https://i.imgur.com/HSHTdzU.png"
+        });
+      },notif9-now);
+    }
+  }
+
+  showToast("Rappels programmes !");
+}
 
 </script>
 </div>
