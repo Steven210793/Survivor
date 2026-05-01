@@ -171,13 +171,11 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 
     <!-- Selection en cours (avant validation) -->
     <div id="pending-pick-box" style="display:none;background:rgba(255,208,0,0.06);border:1.5px solid rgba(255,208,0,0.4);border-radius:12px;padding:14px 16px;margin-bottom:12px;">
-      <div style="font-size:11px;color:#FFD000;font-weight:700;letter-spacing:1px;margin-bottom:8px;">EQUIPE SELECTIONNEE</div>
+      <div style="font-size:11px;color:#FFD000;font-weight:700;letter-spacing:1px;margin-bottom:8px;">EQUIPE SELECTIONNEE — Clique sur une autre pour changer</div>
       <div style="display:flex;align-items:center;gap:10px;">
         <span id="pending-pick-logo"></span>
-        <span style="font-weight:700;flex:1;" id="pending-pick-name"></span>
-        <button onclick="cancelPick()" style="background:rgba(255,68,68,0.15);border:1px solid rgba(255,68,68,0.4);color:#FF4444;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;">Changer</button>
+        <span style="font-weight:700;flex:1;font-size:18px;" id="pending-pick-name"></span>
       </div>
-      <button class="btn btn-g" onclick="confirmPick()" style="margin-top:10px;margin-bottom:0;">VALIDER MON CHOIX ✓</button>
     </div>
 
     <!-- Selection validee -->
@@ -193,12 +191,16 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
       <p class="sec-label">EQUIPES DEJA UTILISEES</p>
       <div id="used-teams-chips" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
+    <!-- Barre fixe en bas pour valider -->
+    <div id="validate-bar" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:calc(min(390px,100%) - 36px);z-index:100;">
+      <button class="btn btn-g" onclick="confirmPick()" style="margin:0;box-shadow:0 4px 20px rgba(57,233,121,0.4);">VALIDER MON CHOIX ✓</button>
+    </div>
     <div style="margin-top:12px;" id="host-controls"></div>
+    <div style="height:70px;"></div>
   </div>
 </div>
 
 <!-- RESULTS -->
-<div class="screen" id="screen-results">
   <div style="text-align:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;font-weight:700;font-size:18px;" id="results-title">Resultats</div>
   <div style="padding:18px;flex:1;overflow-y:auto;">
     <div class="card" id="results-list"></div>
@@ -324,11 +326,46 @@ const RAPIDAPI_KEY = "39c5cc9625mshc2f52e154b3255fp11e5b9jsn0f4c49435a11";
 const APP_URL = "https://survivor-chi-ecru.vercel.app";
 const CURRENT_ROUND = 34;
 
-const PHRASES_WIN = ["Sang froid ! Tu passes a la journee suivante 🧊","Le beast ! Ton equipe a assure 💪","Solide ! Tu survis encore une semaine ⚽","On te voit venir champion... 👀","Tu as du nez, bien joue ! 🎯","Encore en vie ! Les autres tremblent 😤"];
-const PHRASES_LOSS = ["C'est termine pour toi... Rentre chez toi 😂","Meme mon chat aurait fait un meilleur choix 🐱","Tu peux aller regarder Netflix maintenant 📺","GG l'ami, la prochaine fois choisis mieux 💀","Elimine ! Bon au moins t'as essaye... 😬","T'aurais du choisir pile ou face 🪙","La honte... Vraiment la honte 🫣","On aurait pu te prevenir mais c'etait trop drole 😏"];
-const PHRASES_DRAW = ["Un nul ?! Vraiment ?! T'as choisi la mauvaise equipe 😭","Match nul = elimine. Dur mais c'est les regles ! 🤷","Ton equipe n'a meme pas gagne... Classique 😒"];
-const PHRASES_NO_PICK = ["T'as meme pas choisi d'equipe... Respect du neant 🫥","Oublier de jouer c'est un talent rare 🤔","La prochaine fois, ouvre l'appli peut-etre ? 📱"];
-const PHRASES_WINNER = ["Le dernier survivant ! Legende vivante !","Indestructible ! Personne ne peut t'arreter !","Champion de la survie ! Les autres peuvent pleurer !"];
+const PHRASES_WIN = [
+  "Qualifie ! T'as le niveau, contrairement aux autres 😎",
+  "Ton equipe a assure... pour une fois 🙄",
+  "Encore en vie ! Profites-en ca va pas durer 😏",
+  "Quel choix de genie. On est impressionnes. Vraiment 👏",
+  "Survie confirmee. Les autres peuvent aller se coucher 🛏️",
+];
+
+const PHRASES_LOSS = [
+  "Elimine. C'est beau d'avoir essaye au moins 🪦",
+  "T'as choisi cette equipe-la... avec tous les autres choix possibles... t'as choisi CELLE-LA 😭",
+  "T'aurais du lancer une piece, ca aurait ete plus efficace 🪙",
+  "On te l'avait dit. T'as pas ecoute. Voila 🤷",
+  "Rentre chez toi, c'est termine pour cette saison 👋",
+];
+
+const PHRASES_DRAW = [
+  "Un nul... t'as survecu a quoi exactement ? A rien 😭",
+  "1-1. Pas de gagnant. Sauf que toi t'es elimine quand meme 🫠",
+  "Ton equipe a fait match nul. Bravo pour le demi-effort 😒",
+  "Un nul c'est pour les gens qui osent pas gagner 😂",
+  "Ni gagnant ni perdant... sauf toi, qui es perdant 💀",
+];
+
+const PHRASES_NO_PICK = [
+  "T'as meme pas choisi d'equipe. Respect du niveau zero 🫥",
+  "Oublier de jouer c'est un talent rare... et pas utile 🤔",
+  "T'etais ou ? Peu importe, t'es elimine de toute facon 👋",
+  "La prochaine fois mets une alarme mon grand 📱",
+  "Elimine sans meme avoir essaye. C'est un exploit en soi 🏆",
+];
+
+const PHRASES_WINNER = [
+  "Indestructible ! Personne a pu t'arreter !",
+  "LE survivant. Les autres cherchent encore comment c'est possible 😂",
+  "Champion ! Tout le monde peut aller s'entrainer, t'es trop fort !",
+  "Dernier survivant ! Legende vivante !",
+  "T'as gagne. Les autres vont faire semblant d'etre contents pour toi 😅",
+  "CHAAMPION MON FREREUUU ! 🏆🔥",
+];
 
 const TEAMS = [
   {id:"psg",name:"PSG",        logo:"https://media.api-sports.io/football/teams/85.png",  apiId:85},
@@ -620,23 +657,24 @@ function renderPicking(){
   const myPickBox=document.getElementById("my-pick-box");
 
   if(myPick){
-    // Deja valide
     pendingBox.style.display="none";
     const t=getTeam(myPick);
-    document.getElementById("my-pick-logo").innerHTML=teamLogoEl(t);
+    document.getElementById("my-pick-logo").innerHTML="";
     document.getElementById("my-pick-name").textContent=t.name;
     myPickBox.style.display="flex";
+    document.getElementById("validate-bar").style.display="none";
     pendingPick=null;
   } else if(pendingPick){
-    // En attente de validation
     const t=getTeam(pendingPick);
-    document.getElementById("pending-pick-logo").innerHTML=teamLogoEl(t);
+    document.getElementById("pending-pick-logo").innerHTML="";
     document.getElementById("pending-pick-name").textContent=t.name;
     pendingBox.style.display="block";
     myPickBox.style.display="none";
+    document.getElementById("validate-bar").style.display="block";
   } else {
     pendingBox.style.display="none";
     myPickBox.style.display="none";
+    document.getElementById("validate-bar").style.display="none";
   }
 
   // Choix des autres apres fermeture
@@ -648,7 +686,7 @@ function renderPicking(){
       others.forEach(p=>{
         const pt=getTeam(p.pick);
         html+=`<div class="row"><div class="av">${avEl(p)}</div><span style="flex:1;font-weight:600;">${p.pseudo}</span>`;
-        if(p.pick)html+=`<div style="display:flex;align-items:center;gap:6px;">${teamLogoEl(pt)}<span style="font-size:13px;font-weight:600;">${pt.name}</span></div>`;
+        if(p.pick)html+=`<span style="font-size:13px;font-weight:600;color:#39E979;">${pt.name}</span>`;
         else html+='<span style="color:#888;font-size:12px;">Pas encore choisi</span>';
         html+='</div>';
       });
@@ -664,22 +702,23 @@ function renderPicking(){
       const sel=pendingPick===item.id;
       const confirmed=myPick===item.id;
       const used=usedTeams.includes(item.id);
-      const canPick=me&&me.alive&&!myPick&&!pendingPick&&!used&&!closed;
+      // Peut cliquer si vivant, pas encore valide, pas utilise, pas ferme
+      const canPick=me&&me.alive&&!myPick&&!used&&!closed;
       let dot;
       if(confirmed)dot='<div style="width:22px;height:22px;border-radius:50%;background:#39E979;display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;font-weight:700;flex-shrink:0;">✓</div>';
-      else if(sel)dot='<div style="width:22px;height:22px;border-radius:50%;background:#FFD000;display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;font-weight:700;flex-shrink:0;">?</div>';
+      else if(sel)dot='<div style="width:22px;height:22px;border-radius:50%;background:#FFD000;display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;font-weight:700;flex-shrink:0;">●</div>';
       else if(used)dot='<div style="width:22px;height:22px;border-radius:50%;background:#FF4444;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex-shrink:0;">✗</div>';
       else dot='<div style="width:22px;height:22px;border-radius:50%;border:2px solid #2E2E2E;flex-shrink:0;"></div>';
-      const bg=confirmed?'rgba(57,233,121,0.06)':sel?'rgba(255,208,0,0.06)':'transparent';
+      const bg=confirmed?'rgba(57,233,121,0.06)':sel?'rgba(255,208,0,0.08)':'transparent';
       const onclick=canPick?"selectPick('"+item.id+"')":"";
-      fl.innerHTML+='<div onclick="'+onclick+'" style="display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid #2E2E2E;gap:8px;background:'+bg+';opacity:'+(used?0.35:1)+';cursor:'+(canPick?'pointer':'default')+';">'+dot+teamLogoEl(t)+'<span style="flex:1;font-weight:600;font-size:14px;margin-left:4px;">'+t.name+'</span><span style="font-size:11px;color:#888;">'+item.time+'</span></div>';
+      fl.innerHTML+='<div onclick="'+onclick+'" style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid #2E2E2E;gap:10px;background:'+bg+';opacity:'+(used?0.35:1)+';cursor:'+(canPick?'pointer':'default')+';">'+dot+'<span style="flex:1;font-weight:600;font-size:15px;">'+t.name+'</span><span style="font-size:12px;color:#888;">'+item.time+'</span></div>';
     });
   });
 
   if(usedTeams.length>0){
     document.getElementById("used-teams-box").style.display="block";
     const uc=document.getElementById("used-teams-chips");uc.innerHTML="";
-    usedTeams.forEach(tid=>{const t=getTeam(tid);uc.innerHTML+=`<span style="background:#222;border:1px solid #2E2E2E;border-radius:99px;padding:4px 10px;font-size:12px;color:#888;display:inline-flex;align-items:center;gap:4px;">${teamLogoEl(t)} ${t.name}</span>`;});
+    usedTeams.forEach(tid=>{const t=getTeam(tid);uc.innerHTML+='<span style="background:#222;border:1px solid #2E2E2E;border-radius:99px;padding:4px 10px;font-size:12px;color:#888;">'+t.name+'</span>';});
   }
 
   const isHost=currentLobby.host===currentUser.uid;
@@ -689,11 +728,11 @@ function renderPicking(){
   else if(isHost&&closed)hc.innerHTML='<button class="btn btn-g" onclick="resolveRound()">OBTENIR LES RESULTATS</button>';
 }
 
-// Selectionner une equipe (pas encore validee)
+// Selectionner une equipe - on peut changer en cliquant sur une autre
 window.selectPick = function(id) {
   const me=currentLobby.players[currentUser.uid];
-  if(!me||!me.alive||me.pick||pendingPick||currentLobby.status==="closed")return;
-  pendingPick=id;
+  if(!me||!me.alive||me.pick||currentLobby.status==="closed")return;
+  pendingPick=id; // remplace simplement le pick en attente
   renderPicking();
 };
 
