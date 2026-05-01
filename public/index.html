@@ -7,7 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Survivor L1"/>
-<link rel="apple-touch-icon" href="https://media.api-sports.io/football/leagues/61.png"/>
+<link rel="apple-touch-icon" href="https://i.imgur.com/HSHTdzU.png"/>
+<link rel="icon" href="https://i.imgur.com/HSHTdzU.png"/>
 <title>Survivor Ligue 1</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -23,7 +24,6 @@ body{background:#0D0D0D;color:#F2F2F2;font-family:system-ui,sans-serif;min-heigh
 .btn-g{background:#39E979;color:#000;}
 .btn-o{background:transparent;color:#F2F2F2;border:1.5px solid #2E2E2E;}
 .btn-b{background:transparent;color:#4A90E2;border:1.5px solid #4A90E2;}
-.btn-r{background:#FF4444;color:#fff;}
 .btn:disabled{opacity:0.4;cursor:not-allowed;}
 input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:14px 16px;color:#F2F2F2;font-size:16px;width:100%;outline:none;margin-bottom:8px;}
 .tabs-toggle{display:flex;background:#1A1A1A;border-radius:12px;padding:4px;margin-bottom:16px;}
@@ -36,7 +36,6 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 .av{width:34px;height:34px;border-radius:50%;background:#333;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:14px;}
 .badge-g{background:rgba(57,233,121,0.12);color:#39E979;border-radius:99px;padding:3px 9px;font-size:12px;font-weight:700;}
 .badge-r{background:rgba(255,68,68,0.12);color:#FF4444;border-radius:99px;padding:3px 9px;font-size:12px;font-weight:700;}
-.badge-y{background:rgba(255,208,0,0.12);color:#FFD000;border-radius:99px;padding:3px 9px;font-size:12px;font-weight:700;}
 .err{background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);border-radius:10px;padding:10px 14px;color:#FF4444;margin-bottom:12px;font-size:14px;}
 .timer-box{background:#1a1100;border:1.5px solid rgba(255,208,0,0.35);border-radius:12px;padding:14px 16px;text-align:center;margin-bottom:10px;}
 .timer-lbl{font-size:11px;color:#FFD000;letter-spacing:1.5px;font-weight:600;margin-bottom:4px;}
@@ -65,7 +64,6 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 .stat-card{background:#1A1A1A;border:1px solid #2E2E2E;border-radius:12px;padding:16px;text-align:center;}
 .stat-num{font-size:32px;font-weight:900;color:#39E979;}
 .stat-label{font-size:12px;color:#888;margin-top:4px;}
-.add-home-banner{background:rgba(74,144,226,0.08);border:1px solid rgba(74,144,226,0.25);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 </style>
 </head>
 <body>
@@ -101,7 +99,6 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
     <p>Sois le dernier survivant !</p>
   </div>
   <div class="sec">
-    <div id="add-home-zone"></div>
     <div id="create-btn-zone"></div>
     <p style="text-align:center;font-size:12px;color:#888;margin-bottom:8px;">Entrer un code</p>
     <input type="text" id="join-code" placeholder="X X X X X X" maxlength="6"
@@ -269,49 +266,21 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 <div class="toast" id="toast"></div>
 
 <script>
-var ADMIN_EMAIL = "groliersteven@gmail.com";
-var RAPIDAPI_KEY = "39c5cc9625mshc2f52e154b3255fp11e5b9jsn0f4c49435a11";
-var LEAGUE_ID = 61;
-var SEASON = 2025;
-var APP_URL = "https://survivor-chi-ecru.vercel.app";
+var ADMIN_EMAIL="groliersteven@gmail.com";
+var RAPIDAPI_KEY="39c5cc9625mshc2f52e154b3255fp11e5b9jsn0f4c49435a11";
+var LEAGUE_ID=61;
+var SEASON=2025;
+var APP_URL="https://survivor-chi-ecru.vercel.app";
 
-var PHRASES_WIN = [
-  "Sang froid ! Tu passes a la journee suivante 🧊",
-  "Le beast ! Ton equipe a assure 💪",
-  "Solide ! Tu survis encore une semaine ⚽",
-  "On te voit venir champion... 👀",
-  "Tu as du nez, bien joue ! 🎯",
-  "Encore en vie ! Les autres tremblent 😤",
-];
-var PHRASES_LOSS = [
-  "C'est termine pour toi... Rentre chez toi 😂",
-  "Meme mon chat aurait fait un meilleur choix 🐱",
-  "Tu peux aller regarder Netflix maintenant 📺",
-  "GG l'ami, la prochaine fois choisis mieux 💀",
-  "Elimine ! Bon au moins t'as essaye... 😬",
-  "T'aurais du choisir pile ou face, ca aurait ete pareil 🪙",
-  "La honte... Vraiment la honte 🫣",
-  "On aurait pu te prevenir mais c'etait trop drole 😏",
-];
-var PHRASES_DRAW = [
-  "Un nul ?! Vraiment ?! T'as choisi la mauvaise equipe 😭",
-  "Match nul = elimine. Dur mais c'est les regles ! 🤷",
-  "Ton equipe n'a meme pas gagne... Classique 😒",
-];
-var PHRASES_NO_PICK = [
-  "T'as meme pas choisi d'equipe... Respect du neant 🫥",
-  "Oublier de jouer c'est un talent rare 🤔",
-  "La prochaine fois, ouvre l'appli peut-etre ? 📱",
-];
-var PHRASES_WINNER = [
-  "Le dernier survivant ! Legende vivante !",
-  "Indestructible ! Personne ne peut t'arreter !",
-  "Champion de la survie ! Les autres peuvent pleurer !",
-];
+var PHRASES_WIN=["Sang froid ! Tu passes a la journee suivante 🧊","Le beast ! Ton equipe a assure 💪","Solide ! Tu survis encore une semaine ⚽","On te voit venir champion... 👀","Tu as du nez, bien joue ! 🎯","Encore en vie ! Les autres tremblent 😤"];
+var PHRASES_LOSS=["C'est termine pour toi... Rentre chez toi 😂","Meme mon chat aurait fait un meilleur choix 🐱","Tu peux aller regarder Netflix maintenant 📺","GG l'ami, la prochaine fois choisis mieux 💀","Elimine ! Bon au moins t'as essaye... 😬","T'aurais du choisir pile ou face 🪙","La honte... Vraiment la honte 🫣","On aurait pu te prevenir mais c'etait trop drole 😏"];
+var PHRASES_DRAW=["Un nul ?! Vraiment ?! T'as choisi la mauvaise equipe 😭","Match nul = elimine. Dur mais c'est les regles ! 🤷","Ton equipe n'a meme pas gagne... Classique 😒"];
+var PHRASES_NO_PICK=["T'as meme pas choisi d'equipe... Respect du neant 🫥","Oublier de jouer c'est un talent rare 🤔","La prochaine fois, ouvre l'appli peut-etre ? 📱"];
+var PHRASES_WINNER=["Le dernier survivant ! Legende vivante !","Indestructible ! Personne ne peut t'arreter !","Champion de la survie ! Les autres peuvent pleurer !"];
 
 function getPhrase(arr){return arr[Math.floor(Math.random()*arr.length)];}
 
-var TEAMS = [
+var TEAMS=[
   {id:"psg",name:"PSG",        logo:"https://media.api-sports.io/football/teams/85.png",  apiId:85},
   {id:"om", name:"Marseille",  logo:"https://media.api-sports.io/football/teams/81.png",  apiId:81},
   {id:"mon",name:"Monaco",     logo:"https://media.api-sports.io/football/teams/91.png",  apiId:91},
@@ -332,7 +301,7 @@ var TEAMS = [
   {id:"bst",name:"Brest",      logo:"https://media.api-sports.io/football/teams/130.png", apiId:130},
 ];
 
-var FIXTURES = [
+var FIXTURES=[
   {home:"nan",away:"om", day:"Sam. 15:00",homeApiId:83, awayApiId:81},
   {home:"psg",away:"lor",day:"Sam. 17:00",homeApiId:85, awayApiId:1160},
   {home:"mtz",away:"mon",day:"Sam. 19:00",homeApiId:82, awayApiId:91},
@@ -343,34 +312,21 @@ var FIXTURES = [
   {home:"oly",away:"ren",day:"Dim. 20:45",homeApiId:80, awayApiId:94},
 ];
 
-var CURRENT_ROUND = 34;
-var currentUser = null;
-var currentLobby = null;
-var authMode = "login";
-var timerInterval = null;
-var notifScheduled = false;
+var CURRENT_ROUND=34;
+var currentUser=null;
+var currentLobby=null;
+var authMode="login";
+var timerInterval=null;
+var notifScheduled=false;
 
 function sGet(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}
 function sSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function genCode(){var c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",r="";for(var i=0;i<6;i++)r+=c[Math.floor(Math.random()*c.length)];return r;}
 function getTeam(id){return TEAMS.find(function(t){return t.id===id;})||{name:"?",logo:"",apiId:0};}
 
-function showToast(msg){
-  var t=document.getElementById("toast");
-  t.textContent=msg;t.style.display="block";
-  setTimeout(function(){t.style.display="none";},2500);
-}
-
-function showScreen(id){
-  document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});
-  var el=document.getElementById("screen-"+id);
-  if(el)el.classList.add("active");
-}
-
-function teamLogoEl(team){
-  if(team&&team.logo){return '<img src="'+team.logo+'" class="team-logo" onerror="this.style.display=\'none\'" />';}
-  return '<span style="font-size:16px;">⚽</span>';
-}
+function showToast(msg){var t=document.getElementById("toast");t.textContent=msg;t.style.display="block";setTimeout(function(){t.style.display="none";},2500);}
+function showScreen(id){document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});var el=document.getElementById("screen-"+id);if(el)el.classList.add("active");}
+function teamLogoEl(team){if(team&&team.logo){return '<img src="'+team.logo+'" class="team-logo" onerror="this.style.display=\'none\'" />';}return '<span style="font-size:16px;">⚽</span>';}
 
 function requestNotifPermission(){
   if(!("Notification" in window)){showToast("Notifications non supportees");return;}
@@ -381,30 +337,14 @@ function requestNotifPermission(){
 }
 
 function scheduleDeadlineNotif(){
-  if(!currentLobby||notifScheduled)return;
-  if(Notification.permission!=="granted")return;
+  if(!currentLobby||notifScheduled||Notification.permission!=="granted")return;
   var notifTime=currentLobby.deadline-(30*60*1000);
-  var now=Date.now();
-  if(notifTime>now){
+  if(notifTime>Date.now()){
     notifScheduled=true;
     setTimeout(function(){
-      new Notification("Survivor Ligue 1 - Plus que 30 minutes !",{
-        body:"La deadline ferme dans 30 min ! Choisis vite ton equipe.",
-        icon:"https://media.api-sports.io/football/leagues/61.png"
-      });
-    },notifTime-now);
+      new Notification("Survivor Ligue 1 - Plus que 30 minutes !",{body:"La deadline ferme dans 30 min ! Choisis vite ton equipe.",icon:"https://i.imgur.com/HSHTdzU.png"});
+    },notifTime-Date.now());
     showToast("Rappel programme 30 min avant la deadline !");
-  }
-}
-
-function showAddHomePrompt(){
-  var zone=document.getElementById("add-home-zone");
-  var isIOS=/iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
-  var isAndroid=/android/.test(navigator.userAgent.toLowerCase());
-  if(isIOS){
-    zone.innerHTML='<div class="add-home-banner"><span style="font-size:24px;">📱</span><div><div style="font-weight:700;font-size:13px;">Ajouter a l\'ecran d\'accueil</div><div style="font-size:11px;color:#888;margin-top:2px;">Appuie sur Partager puis "Sur l\'ecran d\'accueil"</div></div></div>';
-  } else if(isAndroid){
-    zone.innerHTML='<div class="add-home-banner"><span style="font-size:24px;">📱</span><div><div style="font-weight:700;font-size:13px;">Ajouter a l\'ecran d\'accueil</div><div style="font-size:11px;color:#888;margin-top:2px;">Menu (3 points) puis "Ajouter a l\'ecran d\'accueil"</div></div></div>';
   }
 }
 
@@ -452,7 +392,6 @@ function goHome(){
   if(currentUser.email===ADMIN_EMAIL){
     zone.innerHTML='<button class="btn btn-g" onclick="createLobby()">CREER UNE LIGUE</button><button class="btn btn-b" onclick="requestNotifPermission()" style="margin-bottom:10px;">🔔 Activer les rappels</button>';
   } else {zone.innerHTML='';}
-  showAddHomePrompt();
 }
 
 function logout(){
@@ -492,11 +431,7 @@ function leaveLobby(){
   goHome();
 }
 
-function saveLobby(){
-  var all=sGet("lobbies")||{};
-  all[currentLobby.code]=currentLobby;
-  sSet("lobbies",all);sSet("currentLobby",currentLobby);
-}
+function saveLobby(){var all=sGet("lobbies")||{};all[currentLobby.code]=currentLobby;sSet("lobbies",all);sSet("currentLobby",currentLobby);}
 
 function openRename(){document.getElementById("new-name-input").value=currentLobby.name;document.getElementById("modal-rename").classList.add("open");}
 function closeRename(){document.getElementById("modal-rename").classList.remove("open");}
@@ -671,42 +606,25 @@ function applyResults(apiResults){
         users[userIdx].totalWins=(users[userIdx].totalWins||0)+1;
         users[userIdx].currentStreak=(users[userIdx].currentStreak||0)+1;
         if(users[userIdx].currentStreak>(users[userIdx].bestStreak||0)){users[userIdx].bestStreak=users[userIdx].currentStreak;}
-      } else {
-        users[userIdx].currentStreak=0;
-      }
+      } else {users[userIdx].currentStreak=0;}
     }
     return Object.assign({},p,{result:result,alive:survived,phrase:phrase,usedTeams:survived?(p.usedTeams||[]).concat([p.pick]):p.usedTeams});
   });
   sSet("users",users);
   var updatedUser=users.find(function(u){return u.uid===currentUser.uid;});
   if(updatedUser){currentUser=updatedUser;sSet("currentUser",updatedUser);}
-
   var alive=currentLobby.players.filter(function(p){return p.alive;});
-
-  // ── CAS PERSONNE N'A SURVECU ──
   if(alive.length===0){
     currentLobby.status="nobody";
-    // Pas de point attribue
-    saveLobby();
-    renderNobody();
-    return;
+    saveLobby();renderNobody();return;
   }
-
-  // ── CAS 1 SURVIVANT ──
   if(alive.length===1){
     currentLobby.status="finished";
-    currentLobby.players=currentLobby.players.map(function(p){
-      return p.alive?Object.assign({},p,{points:(p.points||0)+1}):p;
-    });
-    saveLobby();
-    renderWinner();
-    return;
+    currentLobby.players=currentLobby.players.map(function(p){return p.alive?Object.assign({},p,{points:(p.points||0)+1}):p;});
+    saveLobby();renderWinner();return;
   }
-
-  // ── CAS PLUSIEURS SURVIVANTS ──
   currentLobby.status="roundEnd";
-  saveLobby();
-  renderResults();
+  saveLobby();renderResults();
 }
 
 function renderResults(){
@@ -740,7 +658,6 @@ function renderWinner(){
   document.getElementById("btn-replay-winner").style.display=currentLobby.host===currentUser.uid?"block":"none";
 }
 
-// ── NOUVEL ECRAN : PERSONNE N'A SURVECU ──────────────────────────────────────
 function renderNobody(){
   showScreen("nobody");
   var nr=document.getElementById("nobody-results");nr.innerHTML="";
@@ -751,27 +668,10 @@ function renderNobody(){
   document.getElementById("btn-replay-nobody").style.display=currentLobby.host===currentUser.uid?"block":"none";
 }
 
-// ── REJOUER — SANS QUITTER LA LIGUE ──────────────────────────────────────────
 function replayGame(){
-  // Remet tout le monde en vie, equipes utilisees a zero, points conserves
-  currentLobby.status="waiting";
-  currentLobby.round=CURRENT_ROUND;
-  currentLobby.history=[];
-  notifScheduled=false;
-  currentLobby.players=currentLobby.players.map(function(p){
-    return Object.assign({},p,{
-      alive:true,
-      isSpectator:false,
-      pick:null,
-      result:null,
-      usedTeams:[], // equipes remises a zero
-      phrase:null
-      // points conserves !
-    });
-  });
-  saveLobby();
-  // On reste dans la ligue, on va direct au lobby
-  navTo("accueil");
+  currentLobby.status="waiting";currentLobby.round=CURRENT_ROUND;currentLobby.history=[];notifScheduled=false;
+  currentLobby.players=currentLobby.players.map(function(p){return Object.assign({},p,{alive:true,isSpectator:false,pick:null,result:null,usedTeams:[],phrase:null});});
+  saveLobby();navTo("accueil");
 }
 
 function renderResultats(){
