@@ -15,7 +15,7 @@
 body{background:#0D0D0D;color:#F2F2F2;font-family:system-ui,sans-serif;min-height:100vh;}
 .app{max-width:390px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
 .hero{text-align:center;padding:40px 24px 28px;background:linear-gradient(180deg,#0a1a0a,#0D0D0D);}
-.hero img{width:80px;height:80px;border-radius:16px;margin-bottom:12px;}
+.hero img.logo{width:80px;height:80px;border-radius:16px;margin-bottom:12px;}
 .hero h1{font-size:44px;font-weight:900;letter-spacing:3px;line-height:1;}
 .hero h1 span{color:#39E979;}
 .hero p{font-size:14px;color:#888;margin-top:8px;}
@@ -42,23 +42,21 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 .timer-lbl{font-size:11px;color:#FFD000;letter-spacing:1.5px;font-weight:600;margin-bottom:4px;}
 .timer-val{font-size:42px;font-weight:900;color:#FFD000;letter-spacing:2px;}
 .timer-sub{font-size:12px;color:#888;margin-top:4px;}
-.nav{display:flex;background:#111;border-top:1px solid #2E2E2E;flex-shrink:0;position:sticky;bottom:0;}
+.nav{display:flex;background:#111;border-top:1px solid #2E2E2E;flex-shrink:0;position:sticky;bottom:0;z-index:50;}
 .nav button{flex:1;padding:10px 0 12px;background:transparent;border:none;color:#888;font-size:10px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;}
 .nav button.active{color:#39E979;}
 .nav button span{font-size:20px;}
-.screen{display:none;flex:1;overflow-y:auto;}
-.screen.active{display:flex;flex-direction:column;}
+.screen{display:none;flex:1;overflow-y:auto;flex-direction:column;}
+.screen.active{display:flex;}
 .code-box{display:flex;align-items:center;justify-content:center;background:#1A1A1A;border:1px solid #2E2E2E;border-radius:12px;padding:14px 20px;gap:12px;margin-bottom:12px;}
 .code-txt{font-size:32px;font-weight:900;letter-spacing:8px;color:#39E979;}
 .copy-btn{background:#222;border:1px solid #2E2E2E;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:16px;color:#F2F2F2;}
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#39E979;color:#000;font-weight:700;padding:10px 22px;border-radius:99px;font-size:14px;z-index:999;display:none;white-space:nowrap;}
-.winner-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;gap:16px;}
 .sec-label{font-size:11px;color:#888;font-weight:700;letter-spacing:1.5px;margin-bottom:8px;text-transform:uppercase;}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
 .modal-bg.open{display:flex;}
 .modal{background:#1A1A1A;border:1px solid #2E2E2E;border-radius:16px;padding:24px;width:100%;max-width:350px;text-align:center;}
 .modal h3{font-size:18px;font-weight:700;margin-bottom:16px;text-align:left;}
-.team-logo{width:28px;height:28px;object-fit:contain;border-radius:4px;}
 .phrase-win{background:rgba(57,233,121,0.08);border:1px solid rgba(57,233,121,0.25);border-radius:10px;padding:8px 12px;color:#39E979;font-size:12px;font-style:italic;margin-top:6px;}
 .phrase-loss{background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.25);border-radius:10px;padding:8px 12px;color:#FF6666;font-size:12px;font-style:italic;margin-top:6px;}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
@@ -68,10 +66,8 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 .divider{display:flex;align-items:center;gap:10px;margin:12px 0;color:#888;font-size:13px;}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:#2E2E2E;}
 .loading-screen{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
-.pick-selected{background:rgba(57,233,121,0.08);border:1.5px solid rgba(57,233,121,0.5);border-radius:12px;padding:14px 16px;margin-bottom:12px;}
-.recent-lobby-card{background:#1A1A1A;border:1px solid #2E2E2E;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer;}
-.recent-lobby-card:active{opacity:0.7;}
 .result-score{background:#111;border-radius:8px;padding:4px 10px;font-weight:900;font-size:14px;color:#F2F2F2;}
+.recent-lobby-card{background:#1A1A1A;border:1px solid #2E2E2E;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -89,7 +85,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 <!-- AUTH -->
 <div class="screen" id="screen-auth">
   <div class="hero">
-    <img src="https://i.imgur.com/HSHTdzU.png" alt="Survivor"/>
+    <img src="https://i.imgur.com/HSHTdzU.png" alt="Survivor" class="logo"/>
     <h1>SURVIVOR<br><span>LIGUE 1</span></h1>
     <p>Sois le dernier survivant !</p>
   </div>
@@ -103,9 +99,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
       <button class="tab-active" id="btn-login" onclick="setMode('login')">Connexion</button>
       <button class="tab-inactive" id="btn-signup" onclick="setMode('signup')">Inscription</button>
     </div>
-    <div id="signup-field" style="display:none">
-      <input type="text" id="auth-pseudo" placeholder="Ton pseudo"/>
-    </div>
+    <div id="signup-field" style="display:none"><input type="text" id="auth-pseudo" placeholder="Ton pseudo"/></div>
     <input type="email" id="auth-email" placeholder="Email"/>
     <input type="password" id="auth-pwd" placeholder="Mot de passe"/>
     <div class="err" id="auth-err" style="display:none"></div>
@@ -116,7 +110,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 <!-- HOME -->
 <div class="screen" id="screen-home">
   <div class="hero">
-    <img src="https://i.imgur.com/HSHTdzU.png" alt="Survivor"/>
+    <img src="https://i.imgur.com/HSHTdzU.png" alt="Survivor" class="logo"/>
     <h1>SURVIVOR<br><span>LIGUE 1</span></h1>
     <p>Sois le dernier survivant !</p>
   </div>
@@ -135,7 +129,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 
 <!-- LOBBY -->
 <div class="screen" id="screen-lobby">
-  <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;">
+  <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;flex-shrink:0;">
     <button onclick="leaveLobby()" style="background:none;border:none;color:#F2F2F2;font-size:22px;cursor:pointer;margin-right:8px;">←</button>
     <div style="flex:1;text-align:center;font-weight:700;" id="lobby-name-display">Ma ligue</div>
     <button id="edit-name-btn" onclick="openRename()" style="background:none;border:none;font-size:18px;cursor:pointer;display:none;">✏️</button>
@@ -158,18 +152,16 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 
 <!-- PICKING -->
 <div class="screen" id="screen-picking">
-  <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;">
+  <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;flex-shrink:0;">
     <div style="flex:1;text-align:center;font-weight:700;" id="pick-round">Journee 34</div>
     <button onclick="shareLigue()" style="background:none;border:none;color:#4A90E2;font-size:20px;cursor:pointer;">📤</button>
   </div>
-  <div style="padding:18px;flex:1;overflow-y:auto;">
+  <div style="padding:18px;flex:1;overflow-y:auto;padding-bottom:80px;">
     <div class="timer-box">
       <div class="timer-lbl">DEADLINE</div>
       <div class="timer-val" id="timer">00:00:00</div>
-      <div class="timer-sub" id="timer-sub">avant le premier match</div>
+      <div class="timer-sub">avant le premier match</div>
     </div>
-
-    <!-- Selection en cours (avant validation) -->
     <div id="pending-pick-box" style="display:none;background:rgba(255,208,0,0.06);border:1.5px solid rgba(255,208,0,0.4);border-radius:12px;padding:14px 16px;margin-bottom:12px;">
       <div style="font-size:11px;color:#FFD000;font-weight:700;letter-spacing:1px;margin-bottom:8px;">EQUIPE SELECTIONNEE — Clique sur une autre pour changer</div>
       <div style="display:flex;align-items:center;gap:10px;">
@@ -177,35 +169,30 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
         <span style="font-weight:700;flex:1;font-size:18px;" id="pending-pick-name"></span>
       </div>
     </div>
-
-    <!-- Selection validee -->
     <div id="my-pick-box" style="display:none;background:rgba(57,233,121,0.08);border:1px solid rgba(57,233,121,0.3);border-radius:12px;padding:12px;align-items:center;gap:10px;margin-bottom:10px;">
       <span id="my-pick-logo"></span>
       <div><div style="font-weight:700;" id="my-pick-name"></div><div style="font-size:12px;color:#39E979;">Selection validee !</div></div>
     </div>
-
     <div id="others-picks-zone"></div>
-    <p class="sec-label" id="pick-list-label">CHOISIS TON EQUIPE</p>
+    <p class="sec-label">CHOISIS TON EQUIPE</p>
     <div class="card" id="fixtures-list"></div>
     <div id="used-teams-box" style="margin-top:10px;display:none;">
       <p class="sec-label">EQUIPES DEJA UTILISEES</p>
       <div id="used-teams-chips" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
-    <!-- Barre fixe en bas pour valider -->
-    <div id="validate-bar" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:calc(min(390px,100%) - 36px);z-index:100;">
-      <button class="btn btn-g" onclick="confirmPick()" style="margin:0;box-shadow:0 4px 20px rgba(57,233,121,0.4);">VALIDER MON CHOIX ✓</button>
-    </div>
     <div style="margin-top:12px;" id="host-controls"></div>
-    <div style="height:70px;"></div>
+  </div>
+  <div id="validate-bar" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:calc(min(390px,100%) - 36px);z-index:100;">
+    <button class="btn btn-g" onclick="confirmPick()" style="margin:0;box-shadow:0 4px 20px rgba(57,233,121,0.4);">VALIDER MON CHOIX ✓</button>
   </div>
 </div>
 
-<!-- RESULTS -->
-  <div style="text-align:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;font-weight:700;font-size:18px;" id="results-title">Resultats</div>
+<!-- RESULTS (journee en cours) -->
+<div class="screen" id="screen-results">
+  <div style="text-align:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;font-weight:700;font-size:18px;flex-shrink:0;" id="results-title">Resultats</div>
   <div style="padding:18px;flex:1;overflow-y:auto;">
     <div class="card" id="results-list"></div>
     <p style="text-align:center;font-weight:700;font-size:18px;margin:16px 0;" id="alive-count"></p>
-    <!-- Recap des scores reels -->
     <div id="scores-recap-zone"></div>
     <button class="btn btn-g" onclick="nextRound()" id="btn-next-round" style="display:none;">JOURNEE SUIVANTE</button>
     <p style="text-align:center;color:#888;" id="wait-next"></p>
@@ -214,43 +201,50 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 
 <!-- WINNER -->
 <div class="screen" id="screen-winner">
-  <div class="winner-screen">
-    <div style="font-size:80px;">🏆</div>
-    <div style="font-size:14px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:2px;">SAISON TERMINEE !</div>
-    <div style="font-size:36px;font-weight:900;color:#39E979;" id="winner-name">?</div>
-    <div style="font-size:14px;color:#888;">est le dernier survivant !</div>
-    <div style="font-size:16px;font-style:italic;color:#aaa;padding:0 20px;" id="winner-phrase"></div>
-    <div style="background:rgba(57,233,121,0.08);border:1px solid rgba(57,233,121,0.3);border-radius:12px;padding:16px;width:100%;text-align:center;">
-      <div style="font-size:28px;font-weight:900;color:#39E979;">+1 POINT</div>
+  <div style="flex:1;overflow-y:auto;padding:24px 18px;">
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:80px;line-height:1.2;">🏆</div>
+      <div style="font-size:14px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-top:8px;">SAISON TERMINEE !</div>
+      <div style="font-size:32px;font-weight:900;color:#39E979;margin-top:8px;" id="winner-name">?</div>
+      <div style="font-size:14px;color:#888;margin-top:4px;">est le dernier survivant !</div>
+      <div style="font-size:15px;font-style:italic;color:#aaa;padding:8px 20px;" id="winner-phrase"></div>
+      <div style="background:rgba(57,233,121,0.08);border:1px solid rgba(57,233,121,0.3);border-radius:12px;padding:14px;margin:12px 0;">
+        <div style="font-size:28px;font-weight:900;color:#39E979;">+1 POINT</div>
+      </div>
     </div>
-    <button class="btn btn-g" onclick="replayGame()" id="btn-replay-winner" style="display:none;">NOUVELLE SAISON</button>
+    <div id="winner-players-zone"></div>
+    <div id="winner-scores-zone"></div>
+    <button class="btn btn-g" onclick="replayGame()" id="btn-replay-winner" style="display:none;margin-top:8px;">NOUVELLE SAISON</button>
   </div>
 </div>
 
 <!-- NOBODY -->
 <div class="screen" id="screen-nobody">
-  <div class="winner-screen">
-    <div style="font-size:80px;">💀</div>
-    <div style="font-size:14px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:2px;">SAISON TERMINEE !</div>
-    <div style="font-size:28px;font-weight:900;color:#FF4444;">Personne n'a survecu !</div>
-    <div style="font-size:14px;color:#888;">Vous avez tous perdu en meme temps 😂</div>
-    <div style="background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.3);border-radius:12px;padding:16px;width:100%;text-align:center;">
-      <div style="font-size:18px;color:#FF4444;font-style:italic;">Aucun point attribue !</div>
+  <div style="flex:1;overflow-y:auto;padding:24px 18px;">
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:80px;line-height:1.2;">💀</div>
+      <div style="font-size:14px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-top:8px;">SAISON TERMINEE !</div>
+      <div style="font-size:26px;font-weight:900;color:#FF4444;margin-top:8px;">Personne n'a survecu !</div>
+      <div style="font-size:14px;color:#888;margin-top:4px;">Vous avez tous perdu en meme temps 😂</div>
+      <div style="background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.3);border-radius:12px;padding:14px;margin:12px 0;">
+        <div style="font-size:18px;color:#FF4444;font-style:italic;">Aucun point attribue !</div>
+      </div>
     </div>
-    <div class="card" style="width:100%;" id="nobody-results"></div>
-    <button class="btn btn-g" onclick="replayGame()" id="btn-replay-nobody" style="display:none;">NOUVELLE SAISON</button>
+    <div id="nobody-players-zone"></div>
+    <div id="nobody-scores-zone"></div>
+    <button class="btn btn-g" onclick="replayGame()" id="btn-replay-nobody" style="display:none;margin-top:8px;">NOUVELLE SAISON</button>
   </div>
 </div>
 
 <!-- RESULTATS TAB -->
 <div class="screen" id="screen-resultats">
-  <div style="padding:14px 18px;border-bottom:1px solid #2E2E2E;font-weight:700;font-size:18px;">Etat de la partie</div>
+  <div style="padding:14px 18px;border-bottom:1px solid #2E2E2E;font-weight:700;font-size:18px;flex-shrink:0;">Etat de la partie</div>
   <div style="padding:18px;flex:1;overflow-y:auto;" id="resultats-content"></div>
 </div>
 
 <!-- CLASSEMENT TAB -->
 <div class="screen" id="screen-classement">
-  <div style="padding:14px 18px;border-bottom:1px solid #2E2E2E;">
+  <div style="padding:14px 18px;border-bottom:1px solid #2E2E2E;flex-shrink:0;">
     <div style="font-weight:700;font-size:18px;">Classement general</div>
     <div style="font-size:12px;color:#888;">Toutes saisons confondues</div>
   </div>
@@ -259,7 +253,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 
 <!-- PROFIL TAB -->
 <div class="screen" id="screen-profil">
-  <div style="padding:14px 18px;border-bottom:1px solid #2E2E2E;font-weight:700;font-size:18px;">Mon Profil</div>
+  <div style="padding:14px 18px;border-bottom:1px solid #2E2E2E;font-weight:700;font-size:18px;flex-shrink:0;">Mon Profil</div>
   <div style="padding:18px;flex:1;overflow-y:auto;">
     <div style="text-align:center;padding:20px 0;">
       <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#39E979,#1DB954);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin:0 auto 12px;color:#000;overflow:hidden;" id="profil-av-wrap"><span id="profil-av">?</span></div>
@@ -333,7 +327,6 @@ const PHRASES_WIN = [
   "Quel choix de genie. On est impressionnes. Vraiment 👏",
   "Survie confirmee. Les autres peuvent aller se coucher 🛏️",
 ];
-
 const PHRASES_LOSS = [
   "Elimine. C'est beau d'avoir essaye au moins 🪦",
   "T'as choisi cette equipe-la... avec tous les autres choix possibles... t'as choisi CELLE-LA 😭",
@@ -341,7 +334,6 @@ const PHRASES_LOSS = [
   "On te l'avait dit. T'as pas ecoute. Voila 🤷",
   "Rentre chez toi, c'est termine pour cette saison 👋",
 ];
-
 const PHRASES_DRAW = [
   "Un nul... t'as survecu a quoi exactement ? A rien 😭",
   "1-1. Pas de gagnant. Sauf que toi t'es elimine quand meme 🫠",
@@ -349,7 +341,6 @@ const PHRASES_DRAW = [
   "Un nul c'est pour les gens qui osent pas gagner 😂",
   "Ni gagnant ni perdant... sauf toi, qui es perdant 💀",
 ];
-
 const PHRASES_NO_PICK = [
   "T'as meme pas choisi d'equipe. Respect du niveau zero 🫥",
   "Oublier de jouer c'est un talent rare... et pas utile 🤔",
@@ -357,7 +348,6 @@ const PHRASES_NO_PICK = [
   "La prochaine fois mets une alarme mon grand 📱",
   "Elimine sans meme avoir essaye. C'est un exploit en soi 🏆",
 ];
-
 const PHRASES_WINNER = [
   "Indestructible ! Personne a pu t'arreter !",
   "LE survivant. Les autres cherchent encore comment c'est possible 😂",
@@ -399,207 +389,148 @@ const FIXTURES = [
   {home:"oly",away:"ren",day:"Dim. 20:45",homeApiId:80, awayApiId:94},
 ];
 
-let currentUser = null;
-let currentLobby = null;
-let lobbyUnsub = null;
-let timerInterval = null;
-let authMode = "login";
-let pendingPick = null; // equipe selectionnee mais pas encore validee
+let currentUser=null, currentLobby=null, lobbyUnsub=null, timerInterval=null, authMode="login", pendingPick=null;
 
 function getPhrase(arr){return arr[Math.floor(Math.random()*arr.length)];}
 function getTeam(id){return TEAMS.find(t=>t.id===id)||{name:"?",logo:"",apiId:0};}
 function genCode(){const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";return Array.from({length:6},()=>c[Math.floor(Math.random()*c.length)]).join("");}
 function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.style.display="block";setTimeout(()=>t.style.display="none",2500);}
 function showScreen(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));const el=document.getElementById("screen-"+id);if(el)el.classList.add("active");}
-function teamLogoEl(team){if(team&&team.logo)return`<img src="${team.logo}" class="team-logo" onerror="this.style.display='none'" />`;return'<span style="font-size:16px;">⚽</span>';}
-function avEl(user){if(user&&user.photoURL)return`<img src="${user.photoURL}" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;return(user&&user.pseudo?user.pseudo[0].toUpperCase():"?");}
+function avEl(u){if(u&&u.photoURL)return`<img src="${u.photoURL}" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;return(u&&u.pseudo?u.pseudo[0].toUpperCase():"?");}
 
-// ── PERSISTENCE LOBBY ─────────────────────────────────────────────────────────
-function saveLastLobbyCode(code){try{localStorage.setItem("lastLobbyCode",code);}catch(e){}}
-function getLastLobbyCode(){try{return localStorage.getItem("lastLobbyCode");}catch(e){return null;}}
-function clearLastLobbyCode(){try{localStorage.removeItem("lastLobbyCode");}catch(e){}}
+function saveLastCode(c){try{localStorage.setItem("lastLobbyCode",c);}catch(e){}}
+function getLastCode(){try{return localStorage.getItem("lastLobbyCode");}catch(e){return null;}}
+function clearLastCode(){try{localStorage.removeItem("lastLobbyCode");}catch(e){}}
 
-// ── AUTH STATE ────────────────────────────────────────────────────────────────
-onAuthStateChanged(auth, async (firebaseUser) => {
+function scoresHtml(matchResults){
+  if(!matchResults||!Object.keys(matchResults).length)return'';
+  let h='<p class="sec-label" style="margin-top:16px;">SCORES DE LA JOURNEE</p><div class="card">';
+  Object.values(matchResults).forEach(m=>{
+    const ht=getTeam(m.home),at=getTeam(m.away);
+    h+=`<div class="row"><div style="flex:1;text-align:right;font-size:13px;font-weight:600;">${ht.name}</div><div style="display:flex;gap:4px;margin:0 10px;"><span class="result-score">${m.homeGoals}</span><span style="color:#888;align-self:center;">-</span><span class="result-score">${m.awayGoals}</span></div><div style="flex:1;text-align:left;font-size:13px;font-weight:600;">${at.name}</div></div>`;
+  });
+  return h+'</div>';
+}
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, async (fu)=>{
   try {
-  if (firebaseUser) {
-    const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
-    if (userDoc.exists()) {
-      currentUser = userDoc.data();
+    if(fu){
+      const ud=await getDoc(doc(db,"users",fu.uid));
+      currentUser=ud.exists()?ud.data():{uid:fu.uid,pseudo:fu.displayName||fu.email.split("@")[0],email:fu.email,photoURL:fu.photoURL||null,points:0,totalGames:0,totalWins:0,bestStreak:0,currentStreak:0};
+      if(!ud.exists())await setDoc(doc(db,"users",fu.uid),currentUser);
+      const lc=getLastCode();
+      if(lc){
+        try{const ld=await getDoc(doc(db,"lobbies",lc));if(ld.exists()){openLobby(lc);return;}}catch(e){}
+        clearLastCode();
+      }
+      goHome();
     } else {
-      currentUser = { uid:firebaseUser.uid, pseudo:firebaseUser.displayName||firebaseUser.email.split("@")[0], email:firebaseUser.email, photoURL:firebaseUser.photoURL||null, points:0, totalGames:0, totalWins:0, bestStreak:0, currentStreak:0 };
-      await setDoc(doc(db,"users",firebaseUser.uid), currentUser);
+      currentUser=null;showScreen("auth");
     }
-    // Essayer de rejoindre automatiquement la derniere ligue
-    const lastCode = getLastLobbyCode();
-    if (lastCode) {
-      try {
-        const lobbyDoc = await getDoc(doc(db,"lobbies",lastCode));
-        if (lobbyDoc.exists()) {
-          openLobby(lastCode);
-          return;
-        }
-      } catch(e) {}
-      clearLastLobbyCode();
-    }
-    goHome();
-  } else {
-    currentUser = null;
-    showScreen("auth");
-  }
-  } catch(e) {
-    const errEl = document.getElementById("load-error");
-    if(errEl){ errEl.textContent = "Erreur : " + e.message + " (code: " + (e.code||"?") + ")"; errEl.style.display = "block"; }
+  } catch(e){
+    const el=document.getElementById("load-error");
+    if(el){el.textContent="Erreur : "+e.message;el.style.display="block";}
   }
 });
 
-// ── AUTH ──────────────────────────────────────────────────────────────────────
-window.loginGoogle = async function() {
-  try { await signInWithPopup(auth, googleProvider); }
-  catch(e) { showErrAuth("Connexion Google annulee."); }
+window.loginGoogle=async function(){try{await signInWithPopup(auth,googleProvider);}catch(e){showErrAuth("Connexion Google annulee.");}};
+
+window.setMode=function(mode){
+  authMode=mode;const isSig=mode==="signup";
+  document.getElementById("signup-field").style.display=isSig?"block":"none";
+  document.getElementById("btn-login").className=isSig?"tab-inactive":"tab-active";
+  document.getElementById("btn-signup").className=isSig?"tab-active":"tab-inactive";
+  document.getElementById("auth-btn").textContent=isSig?"CREER MON COMPTE":"SE CONNECTER";
+  document.getElementById("auth-err").style.display="none";
 };
 
-window.setMode = function(mode) {
-  authMode = mode;
-  const isSig = mode==="signup";
-  document.getElementById("signup-field").style.display = isSig?"block":"none";
-  document.getElementById("btn-login").className = isSig?"tab-inactive":"tab-active";
-  document.getElementById("btn-signup").className = isSig?"tab-active":"tab-inactive";
-  document.getElementById("auth-btn").textContent = isSig?"CREER MON COMPTE":"SE CONNECTER";
-  document.getElementById("auth-err").style.display = "none";
-};
-
-window.doAuth = async function() {
-  const email = document.getElementById("auth-email").value.trim().toLowerCase();
-  const pwd = document.getElementById("auth-pwd").value;
-  if(!email||!pwd) return showErrAuth("Remplis tous les champs.");
-  try {
+window.doAuth=async function(){
+  const email=document.getElementById("auth-email").value.trim().toLowerCase();
+  const pwd=document.getElementById("auth-pwd").value;
+  if(!email||!pwd)return showErrAuth("Remplis tous les champs.");
+  try{
     if(authMode==="signup"){
-      const pseudo = document.getElementById("auth-pseudo").value.trim();
-      if(!pseudo) return showErrAuth("Choisis un pseudo.");
-      const {user} = await createUserWithEmailAndPassword(auth,email,pwd);
+      const pseudo=document.getElementById("auth-pseudo").value.trim();
+      if(!pseudo)return showErrAuth("Choisis un pseudo.");
+      const {user}=await createUserWithEmailAndPassword(auth,email,pwd);
       await updateProfile(user,{displayName:pseudo});
       await setDoc(doc(db,"users",user.uid),{uid:user.uid,pseudo,email,photoURL:null,points:0,totalGames:0,totalWins:0,bestStreak:0,currentStreak:0});
-    } else {
-      await signInWithEmailAndPassword(auth,email,pwd);
-    }
-  } catch(e) {
-    const msgs={"auth/email-already-in-use":"Email deja utilise.","auth/user-not-found":"Email inconnu.","auth/wrong-password":"Mot de passe incorrect.","auth/invalid-email":"Email invalide.","auth/weak-password":"Mot de passe trop court.","auth/invalid-credential":"Email ou mot de passe incorrect."};
-    showErrAuth(msgs[e.code]||"Erreur de connexion.");
+    } else {await signInWithEmailAndPassword(auth,email,pwd);}
+  } catch(e){
+    const m={"auth/email-already-in-use":"Email deja utilise.","auth/user-not-found":"Email inconnu.","auth/wrong-password":"Mot de passe incorrect.","auth/invalid-email":"Email invalide.","auth/weak-password":"Mot de passe trop court.","auth/invalid-credential":"Email ou mot de passe incorrect."};
+    showErrAuth(m[e.code]||"Erreur de connexion.");
   }
 };
 
 function showErrAuth(msg){const el=document.getElementById("auth-err");el.textContent=msg;el.style.display="block";}
 
-window.logout = async function() {
+window.logout=async function(){
   if(lobbyUnsub){lobbyUnsub();lobbyUnsub=null;}
-  currentLobby=null;
-  clearLastLobbyCode();
+  currentLobby=null;clearLastCode();
   await signOut(auth);
   document.getElementById("bottom-nav").style.display="none";
 };
 
 // ── HOME ──────────────────────────────────────────────────────────────────────
-function goHome() {
-  showScreen("home");
-  document.getElementById("bottom-nav").style.display="none";
-  const zone = document.getElementById("create-btn-zone");
-  if(currentUser&&currentUser.email===ADMIN_EMAIL){
-    zone.innerHTML='<button class="btn btn-g" onclick="createLobby()">CREER UNE LIGUE</button><button class="btn btn-b" onclick="requestNotifPermission()" style="margin-bottom:10px;">🔔 Activer les rappels</button>';
-  } else { zone.innerHTML=''; }
-
-  // Afficher la derniere ligue si elle existe
-  const lastCode = getLastLobbyCode();
-  const recentZone = document.getElementById("recent-lobby-zone");
-  if(lastCode){
-    recentZone.innerHTML=`<div class="recent-lobby-card" onclick="rejoinLobby('${lastCode}')"><span style="font-size:28px;">⚽</span><div><div style="font-weight:700;font-size:15px;">Rejoindre ma ligue</div><div style="font-size:12px;color:#888;margin-top:2px;">Code : ${lastCode}</div></div><span style="color:#39E979;font-size:20px;">→</span></div>`;
-  } else { recentZone.innerHTML=''; }
+function goHome(){
+  showScreen("home");document.getElementById("bottom-nav").style.display="none";
+  const zone=document.getElementById("create-btn-zone");
+  zone.innerHTML=currentUser&&currentUser.email===ADMIN_EMAIL?'<button class="btn btn-g" onclick="createLobby()">CREER UNE LIGUE</button><button class="btn btn-b" onclick="requestNotifPermission()" style="margin-bottom:10px;">🔔 Activer les rappels</button>':'';
+  const lc=getLastCode();
+  const rz=document.getElementById("recent-lobby-zone");
+  rz.innerHTML=lc?`<div class="recent-lobby-card" onclick="rejoinLobby('${lc}')"><span style="font-size:28px;">⚽</span><div><div style="font-weight:700;font-size:15px;">Rejoindre ma ligue</div><div style="font-size:12px;color:#888;margin-top:2px;">Code : ${lc}</div></div><span style="color:#39E979;font-size:20px;">→</span></div>`:'';
 }
 
-window.rejoinLobby = async function(code) {
-  try {
-    const lobbyDoc = await getDoc(doc(db,"lobbies",code));
-    if(lobbyDoc.exists()){openLobby(code);}
-    else{clearLastLobbyCode();showToast("Ligue introuvable.");goHome();}
-  } catch(e){showToast("Erreur de connexion.");}
+window.rejoinLobby=async function(code){
+  try{const ld=await getDoc(doc(db,"lobbies",code));if(ld.exists())openLobby(code);else{clearLastCode();showToast("Ligue introuvable.");goHome();}}
+  catch(e){showToast("Erreur de connexion.");}
 };
 
 // ── LOBBY ─────────────────────────────────────────────────────────────────────
-window.createLobby = async function() {
-  if(!currentUser||currentUser.email!==ADMIN_EMAIL) return showToast("Acces refuse.");
-  const code = genCode();
-  const lobby = {
-    code, name:"Ligue de "+currentUser.pseudo, host:currentUser.uid, hostEmail:currentUser.email,
-    status:"waiting", round:CURRENT_ROUND, deadline:new Date("2026-05-09T13:00:00").getTime(),
-    players:{[currentUser.uid]:{uid:currentUser.uid,pseudo:currentUser.pseudo,photoURL:currentUser.photoURL||null,alive:true,pick:null,result:null,usedTeams:[],points:0,phrase:null}},
-    matchResults:{}, createdAt:Date.now()
-  };
-  await setDoc(doc(db,"lobbies",code),lobby);
-  saveLastLobbyCode(code);
-  openLobby(code);
+window.createLobby=async function(){
+  if(!currentUser||currentUser.email!==ADMIN_EMAIL)return showToast("Acces refuse.");
+  const code=genCode();
+  await setDoc(doc(db,"lobbies",code),{code,name:"Ligue de "+currentUser.pseudo,host:currentUser.uid,hostEmail:currentUser.email,status:"waiting",round:CURRENT_ROUND,deadline:new Date("2026-05-09T13:00:00").getTime(),players:{[currentUser.uid]:{uid:currentUser.uid,pseudo:currentUser.pseudo,photoURL:currentUser.photoURL||null,alive:true,pick:null,result:null,usedTeams:[],points:0,phrase:null}},matchResults:{},createdAt:Date.now()});
+  saveLastCode(code);openLobby(code);
 };
 
-window.joinLobby = async function() {
-  const code = document.getElementById("join-code").value.trim().toUpperCase();
-  const errEl = document.getElementById("join-err");
-  errEl.style.display="none";
-  try {
-    const lobbyDoc = await getDoc(doc(db,"lobbies",code));
-    if(!lobbyDoc.exists()){errEl.textContent="Code introuvable.";errEl.style.display="block";return;}
-    const lob = lobbyDoc.data();
-    if(!lob.players[currentUser.uid]){
-      await updateDoc(doc(db,"lobbies",code),{[`players.${currentUser.uid}`]:{uid:currentUser.uid,pseudo:currentUser.pseudo,photoURL:currentUser.photoURL||null,alive:true,pick:null,result:null,usedTeams:[],points:0,phrase:null}});
-    }
-    saveLastLobbyCode(code);
-    openLobby(code);
+window.joinLobby=async function(){
+  const code=document.getElementById("join-code").value.trim().toUpperCase();
+  const errEl=document.getElementById("join-err");errEl.style.display="none";
+  try{
+    const ld=await getDoc(doc(db,"lobbies",code));
+    if(!ld.exists()){errEl.textContent="Code introuvable.";errEl.style.display="block";return;}
+    if(!ld.data().players[currentUser.uid])await updateDoc(doc(db,"lobbies",code),{[`players.${currentUser.uid}`]:{uid:currentUser.uid,pseudo:currentUser.pseudo,photoURL:currentUser.photoURL||null,alive:true,pick:null,result:null,usedTeams:[],points:0,phrase:null}});
+    saveLastCode(code);openLobby(code);
   } catch(e){errEl.textContent="Erreur : "+e.message;errEl.style.display="block";}
 };
 
-function openLobby(code) {
+function openLobby(code){
   if(lobbyUnsub){lobbyUnsub();lobbyUnsub=null;}
-  lobbyUnsub = onSnapshot(doc(db,"lobbies",code),(snap)=>{
+  lobbyUnsub=onSnapshot(doc(db,"lobbies",code),snap=>{
     if(snap.exists()){
       currentLobby={id:snap.id,...snap.data()};
-      if(document.getElementById("bottom-nav").style.display==="none"){
-        document.getElementById("bottom-nav").style.display="flex";
-        navTo("accueil");
-      } else {
-        refreshCurrentView();
-      }
+      if(document.getElementById("bottom-nav").style.display==="none"){document.getElementById("bottom-nav").style.display="flex";navTo("accueil");}
+      else refreshCurrentView();
     }
   });
 }
 
-function refreshCurrentView(){
-  const activeNav=document.querySelector(".nav button.active");
-  if(activeNav){const tab=activeNav.id.replace("nav-","");navTo(tab);}
-}
+function refreshCurrentView(){const b=document.querySelector(".nav button.active");if(b)navTo(b.id.replace("nav-",""));}
 
-window.leaveLobby = function() {
-  if(lobbyUnsub){lobbyUnsub();lobbyUnsub=null;}
-  currentLobby=null;
-  clearLastLobbyCode();
-  document.getElementById("bottom-nav").style.display="none";
-  goHome();
-};
-
-async function saveLobbyField(field,value){await updateDoc(doc(db,"lobbies",currentLobby.code),{[field]:value});}
-async function saveLobbyFields(fields){await updateDoc(doc(db,"lobbies",currentLobby.code),fields);}
+window.leaveLobby=function(){if(lobbyUnsub){lobbyUnsub();lobbyUnsub=null;}currentLobby=null;clearLastCode();document.getElementById("bottom-nav").style.display="none";goHome();};
+async function saveF(f,v){await updateDoc(doc(db,"lobbies",currentLobby.code),{[f]:v});}
+async function saveFs(fs){await updateDoc(doc(db,"lobbies",currentLobby.code),fs);}
 
 window.openRename=function(){document.getElementById("new-name-input").value=currentLobby.name;document.getElementById("modal-rename").classList.add("open");};
 window.closeRename=function(){document.getElementById("modal-rename").classList.remove("open");};
-window.saveName=async function(){const n=document.getElementById("new-name-input").value.trim();if(!n)return showToast("Nom vide !");await saveLobbyField("name",n);closeRename();showToast("Nom mis a jour !");};
-
-window.shareLigue = function() {
-  const msg="Rejoins ma ligue Survivor Ligue 1 !\nCode : "+currentLobby.code+"\n"+APP_URL;
-  if(navigator.share){navigator.share({title:"Survivor Ligue 1",text:msg,url:APP_URL}).catch(()=>{});}
-  else{navigator.clipboard&&navigator.clipboard.writeText(msg);showToast("Lien copie !");}
-};
-
+window.saveName=async function(){const n=document.getElementById("new-name-input").value.trim();if(!n)return showToast("Nom vide !");await saveF("name",n);closeRename();showToast("Nom mis a jour !");};
+window.shareLigue=function(){const msg="Rejoins ma ligue Survivor Ligue 1 !\nCode : "+currentLobby.code+"\n"+APP_URL;if(navigator.share)navigator.share({title:"Survivor Ligue 1",text:msg,url:APP_URL}).catch(()=>{});else{navigator.clipboard&&navigator.clipboard.writeText(msg);showToast("Lien copie !");}};
 window.copyCode=function(){if(navigator.clipboard)navigator.clipboard.writeText(currentLobby.code);showToast("Code copie !");};
 
 // ── NAV ───────────────────────────────────────────────────────────────────────
-window.navTo = function(tab) {
+window.navTo=function(tab){
   document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
   document.getElementById("nav-"+tab).classList.add("active");
   if(tab==="accueil")renderAccueil();
@@ -632,9 +563,7 @@ function renderLobby(){
   document.getElementById("wait-host").style.display=isHost?"none":"block";
 }
 
-window.startGame=async function(){
-  await saveLobbyFields({status:"picking",deadline:new Date("2026-05-09T13:00:00").getTime()});
-};
+window.startGame=async function(){await saveFs({status:"picking",deadline:new Date("2026-05-09T13:00:00").getTime()});};
 
 // ── PICKING SCREEN ────────────────────────────────────────────────────────────
 function renderPicking(){
@@ -644,7 +573,6 @@ function renderPicking(){
   const myPick=me?me.pick:null;
   const usedTeams=me?(me.usedTeams||[]):[];
   const closed=currentLobby.status==="closed";
-
   if(timerInterval)clearInterval(timerInterval);
   timerInterval=setInterval(()=>{
     const d=Math.max(0,(currentLobby.deadline||0)-Date.now());
@@ -652,32 +580,27 @@ function renderPicking(){
     document.getElementById("timer").textContent=`${h<10?"0"+h:h}:${m<10?"0"+m:m}:${s<10?"0"+s:s}`;
   },1000);
 
-  // Boite selection en attente de validation
   const pendingBox=document.getElementById("pending-pick-box");
   const myPickBox=document.getElementById("my-pick-box");
+  const validateBar=document.getElementById("validate-bar");
 
   if(myPick){
     pendingBox.style.display="none";
-    const t=getTeam(myPick);
-    document.getElementById("my-pick-logo").innerHTML="";
-    document.getElementById("my-pick-name").textContent=t.name;
+    document.getElementById("my-pick-name").textContent=getTeam(myPick).name;
     myPickBox.style.display="flex";
-    document.getElementById("validate-bar").style.display="none";
+    validateBar.style.display="none";
     pendingPick=null;
   } else if(pendingPick){
-    const t=getTeam(pendingPick);
-    document.getElementById("pending-pick-logo").innerHTML="";
-    document.getElementById("pending-pick-name").textContent=t.name;
+    document.getElementById("pending-pick-name").textContent=getTeam(pendingPick).name;
     pendingBox.style.display="block";
     myPickBox.style.display="none";
-    document.getElementById("validate-bar").style.display="block";
+    validateBar.style.display="block";
   } else {
     pendingBox.style.display="none";
     myPickBox.style.display="none";
-    document.getElementById("validate-bar").style.display="none";
+    validateBar.style.display="none";
   }
 
-  // Choix des autres apres fermeture
   const othersZone=document.getElementById("others-picks-zone");
   if(closed){
     const others=Object.values(currentLobby.players).filter(p=>p.uid!==currentUser.uid&&p.alive);
@@ -686,12 +609,10 @@ function renderPicking(){
       others.forEach(p=>{
         const pt=getTeam(p.pick);
         html+=`<div class="row"><div class="av">${avEl(p)}</div><span style="flex:1;font-weight:600;">${p.pseudo}</span>`;
-        if(p.pick)html+=`<span style="font-size:13px;font-weight:600;color:#39E979;">${pt.name}</span>`;
-        else html+='<span style="color:#888;font-size:12px;">Pas encore choisi</span>';
+        html+=p.pick?`<span style="font-size:13px;font-weight:600;color:#39E979;">${pt.name}</span>`:'<span style="color:#888;font-size:12px;">Pas encore choisi</span>';
         html+='</div>';
       });
-      html+='</div></div>';
-      othersZone.innerHTML=html;
+      othersZone.innerHTML=html+'</div></div>';
     }
   } else {othersZone.innerHTML='';}
 
@@ -702,13 +623,8 @@ function renderPicking(){
       const sel=pendingPick===item.id;
       const confirmed=myPick===item.id;
       const used=usedTeams.includes(item.id);
-      // Peut cliquer si vivant, pas encore valide, pas utilise, pas ferme
       const canPick=me&&me.alive&&!myPick&&!used&&!closed;
-      let dot;
-      if(confirmed)dot='<div style="width:22px;height:22px;border-radius:50%;background:#39E979;display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;font-weight:700;flex-shrink:0;">✓</div>';
-      else if(sel)dot='<div style="width:22px;height:22px;border-radius:50%;background:#FFD000;display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;font-weight:700;flex-shrink:0;">●</div>';
-      else if(used)dot='<div style="width:22px;height:22px;border-radius:50%;background:#FF4444;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex-shrink:0;">✗</div>';
-      else dot='<div style="width:22px;height:22px;border-radius:50%;border:2px solid #2E2E2E;flex-shrink:0;"></div>';
+      const dot=confirmed?'<div style="width:22px;height:22px;border-radius:50%;background:#39E979;display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;font-weight:700;flex-shrink:0;">✓</div>':sel?'<div style="width:22px;height:22px;border-radius:50%;background:#FFD000;display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;font-weight:700;flex-shrink:0;">●</div>':used?'<div style="width:22px;height:22px;border-radius:50%;background:#FF4444;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex-shrink:0;">✗</div>':'<div style="width:22px;height:22px;border-radius:50%;border:2px solid #2E2E2E;flex-shrink:0;"></div>';
       const bg=confirmed?'rgba(57,233,121,0.06)':sel?'rgba(255,208,0,0.08)':'transparent';
       const onclick=canPick?"selectPick('"+item.id+"')":"";
       fl.innerHTML+='<div onclick="'+onclick+'" style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid #2E2E2E;gap:10px;background:'+bg+';opacity:'+(used?0.35:1)+';cursor:'+(canPick?'pointer':'default')+';">'+dot+'<span style="flex:1;font-weight:600;font-size:15px;">'+t.name+'</span><span style="font-size:12px;color:#888;">'+item.time+'</span></div>';
@@ -718,7 +634,7 @@ function renderPicking(){
   if(usedTeams.length>0){
     document.getElementById("used-teams-box").style.display="block";
     const uc=document.getElementById("used-teams-chips");uc.innerHTML="";
-    usedTeams.forEach(tid=>{const t=getTeam(tid);uc.innerHTML+='<span style="background:#222;border:1px solid #2E2E2E;border-radius:99px;padding:4px 10px;font-size:12px;color:#888;">'+t.name+'</span>';});
+    usedTeams.forEach(tid=>{uc.innerHTML+='<span style="background:#222;border:1px solid #2E2E2E;border-radius:99px;padding:4px 10px;font-size:12px;color:#888;">'+getTeam(tid).name+'</span>';});
   }
 
   const isHost=currentLobby.host===currentUser.uid;
@@ -728,105 +644,80 @@ function renderPicking(){
   else if(isHost&&closed)hc.innerHTML='<button class="btn btn-g" onclick="resolveRound()">OBTENIR LES RESULTATS</button>';
 }
 
-// Selectionner une equipe - on peut changer en cliquant sur une autre
-window.selectPick = function(id) {
+window.selectPick=function(id){
   const me=currentLobby.players[currentUser.uid];
   if(!me||!me.alive||me.pick||currentLobby.status==="closed")return;
-  pendingPick=id; // remplace simplement le pick en attente
-  renderPicking();
+  pendingPick=id;renderPicking();
 };
-
-// Annuler la selection avant validation
-window.cancelPick = function() {
-  pendingPick=null;
-  renderPicking();
-};
-
-// Confirmer et enregistrer le choix
-window.confirmPick = async function() {
+window.cancelPick=function(){pendingPick=null;renderPicking();};
+window.confirmPick=async function(){
   if(!pendingPick)return;
   const me=currentLobby.players[currentUser.uid];
   if(!me||!me.alive||me.pick||currentLobby.status==="closed")return;
-  const id=pendingPick;
-  pendingPick=null;
-  await saveLobbyField(`players.${currentUser.uid}.pick`,id);
+  const id=pendingPick;pendingPick=null;
+  await saveF("players."+currentUser.uid+".pick",id);
   showToast(getTeam(id).name+" valide !");
 };
+window.closeSelections=async function(){await saveF("status","closed");};
 
-window.closeSelections=async function(){await saveLobbyField("status","closed");};
-
-// ── RESOLVE ROUND ─────────────────────────────────────────────────────────────
+// ── RESOLVE ───────────────────────────────────────────────────────────────────
 window.resolveRound=async function(){
   if(!currentUser||currentUser.email!==ADMIN_EMAIL)return showToast("Acces refuse.");
   document.getElementById("modal-loading").classList.add("open");
-
-  let apiResults={};
-  let matchScores={}; // Pour le recap
-  try {
-    const resp=await fetch(`https://free-api-live-football-data.p.rapidapi.com/football-get-all-fixtures-by-league-and-season?leagueId=61&season=2025`,{method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}});
+  let apiResults={},matchResults={};
+  try{
+    const resp=await fetch("https://free-api-live-football-data.p.rapidapi.com/football-get-all-fixtures-by-league-and-season?leagueId=61&season=2025",{method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}});
     const data=await resp.json();
     if(data&&data.response){
       data.response.forEach(match=>{
         if(match.fixture?.status?.short==="FT"&&match.league?.round){
-          const roundNum=parseInt(match.league.round.replace(/\D/g,""));
-          if(roundNum===currentLobby.round){
+          const rn=parseInt(match.league.round.replace(/\D/g,""));
+          if(rn===currentLobby.round){
             const ht=TEAMS.find(t=>t.apiId===match.teams?.home?.id);
             const at=TEAMS.find(t=>t.apiId===match.teams?.away?.id);
-            const hg=match.goals?.home;const ag=match.goals?.away;
+            const hg=match.goals?.home,ag=match.goals?.away;
             if(ht&&at&&hg!==null&&ag!==null){
               if(hg>ag){apiResults[ht.id]="win";apiResults[at.id]="loss";}
               else if(ag>hg){apiResults[at.id]="win";apiResults[ht.id]="loss";}
               else{apiResults[ht.id]="draw";apiResults[at.id]="draw";}
-              matchScores[`${ht.id}-${at.id}`]={home:ht.id,away:at.id,homeGoals:hg,awayGoals:ag};
+              matchResults[ht.id+"-"+at.id]={home:ht.id,away:at.id,homeGoals:hg,awayGoals:ag};
             }
           }
         }
       });
     }
   } catch(e){showToast("API indisponible - simulation");}
-
   document.getElementById("modal-loading").classList.remove("open");
 
-  const updates={matchResults:matchScores};
+  const updates={matchResults};
   Object.values(currentLobby.players).forEach(p=>{
     if(!p.alive)return;
-    if(!p.pick){updates[`players.${p.uid}.result`]="no_pick";updates[`players.${p.uid}.alive`]=false;updates[`players.${p.uid}.phrase`]=getPhrase(PHRASES_NO_PICK);return;}
+    if(!p.pick){updates["players."+p.uid+".result"]="no_pick";updates["players."+p.uid+".alive"]=false;updates["players."+p.uid+".phrase"]=getPhrase(PHRASES_NO_PICK);return;}
     let result=apiResults[p.pick];
     if(!result){const r=Math.random();result=r<0.45?"win":r<0.7?"draw":"loss";}
     const survived=result==="win";
-    updates[`players.${p.uid}.result`]=result;
-    updates[`players.${p.uid}.alive`]=survived;
-    updates[`players.${p.uid}.phrase`]=result==="win"?getPhrase(PHRASES_WIN):result==="draw"?getPhrase(PHRASES_DRAW):getPhrase(PHRASES_LOSS);
-    if(survived)updates[`players.${p.uid}.usedTeams`]=[...(p.usedTeams||[]),p.pick];
+    updates["players."+p.uid+".result"]=result;
+    updates["players."+p.uid+".alive"]=survived;
+    updates["players."+p.uid+".phrase"]=result==="win"?getPhrase(PHRASES_WIN):result==="draw"?getPhrase(PHRASES_DRAW):getPhrase(PHRASES_LOSS);
+    if(survived)updates["players."+p.uid+".usedTeams"]=[...(p.usedTeams||[]),p.pick];
   });
 
-  // Calculer les survivants apres application
-  const survivorsCount=Object.values(currentLobby.players).filter(p=>{
+  const survivorsAfter=Object.values(currentLobby.players).filter(p=>{
     if(!p.alive)return false;
     if(!p.pick)return false;
-    const result=updates[`players.${p.uid}.result`];
-    return result==="win";
-  }).length;
+    return updates["players."+p.uid+".result"]==="win";
+  });
 
-  if(survivorsCount===0){
+  if(survivorsAfter.length===0){
     updates.status="nobody";
-  } else if(survivorsCount===1){
-    // UN SEUL SURVIVANT = il gagne un point
+  } else if(survivorsAfter.length===1){
     updates.status="finished";
-    Object.values(currentLobby.players).forEach(p=>{
-      if(p.alive&&updates[`players.${p.uid}.result`]==="win"){
-        updates[`players.${p.uid}.points`]=(p.points||0)+1;
-        // Mettre a jour dans users aussi
-        getDoc(doc(db,"users",p.uid)).then(ud=>{
-          if(ud.exists())updateDoc(doc(db,"users",p.uid),{points:(ud.data().points||0)+1});
-        });
-      }
-    });
+    const w=survivorsAfter[0];
+    updates["players."+w.uid+".points"]=(w.points||0)+1;
+    getDoc(doc(db,"users",w.uid)).then(ud=>{if(ud.exists())updateDoc(doc(db,"users",w.uid),{points:(ud.data().points||0)+1});});
   } else {
-    // PLUSIEURS SURVIVANTS = pas de point, on continue
     updates.status="roundEnd";
   }
-
   await updateDoc(doc(db,"lobbies",currentLobby.code),updates);
 };
 
@@ -838,28 +729,11 @@ function renderResults(){
   Object.values(currentLobby.players).forEach(p=>{
     const t=getTeam(p.pick);
     const isWin=p.result==="win";
-    const phraseHtml=p.phrase?`<div class="${isWin?"phrase-win":"phrase-loss"}">${p.phrase}</div>`:'';
-    rl.innerHTML+=`<div style="padding:12px 16px;border-bottom:1px solid #2E2E2E;"><div style="display:flex;align-items:center;gap:10px;"><div class="av">${avEl(p)}</div><div style="flex:1;"><div style="font-weight:600;">${p.pseudo}</div><div style="font-size:12px;color:#888;display:flex;align-items:center;gap:4px;">${p.pick?teamLogoEl(t)+' '+t.name:"Pas de choix"}</div></div><span class="${isWin?"badge-g":"badge-r"}">${isWin?"GAGNE":"ELIMINE"}</span></div>${phraseHtml}</div>`;
+    rl.innerHTML+=`<div style="padding:12px 16px;border-bottom:1px solid #2E2E2E;"><div style="display:flex;align-items:center;gap:10px;"><div class="av">${avEl(p)}</div><div style="flex:1;"><div style="font-weight:600;">${p.pseudo}</div><div style="font-size:12px;color:#888;">${p.pick?t.name:"Pas de choix"}</div></div><span class="${isWin?"badge-g":"badge-r"}">${isWin?"GAGNE":"ELIMINE"}</span></div>${p.phrase?`<div class="${isWin?"phrase-win":"phrase-loss"}">${p.phrase}</div>`:''}</div>`;
   });
-
   const alive=Object.values(currentLobby.players).filter(p=>p.alive);
   document.getElementById("alive-count").textContent=alive.length+" joueur"+(alive.length>1?"s":"")+" encore en lice !";
-
-  // Recap des scores reels
-  const scoresZone=document.getElementById("scores-recap-zone");
-  const matchResults=currentLobby.matchResults||{};
-  if(Object.keys(matchResults).length>0){
-    let html='<p class="sec-label" style="margin-top:8px;">SCORES DE LA JOURNEE</p><div class="card" style="margin-bottom:12px;">';
-    Object.values(matchResults).forEach(m=>{
-      const ht=getTeam(m.home);const at=getTeam(m.away);
-      html+=`<div class="row"><div style="flex:1;display:flex;align-items:center;gap:6px;justify-content:flex-end;">${teamLogoEl(ht)}<span style="font-size:13px;font-weight:600;">${ht.name}</span></div><div style="display:flex;gap:4px;margin:0 8px;"><span class="result-score">${m.homeGoals}</span><span style="color:#888;align-self:center;">-</span><span class="result-score">${m.awayGoals}</span></div><div style="flex:1;display:flex;align-items:center;gap:6px;">${teamLogoEl(at)}<span style="font-size:13px;font-weight:600;">${at.name}</span></div></div>`;
-    });
-    html+='</div>';
-    scoresZone.innerHTML=html;
-  } else {
-    scoresZone.innerHTML='';
-  }
-
+  document.getElementById("scores-recap-zone").innerHTML=scoresHtml(currentLobby.matchResults);
   const isHost=currentLobby.host===currentUser.uid;
   document.getElementById("btn-next-round").style.display=isHost?"block":"none";
   document.getElementById("wait-next").textContent=isHost?"":"En attente de l'admin...";
@@ -867,11 +741,7 @@ function renderResults(){
 
 window.nextRound=async function(){
   const updates={status:"picking",round:currentLobby.round+1,deadline:Date.now()+3600000,matchResults:{}};
-  Object.values(currentLobby.players).forEach(p=>{
-    updates[`players.${p.uid}.pick`]=null;
-    updates[`players.${p.uid}.result`]=null;
-    updates[`players.${p.uid}.phrase`]=null;
-  });
+  Object.values(currentLobby.players).forEach(p=>{updates["players."+p.uid+".pick"]=null;updates["players."+p.uid+".result"]=null;updates["players."+p.uid+".phrase"]=null;});
   await updateDoc(doc(db,"lobbies",currentLobby.code),updates);
 };
 
@@ -880,60 +750,52 @@ function renderWinner(){
   const winner=Object.values(currentLobby.players).find(p=>p.alive)||Object.values(currentLobby.players)[0];
   document.getElementById("winner-name").textContent="🏆 "+(winner?winner.pseudo:"?")+" 🏆";
   document.getElementById("winner-phrase").textContent=getPhrase(PHRASES_WINNER);
+  // Joueurs
+  let playersHtml='<p class="sec-label">RESULTATS DES JOUEURS</p><div class="card" style="margin-bottom:12px;">';
+  Object.values(currentLobby.players).forEach(p=>{
+    const t=getTeam(p.pick);
+    const isWin=p.result==="win";
+    playersHtml+=`<div style="padding:12px 16px;border-bottom:1px solid #2E2E2E;"><div style="display:flex;align-items:center;gap:10px;"><div class="av">${avEl(p)}</div><div style="flex:1;"><div style="font-weight:600;">${p.pseudo}</div><div style="font-size:12px;color:#888;">${p.pick?t.name:"Pas de choix"}</div></div><span class="${isWin?"badge-g":"badge-r"}">${isWin?"GAGNE":"ELIMINE"}</span></div>${p.phrase?`<div class="${isWin?"phrase-win":"phrase-loss"}">${p.phrase}</div>`:''}</div>`;
+  });
+  playersHtml+='</div>';
+  document.getElementById("winner-players-zone").innerHTML=playersHtml;
+  document.getElementById("winner-scores-zone").innerHTML=scoresHtml(currentLobby.matchResults);
   document.getElementById("btn-replay-winner").style.display=currentLobby.host===currentUser.uid?"block":"none";
 }
 
 function renderNobody(){
   showScreen("nobody");
-  const nr=document.getElementById("nobody-results");nr.innerHTML="";
+  let playersHtml='<p class="sec-label">RESULTATS DES JOUEURS</p><div class="card" style="margin-bottom:12px;">';
   Object.values(currentLobby.players).forEach(p=>{
     const t=getTeam(p.pick);
-    nr.innerHTML+=`<div style="padding:12px 16px;border-bottom:1px solid #2E2E2E;"><div style="display:flex;align-items:center;gap:10px;"><div class="av">${avEl(p)}</div><div style="flex:1;"><div style="font-weight:600;">${p.pseudo}</div><div style="font-size:12px;color:#888;">${p.pick?t.name:"Pas de choix"}</div></div><span class="badge-r">ELIMINE</span></div>${p.phrase?`<div class="phrase-loss">${p.phrase}</div>`:''}</div>`;
+    playersHtml+=`<div style="padding:12px 16px;border-bottom:1px solid #2E2E2E;"><div style="display:flex;align-items:center;gap:10px;"><div class="av">${avEl(p)}</div><div style="flex:1;"><div style="font-weight:600;">${p.pseudo}</div><div style="font-size:12px;color:#888;">${p.pick?t.name:"Pas de choix"}</div></div><span class="badge-r">ELIMINE</span></div>${p.phrase?`<div class="phrase-loss">${p.phrase}</div>`:''}</div>`;
   });
-
-  // Scores reels apres les joueurs
-  const matchResults=currentLobby.matchResults||{};
-  if(Object.keys(matchResults).length>0){
-    nr.innerHTML+='<div style="margin-top:4px;"></div>';
-    let scoresHtml='<p class="sec-label" style="margin-top:16px;">SCORES DE LA JOURNEE</p><div class="card">';
-    Object.values(matchResults).forEach(m=>{
-      const ht=getTeam(m.home);const at=getTeam(m.away);
-      scoresHtml+=`<div class="row"><div style="flex:1;text-align:right;font-size:13px;font-weight:600;">${ht.name}</div><div style="display:flex;gap:4px;margin:0 10px;"><span class="result-score">${m.homeGoals}</span><span style="color:#888;align-self:center;">-</span><span class="result-score">${m.awayGoals}</span></div><div style="flex:1;text-align:left;font-size:13px;font-weight:600;">${at.name}</div></div>`;
-    });
-    scoresHtml+='</div>';
-    nr.innerHTML+=scoresHtml;
-  }
-
+  playersHtml+='</div>';
+  document.getElementById("nobody-players-zone").innerHTML=playersHtml;
+  document.getElementById("nobody-scores-zone").innerHTML=scoresHtml(currentLobby.matchResults);
   document.getElementById("btn-replay-nobody").style.display=currentLobby.host===currentUser.uid?"block":"none";
 }
 
 window.replayGame=async function(){
   const updates={status:"waiting",round:CURRENT_ROUND,history:[],matchResults:{}};
-  Object.values(currentLobby.players).forEach(p=>{
-    updates[`players.${p.uid}.alive`]=true;
-    updates[`players.${p.uid}.pick`]=null;
-    updates[`players.${p.uid}.result`]=null;
-    updates[`players.${p.uid}.usedTeams`]=[];
-    updates[`players.${p.uid}.phrase`]=null;
-  });
+  Object.values(currentLobby.players).forEach(p=>{updates["players."+p.uid+".alive"]=true;updates["players."+p.uid+".pick"]=null;updates["players."+p.uid+".result"]=null;updates["players."+p.uid+".usedTeams"]=[];updates["players."+p.uid+".phrase"]=null;});
   await updateDoc(doc(db,"lobbies",currentLobby.code),updates);
 };
 
+// ── RESULTATS TAB ─────────────────────────────────────────────────────────────
 function renderResultats(){
   showScreen("resultats");
   const players=Object.values(currentLobby.players);
   const alive=players.filter(p=>p.alive);
   const elim=players.filter(p=>!p.alive);
+  const s=currentLobby.status;
   let html="";
-
-  // Si la partie est en cours ou terminee, afficher les joueurs
-  if(players.length>0&&(currentLobby.status==="roundEnd"||currentLobby.status==="finished"||currentLobby.status==="nobody"||currentLobby.status==="picking"||currentLobby.status==="closed")){
+  if(s==="waiting"){
+    html='<p style="color:#888;text-align:center;margin-top:40px;">La partie n\'a pas encore commence.</p>';
+  } else {
     if(alive.length>0){
       html+=`<p class="sec-label" style="color:#39E979;">SURVIVANTS (${alive.length})</p><div class="card" style="margin-bottom:16px;">`;
-      alive.forEach(p=>{
-        const t=getTeam(p.pick);
-        html+=`<div class="row"><div style="width:8px;height:8px;border-radius:50%;background:#39E979;flex-shrink:0;"></div><div class="av">${avEl(p)}</div><span style="flex:1;font-weight:600;">${p.pseudo}</span>${p.pick&&p.result?'<span class="badge-g">GAGNE</span>':''}</div>`;
-      });
+      alive.forEach(p=>{html+=`<div class="row"><div style="width:8px;height:8px;border-radius:50%;background:#39E979;flex-shrink:0;"></div><div class="av">${avEl(p)}</div><span style="flex:1;font-weight:600;">${p.pseudo}</span>${p.result==="win"?'<span class="badge-g">GAGNE</span>':''}</div>`;});
       html+='</div>';
     }
     if(elim.length>0){
@@ -941,23 +803,12 @@ function renderResultats(){
       elim.forEach(p=>{html+=`<div class="row" style="opacity:0.55;"><div class="av">${avEl(p)}</div><span style="flex:1;font-weight:600;">${p.pseudo}</span><span class="badge-r">Elimine</span></div>`;});
       html+='</div>';
     }
-    // Scores reels
-    const matchResults=currentLobby.matchResults||{};
-    if(Object.keys(matchResults).length>0){
-      html+='<p class="sec-label">SCORES DE LA JOURNEE</p><div class="card">';
-      Object.values(matchResults).forEach(m=>{
-        const ht=getTeam(m.home);const at=getTeam(m.away);
-        html+=`<div class="row"><div style="flex:1;text-align:right;font-size:13px;font-weight:600;">${ht.name}</div><div style="display:flex;gap:4px;margin:0 10px;"><span class="result-score">${m.homeGoals}</span><span style="color:#888;align-self:center;">-</span><span class="result-score">${m.awayGoals}</span></div><div style="flex:1;text-align:left;font-size:13px;font-weight:600;">${at.name}</div></div>`;
-      });
-      html+='</div>';
-    }
-  } else {
-    html='<p style="color:#888;text-align:center;margin-top:40px;">Aucun resultat pour l\'instant.<br>La partie n\'a pas encore commence.</p>';
+    html+=scoresHtml(currentLobby.matchResults);
   }
-
   document.getElementById("resultats-content").innerHTML=html;
 }
 
+// ── CLASSEMENT ────────────────────────────────────────────────────────────────
 function renderClassement(){
   showScreen("classement");
   const sorted=Object.values(currentLobby.players).sort((a,b)=>(b.points||0)-(a.points||0));
@@ -968,35 +819,24 @@ function renderClassement(){
   });
 }
 
+// ── PROFIL ────────────────────────────────────────────────────────────────────
 async function renderProfil(){
   showScreen("profil");
   const me=currentLobby.players[currentUser.uid];
-  const userDoc=await getDoc(doc(db,"users",currentUser.uid));
-  const fullUser=userDoc.exists()?userDoc.data():currentUser;
+  const ud=await getDoc(doc(db,"users",currentUser.uid));
+  const fu=ud.exists()?ud.data():currentUser;
   const wrap=document.getElementById("profil-av-wrap");
-  if(currentUser.photoURL){wrap.innerHTML=`<img src="${currentUser.photoURL}" referrerpolicy="no-referrer" style="width:72px;height:72px;object-fit:cover;border-radius:50%;"/>`;}
-  else{wrap.innerHTML=`<span id="profil-av">${currentUser.pseudo?.[0]?.toUpperCase()||"?"}</span>`;}
-  document.getElementById("profil-name").textContent=currentUser.pseudo||fullUser.pseudo;
+  wrap.innerHTML=currentUser.photoURL?`<img src="${currentUser.photoURL}" referrerpolicy="no-referrer" style="width:72px;height:72px;object-fit:cover;border-radius:50%;"/>`:`<span id="profil-av">${currentUser.pseudo?.[0]?.toUpperCase()||"?"}</span>`;
+  document.getElementById("profil-name").textContent=currentUser.pseudo||fu.pseudo;
   document.getElementById("profil-email").textContent=currentUser.email;
-  const totalGames=fullUser.totalGames||0;
-  const totalWins=fullUser.totalWins||0;
-  const winRate=totalGames>0?Math.round((totalWins/totalGames)*100):0;
-  const points=me?me.points||0:0;
-  document.getElementById("stats-grid").innerHTML=
-    `<div class="stat-card"><div class="stat-num">${points}</div><div class="stat-label">Points totaux</div></div>`+
-    `<div class="stat-card"><div class="stat-num">${winRate}%</div><div class="stat-label">Taux de survie</div></div>`+
-    `<div class="stat-card"><div class="stat-num">${fullUser.bestStreak||0}</div><div class="stat-label">Meilleure serie</div></div>`+
-    `<div class="stat-card"><div class="stat-num">${fullUser.currentStreak||0}</div><div class="stat-label">Serie en cours</div></div>`;
-  document.getElementById("profil-details").innerHTML=
-    `<div class="row"><span style="flex:1;font-weight:600;">Parties jouees</span><span style="color:#888;">${totalGames}</span></div>`+
-    `<div class="row"><span style="flex:1;font-weight:600;">Victoires</span><span style="color:#39E979;font-weight:700;">${totalWins}</span></div>`+
-    `<div class="row"><span style="flex:1;font-weight:600;">Equipes utilisees</span><span style="color:#888;">${me?.usedTeams?.length||0}</span></div>`+
-    `<div class="row" style="border-bottom:none;"><span style="flex:1;font-weight:600;">Statut</span><span class="${me?.alive?"badge-g":"badge-r"}">${me?.alive?"En vie":"Elimine"}</span></div>`;
+  const tg=fu.totalGames||0,tw=fu.totalWins||0,wr=tg>0?Math.round((tw/tg)*100):0,pts=me?me.points||0:0;
+  document.getElementById("stats-grid").innerHTML=`<div class="stat-card"><div class="stat-num">${pts}</div><div class="stat-label">Points totaux</div></div><div class="stat-card"><div class="stat-num">${wr}%</div><div class="stat-label">Taux de survie</div></div><div class="stat-card"><div class="stat-num">${fu.bestStreak||0}</div><div class="stat-label">Meilleure serie</div></div><div class="stat-card"><div class="stat-num">${fu.currentStreak||0}</div><div class="stat-label">Serie en cours</div></div>`;
+  document.getElementById("profil-details").innerHTML=`<div class="row"><span style="flex:1;font-weight:600;">Parties jouees</span><span style="color:#888;">${tg}</span></div><div class="row"><span style="flex:1;font-weight:600;">Victoires</span><span style="color:#39E979;font-weight:700;">${tw}</span></div><div class="row"><span style="flex:1;font-weight:600;">Equipes utilisees</span><span style="color:#888;">${me?.usedTeams?.length||0}</span></div><div class="row" style="border-bottom:none;"><span style="flex:1;font-weight:600;">Statut</span><span class="${me?.alive?"badge-g":"badge-r"}">${me?.alive?"En vie":"Elimine"}</span></div>`;
 }
 
 window.requestNotifPermission=function(){
   if(!("Notification" in window))return showToast("Notifications non supportees");
-  Notification.requestPermission().then(perm=>{showToast(perm==="granted"?"Notifications activees !":"Notifications refusees");});
+  Notification.requestPermission().then(p=>showToast(p==="granted"?"Notifications activees !":"Notifications refusees"));
 };
 
 </script>
