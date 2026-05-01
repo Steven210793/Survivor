@@ -890,6 +890,20 @@ function renderNobody(){
     const t=getTeam(p.pick);
     nr.innerHTML+=`<div style="padding:12px 16px;border-bottom:1px solid #2E2E2E;"><div style="display:flex;align-items:center;gap:10px;"><div class="av">${avEl(p)}</div><div style="flex:1;"><div style="font-weight:600;">${p.pseudo}</div><div style="font-size:12px;color:#888;">${p.pick?t.name:"Pas de choix"}</div></div><span class="badge-r">ELIMINE</span></div>${p.phrase?`<div class="phrase-loss">${p.phrase}</div>`:''}</div>`;
   });
+
+  // Scores reels apres les joueurs
+  const matchResults=currentLobby.matchResults||{};
+  if(Object.keys(matchResults).length>0){
+    nr.innerHTML+='<div style="margin-top:4px;"></div>';
+    let scoresHtml='<p class="sec-label" style="margin-top:16px;">SCORES DE LA JOURNEE</p><div class="card">';
+    Object.values(matchResults).forEach(m=>{
+      const ht=getTeam(m.home);const at=getTeam(m.away);
+      scoresHtml+=`<div class="row"><div style="flex:1;text-align:right;font-size:13px;font-weight:600;">${ht.name}</div><div style="display:flex;gap:4px;margin:0 10px;"><span class="result-score">${m.homeGoals}</span><span style="color:#888;align-self:center;">-</span><span class="result-score">${m.awayGoals}</span></div><div style="flex:1;text-align:left;font-size:13px;font-weight:600;">${at.name}</div></div>`;
+    });
+    scoresHtml+='</div>';
+    nr.innerHTML+=scoresHtml;
+  }
+
   document.getElementById("btn-replay-nobody").style.display=currentLobby.host===currentUser.uid?"block":"none";
 }
 
@@ -907,20 +921,41 @@ window.replayGame=async function(){
 
 function renderResultats(){
   showScreen("resultats");
-  const alive=Object.values(currentLobby.players).filter(p=>p.alive);
-  const elim=Object.values(currentLobby.players).filter(p=>!p.alive);
+  const players=Object.values(currentLobby.players);
+  const alive=players.filter(p=>p.alive);
+  const elim=players.filter(p=>!p.alive);
   let html="";
-  if(alive.length>0){
-    html+=`<p class="sec-label" style="color:#39E979;">SURVIVANTS (${alive.length})</p><div class="card" style="margin-bottom:16px;">`;
-    alive.forEach(p=>{html+=`<div class="row"><div style="width:8px;height:8px;border-radius:50%;background:#39E979;flex-shrink:0;"></div><div class="av">${avEl(p)}</div><span style="flex:1;font-weight:600;">${p.pseudo}</span></div>`;});
-    html+='</div>';
+
+  // Si la partie est en cours ou terminee, afficher les joueurs
+  if(players.length>0&&(currentLobby.status==="roundEnd"||currentLobby.status==="finished"||currentLobby.status==="nobody"||currentLobby.status==="picking"||currentLobby.status==="closed")){
+    if(alive.length>0){
+      html+=`<p class="sec-label" style="color:#39E979;">SURVIVANTS (${alive.length})</p><div class="card" style="margin-bottom:16px;">`;
+      alive.forEach(p=>{
+        const t=getTeam(p.pick);
+        html+=`<div class="row"><div style="width:8px;height:8px;border-radius:50%;background:#39E979;flex-shrink:0;"></div><div class="av">${avEl(p)}</div><span style="flex:1;font-weight:600;">${p.pseudo}</span>${p.pick&&p.result?'<span class="badge-g">GAGNE</span>':''}</div>`;
+      });
+      html+='</div>';
+    }
+    if(elim.length>0){
+      html+=`<p class="sec-label">ELIMINES (${elim.length})</p><div class="card" style="margin-bottom:16px;">`;
+      elim.forEach(p=>{html+=`<div class="row" style="opacity:0.55;"><div class="av">${avEl(p)}</div><span style="flex:1;font-weight:600;">${p.pseudo}</span><span class="badge-r">Elimine</span></div>`;});
+      html+='</div>';
+    }
+    // Scores reels
+    const matchResults=currentLobby.matchResults||{};
+    if(Object.keys(matchResults).length>0){
+      html+='<p class="sec-label">SCORES DE LA JOURNEE</p><div class="card">';
+      Object.values(matchResults).forEach(m=>{
+        const ht=getTeam(m.home);const at=getTeam(m.away);
+        html+=`<div class="row"><div style="flex:1;text-align:right;font-size:13px;font-weight:600;">${ht.name}</div><div style="display:flex;gap:4px;margin:0 10px;"><span class="result-score">${m.homeGoals}</span><span style="color:#888;align-self:center;">-</span><span class="result-score">${m.awayGoals}</span></div><div style="flex:1;text-align:left;font-size:13px;font-weight:600;">${at.name}</div></div>`;
+      });
+      html+='</div>';
+    }
+  } else {
+    html='<p style="color:#888;text-align:center;margin-top:40px;">Aucun resultat pour l\'instant.<br>La partie n\'a pas encore commence.</p>';
   }
-  if(elim.length>0){
-    html+=`<p class="sec-label">ELIMINES (${elim.length})</p><div class="card">`;
-    elim.forEach(p=>{html+=`<div class="row" style="opacity:0.55;"><div class="av">${avEl(p)}</div><span style="flex:1;font-weight:600;">${p.pseudo}</span><span class="badge-r">Elimine</span></div>`;});
-    html+='</div>';
-  }
-  document.getElementById("resultats-content").innerHTML=html||'<p style="color:#888;text-align:center;">Aucun joueur.</p>';
+
+  document.getElementById("resultats-content").innerHTML=html;
 }
 
 function renderClassement(){
