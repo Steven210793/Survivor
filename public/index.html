@@ -854,63 +854,93 @@ window.refreshLigue1=async function(){
   const content=document.getElementById("ligue1-content");
   content.innerHTML='<div style="text-align:center;padding:40px;color:#888;">Chargement...</div>';
   try{
-    const standResp=await fetch("https://free-api-live-football-data.p.rapidapi.com/football-get-standing-all-by-league-and-season?leagueId=61&season=2025",{method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}});
-    const standData=await standResp.json();
-    console.log("Standings response:", JSON.stringify(standData).substring(0,500));
+    // On utilise uniquement les fixtures — 1 seule requete
     const formResp=await fetch("https://free-api-live-football-data.p.rapidapi.com/football-get-all-fixtures-by-league-and-season?leagueId=61&season=2025",{method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}});
     const formData=await formResp.json();
-    const teamForm={};
-    if(formData&&formData.response){
-      const finished=formData.response.filter(m=>m.fixture?.status?.short==="FT").sort((a,b)=>b.fixture.timestamp-a.fixture.timestamp);
-      finished.forEach(m=>{
-        const hId=m.teams?.home?.id,aId=m.teams?.away?.id;
-        const hG=m.goals?.home,aG=m.goals?.away;
-        if(hId&&aId&&hG!==null&&aG!==null){
-          if(!teamForm[hId])teamForm[hId]=[];
-          if(!teamForm[aId])teamForm[aId]=[];
-          if(teamForm[hId].length<5)teamForm[hId].push(hG>aG?"W":hG===aG?"D":"L");
-          if(teamForm[aId].length<5)teamForm[aId].push(aG>hG?"W":hG===aG?"D":"L");
-        }
-      });
-    }
-    // Parser la reponse - format variable selon l'API
-    let standings=null;
-    if(standData&&standData.response&&standData.response[0]&&standData.response[0][0]&&standData.response[0][0].league){
-      standings=standData.response[0][0].league.standings[0];
-    } else if(standData&&standData.response&&Array.isArray(standData.response[0])){
-      standings=standData.response[0];
-    } else if(standData&&standData.response){
-      standings=standData.response;
-    }
-    if(!standings||!standings.length){
-      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Classement indisponible. Reessaie plus tard.</p>';
+
+    if(!formData||!formData.response||!formData.response.length){
+      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Donnees indisponibles. Reessaie plus tard.</p>';
       return;
     }
+
+    // Construire classement + forme depuis les fixtures
+    const teams={};
+    const teamForm={};
+    const teamNames={};
+
+    const finished=formData.response.filter(m=>m.fixture?.status?.short==="FT").sort((a,b)=>a.fixture.timestamp-b.fixture.timestamp);
+
+    finished.forEach(m=>{
+      const hId=m.teams?.home?.id, aId=m.teams?.away?.id;
+      const hName=m.teams?.home?.name, aName=m.teams?.away?.name;
+      const hG=m.goals?.home, aG=m.goals?.away;
+      if(!hId||!aId||hG===null||aG===null)return;
+
+      teamNames[hId]=hName;
+      teamNames[aId]=aName;
+
+      if(!teams[hId])teams[hId]={id:hId,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
+      if(!teams[aId])teams[aId]={id:aId,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
+      if(!teamForm[hId])teamForm[hId]=[];
+      if(!teamForm[aId])teamForm[aId]=[];
+
+      teams[hId].p++;teams[aId].p++;
+      teams[hId].gf+=hG;teams[hId].ga+=aG;
+      teams[aId].gf+=aG;teams[aId].ga+=hG;
+
+      if(hG>aG){
+        teams[hId].w++;teams[hId].pts+=3;
+        teams[aId].l++;
+        teamForm[hId].push("W");teamForm[aId].push("L");
+      } else if(aG>hG){
+        teams[aId].w++;teams[aId].pts+=3;
+        teams[hId].l++;
+        teamForm[aId].push("W");teamForm[hId].push("L");
+      } else {
+        teams[hId].d++;teams[hId].pts++;
+        teams[aId].d++;teams[aId].pts++;
+        teamForm[hId].push("D");teamForm[aId].push("D");
+      }
+    });
+
+    // Trier par points, puis diff de buts
+    const sorted=Object.values(teams).sort((a,b)=>{
+      if(b.pts!==a.pts)return b.pts-a.pts;
+      return (b.gf-b.ga)-(a.gf-a.ga);
+    });
+
+    if(!sorted.length){
+      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Aucune donnee disponible.</p>';
+      return;
+    }
+
     let html='<div class="card">';
-    html+='<div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #2E2E2E;"><span style="width:24px;font-size:11px;color:#888;text-align:center;">#</span><span style="flex:1;font-size:11px;color:#888;margin-left:8px;">EQUIPE</span><span style="width:24px;font-size:11px;color:#888;text-align:center;">J</span><span style="width:24px;font-size:11px;color:#888;text-align:center;">Pts</span><span style="width:90px;font-size:11px;color:#888;text-align:center;">FORME</span></div>';
-    standings.forEach((team,i)=>{
-      const rank=team.rank||i+1;
-      const name=team.team?.name||"?";
-      const apiId=team.team?.id;
-      const pts=team.points||0;
-      const played=team.all?.played||0;
-      const form=teamForm[apiId]||[];
+    html+='<div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #2E2E2E;"><span style="width:24px;font-size:11px;color:#888;text-align:center;">#</span><span style="flex:1;font-size:11px;color:#888;margin-left:8px;">EQUIPE</span><span style="width:24px;font-size:11px;color:#888;text-align:center;">J</span><span style="width:28px;font-size:11px;color:#888;text-align:center;">Pts</span><span style="width:80px;font-size:11px;color:#888;text-align:center;">FORME</span></div>';
+
+    sorted.forEach((t,i)=>{
+      const rank=i+1;
+      const name=teamNames[t.id]||"?";
+      // 5 derniers matchs du plus recent au plus ancien
+      const form=(teamForm[t.id]||[]).slice(-5).reverse();
       let rankColor="#F2F2F2";
       if(rank<=3)rankColor="#39E979";
       else if(rank<=5)rankColor="#4A90E2";
       else if(rank>=17)rankColor="#FF4444";
+
       let formSquares='<div style="display:flex;gap:3px;justify-content:center;">';
       for(let f=0;f<5;f++){
         const r=form[f];
         const bg=r==="W"?"#39E979":r==="D"?"#888":"#FF4444";
-        const opacity=r?1:0.2;
-        formSquares+=`<div style="width:14px;height:14px;border-radius:3px;background:${bg};opacity:${opacity};"></div>`;
+        const opacity=r?1:0.15;
+        formSquares+=`<div style="width:13px;height:13px;border-radius:3px;background:${bg};opacity:${opacity};"></div>`;
       }
       formSquares+='</div>';
-      html+=`<div style="display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid #111;"><span style="width:24px;font-size:13px;font-weight:700;text-align:center;color:${rankColor};">${rank}</span><span style="flex:1;font-size:13px;font-weight:600;margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span><span style="width:24px;font-size:12px;color:#888;text-align:center;">${played}</span><span style="width:24px;font-size:13px;font-weight:700;text-align:center;">${pts}</span><div style="width:90px;">${formSquares}</div></div>`;
+
+      html+=`<div style="display:flex;align-items:center;padding:9px 12px;border-bottom:1px solid #111;"><span style="width:24px;font-size:13px;font-weight:700;text-align:center;color:${rankColor};">${rank}</span><span style="flex:1;font-size:13px;font-weight:600;margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span><span style="width:24px;font-size:12px;color:#888;text-align:center;">${t.p}</span><span style="width:28px;font-size:13px;font-weight:700;text-align:center;">${t.pts}</span><div style="width:80px;">${formSquares}</div></div>`;
     });
-    html+='</div><p style="font-size:11px;color:#555;text-align:center;margin-top:8px;">🟢 Ligue des Champions &nbsp; 🔵 Europa &nbsp; 🔴 Relegation</p>';
-    // Sauvegarder en cache
+
+    html+='</div><p style="font-size:11px;color:#555;text-align:center;margin-top:8px;">🟢 Ligue des Champions &nbsp;🔵 Europa &nbsp;🔴 Relegation</p>';
+
     localStorage.setItem("ligue1Cache",html);
     localStorage.setItem("ligue1CacheTime",Date.now().toString());
     content.innerHTML=html;
@@ -918,7 +948,7 @@ window.refreshLigue1=async function(){
     document.getElementById("ligue1-last-update").textContent="Mis a jour le "+d.toLocaleDateString("fr-FR")+" a "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
     showToast("Classement mis a jour !");
   } catch(e){
-    content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Erreur de chargement. Reessaie.</p>';
+    content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Erreur : '+e.message+'</p>';
   }
 };
 function renderClassement(){
