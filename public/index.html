@@ -859,7 +859,7 @@ window.refreshLigue1=async function(){
     const formData=await formResp.json();
 
     if(!formData||!formData.response||!formData.response.length){
-      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Donnees indisponibles. Reessaie plus tard.</p>';
+      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Donnees indisponibles.<br><small style="font-size:11px;">'+JSON.stringify(formData).substring(0,200)+'</small></p>';
       return;
     }
 
