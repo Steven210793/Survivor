@@ -854,8 +854,9 @@ window.refreshLigue1=async function(){
   const content=document.getElementById("ligue1-content");
   content.innerHTML='<div style="text-align:center;padding:40px;color:#888;">Chargement...</div>';
   try{
-    const standResp=await fetch("https://free-api-live-football-data.p.rapidapi.com/football-get-standing-all-by-league?leagueId=61",{method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}});
+    const standResp=await fetch("https://free-api-live-football-data.p.rapidapi.com/football-get-standing-all-by-league-and-season?leagueId=61&season=2025",{method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}});
     const standData=await standResp.json();
+    console.log("Standings response:", JSON.stringify(standData).substring(0,500));
     const formResp=await fetch("https://free-api-live-football-data.p.rapidapi.com/football-get-all-fixtures-by-league-and-season?leagueId=61&season=2025",{method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}});
     const formData=await formResp.json();
     const teamForm={};
@@ -872,11 +873,19 @@ window.refreshLigue1=async function(){
         }
       });
     }
-    if(!standData||!standData.response||!standData.response[0]){
-      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Classement indisponible.</p>';
+    // Parser la reponse - format variable selon l'API
+    let standings=null;
+    if(standData&&standData.response&&standData.response[0]&&standData.response[0][0]&&standData.response[0][0].league){
+      standings=standData.response[0][0].league.standings[0];
+    } else if(standData&&standData.response&&Array.isArray(standData.response[0])){
+      standings=standData.response[0];
+    } else if(standData&&standData.response){
+      standings=standData.response;
+    }
+    if(!standings||!standings.length){
+      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Classement indisponible. Reessaie plus tard.</p>';
       return;
     }
-    const standings=standData.response[0];
     let html='<div class="card">';
     html+='<div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #2E2E2E;"><span style="width:24px;font-size:11px;color:#888;text-align:center;">#</span><span style="flex:1;font-size:11px;color:#888;margin-left:8px;">EQUIPE</span><span style="width:24px;font-size:11px;color:#888;text-align:center;">J</span><span style="width:24px;font-size:11px;color:#888;text-align:center;">Pts</span><span style="width:90px;font-size:11px;color:#888;text-align:center;">FORME</span></div>';
     standings.forEach((team,i)=>{
