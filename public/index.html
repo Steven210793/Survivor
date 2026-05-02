@@ -855,7 +855,7 @@ window.refreshLigue1=async function(){
   content.innerHTML='<div style="text-align:center;padding:40px;color:#888;">Chargement...</div>';
   try{
     // On utilise uniquement les fixtures — 1 seule requete
-    const formResp=await fetch("https://free-api-live-football-data.p.rapidapi.com/football-get-all-matches-by-leagueid?leagueid=61",{method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}});
+    const formResp=await fetch("https://free-api-live-football-data.p.rapidapi.com/football-get-all-matches-by-league?leagueid=61",{method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}});
     const formData=await formResp.json();
 
     if(!formData||(!formData.response&&!formData.data&&!formData.matches)){
