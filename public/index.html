@@ -269,12 +269,17 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 
 <!-- LIGUE 1 TAB -->
 <div class="screen" id="screen-ligue1">
-  <div style="padding:14px 18px;border-bottom:1px solid #2E2E2E;flex-shrink:0;">
-    <div style="font-weight:700;font-size:18px;">Classement Ligue 1</div>
-    <div style="font-size:12px;color:#888;">Saison 2025-2026</div>
+  <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;flex-shrink:0;">
+    <div style="flex:1;">
+      <div style="font-weight:700;font-size:18px;">Classement Ligue 1</div>
+      <div style="font-size:12px;color:#888;" id="ligue1-last-update">Jamais mis a jour</div>
+    </div>
+    <div id="ligue1-refresh-btn" style="display:none;">
+      <button onclick="refreshLigue1()" style="background:#1A1A1A;border:1px solid #2E2E2E;color:#39E979;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">↻ Rafraichir</button>
+    </div>
   </div>
   <div style="padding:18px;flex:1;overflow-y:auto;" id="ligue1-content">
-    <div style="text-align:center;padding:40px;color:#888;">Chargement...</div>
+    <div style="text-align:center;padding:40px;color:#888;">Appuie sur Rafraichir pour charger le classement</div>
   </div>
 </div>
 
@@ -826,20 +831,33 @@ function renderResultats(){
 }
 
 // ── LIGUE 1 CLASSEMENT ───────────────────────────────────────────────────────
-async function renderLigue1(){
+function renderLigue1(){
   showScreen("ligue1");
+  // Afficher le bouton refresh uniquement pour l'admin
+  const refreshBtn=document.getElementById("ligue1-refresh-btn");
+  if(refreshBtn)refreshBtn.style.display=currentUser&&currentUser.email===ADMIN_EMAIL?"block":"none";
+  // Afficher les donnees en cache si disponibles
+  const cached=localStorage.getItem("ligue1Cache");
+  const cachedTime=localStorage.getItem("ligue1CacheTime");
+  if(cached){
+    document.getElementById("ligue1-content").innerHTML=cached;
+    const d=new Date(parseInt(cachedTime));
+    document.getElementById("ligue1-last-update").textContent="Mis a jour le "+d.toLocaleDateString("fr-FR")+" a "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+  } else {
+    document.getElementById("ligue1-content").innerHTML=currentUser&&currentUser.email===ADMIN_EMAIL?'<p style="color:#888;text-align:center;margin-top:40px;">Clique sur "Rafraichir" pour charger le classement.</p>':'<p style="color:#888;text-align:center;margin-top:40px;">Le classement sera disponible apres la mise a jour de l\'admin.</p>';
+    document.getElementById("ligue1-last-update").textContent="Jamais mis a jour";
+  }
+}
+
+window.refreshLigue1=async function(){
+  if(!currentUser||currentUser.email!==ADMIN_EMAIL)return showToast("Acces refuse.");
   const content=document.getElementById("ligue1-content");
-  content.innerHTML='<div style="text-align:center;padding:40px;color:#888;">Chargement du classement...</div>';
-  try {
-    // Classement
+  content.innerHTML='<div style="text-align:center;padding:40px;color:#888;">Chargement...</div>';
+  try{
     const standResp=await fetch("https://free-api-live-football-data.p.rapidapi.com/football-get-standing-all-by-league?leagueId=61",{method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}});
     const standData=await standResp.json();
-
-    // 5 derniers matchs par equipe
     const formResp=await fetch("https://free-api-live-football-data.p.rapidapi.com/football-get-all-fixtures-by-league-and-season?leagueId=61&season=2025",{method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}});
     const formData=await formResp.json();
-
-    // Construire la forme des equipes (5 derniers matchs termines)
     const teamForm={};
     if(formData&&formData.response){
       const finished=formData.response.filter(m=>m.fixture?.status?.short==="FT").sort((a,b)=>b.fixture.timestamp-a.fixture.timestamp);
@@ -854,17 +872,13 @@ async function renderLigue1(){
         }
       });
     }
-
     if(!standData||!standData.response||!standData.response[0]){
-      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Classement indisponible pour le moment.</p>';
+      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Classement indisponible.</p>';
       return;
     }
-
     const standings=standData.response[0];
     let html='<div class="card">';
-    // Header
     html+='<div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #2E2E2E;"><span style="width:24px;font-size:11px;color:#888;text-align:center;">#</span><span style="flex:1;font-size:11px;color:#888;margin-left:8px;">EQUIPE</span><span style="width:24px;font-size:11px;color:#888;text-align:center;">J</span><span style="width:24px;font-size:11px;color:#888;text-align:center;">Pts</span><span style="width:90px;font-size:11px;color:#888;text-align:center;">FORME</span></div>';
-
     standings.forEach((team,i)=>{
       const rank=team.rank||i+1;
       const name=team.team?.name||"?";
@@ -872,14 +886,10 @@ async function renderLigue1(){
       const pts=team.points||0;
       const played=team.all?.played||0;
       const form=teamForm[apiId]||[];
-
-      // Couleur rang
       let rankColor="#F2F2F2";
       if(rank<=3)rankColor="#39E979";
       else if(rank<=5)rankColor="#4A90E2";
       else if(rank>=17)rankColor="#FF4444";
-
-      // Carrés de forme (du plus recent au plus ancien = gauche a droite)
       let formSquares='<div style="display:flex;gap:3px;justify-content:center;">';
       for(let f=0;f<5;f++){
         const r=form[f];
@@ -888,16 +898,20 @@ async function renderLigue1(){
         formSquares+=`<div style="width:14px;height:14px;border-radius:3px;background:${bg};opacity:${opacity};"></div>`;
       }
       formSquares+='</div>';
-
-      html+=`<div style="display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid #111;"><span style="width:24px;font-size:13px;font-weight:700;text-align:center;color:${rankColor};">${rank}</span><span style="flex:1;font-size:13px;font-weight:600;margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span><span style="width:24px;font-size:12px;color:#888;text-align:center;">${played}</span><span style="width:24px;font-size:13px;font-weight:700;color:#F2F2F2;text-align:center;">${pts}</span><div style="width:90px;">${formSquares}</div></div>`;
+      html+=`<div style="display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid #111;"><span style="width:24px;font-size:13px;font-weight:700;text-align:center;color:${rankColor};">${rank}</span><span style="flex:1;font-size:13px;font-weight:600;margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span><span style="width:24px;font-size:12px;color:#888;text-align:center;">${played}</span><span style="width:24px;font-size:13px;font-weight:700;text-align:center;">${pts}</span><div style="width:90px;">${formSquares}</div></div>`;
     });
-    html+='</div>';
-    html+='<p style="font-size:11px;color:#555;text-align:center;margin-top:8px;">🟢 Qualif. Ligue des Champions &nbsp; 🔵 Qualif. Europa &nbsp; 🔴 Relegation</p>';
+    html+='</div><p style="font-size:11px;color:#555;text-align:center;margin-top:8px;">🟢 Ligue des Champions &nbsp; 🔵 Europa &nbsp; 🔴 Relegation</p>';
+    // Sauvegarder en cache
+    localStorage.setItem("ligue1Cache",html);
+    localStorage.setItem("ligue1CacheTime",Date.now().toString());
     content.innerHTML=html;
+    const d=new Date();
+    document.getElementById("ligue1-last-update").textContent="Mis a jour le "+d.toLocaleDateString("fr-FR")+" a "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+    showToast("Classement mis a jour !");
   } catch(e){
-    content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Impossible de charger le classement.<br>Reessaie plus tard.</p>';
+    content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Erreur de chargement. Reessaie.</p>';
   }
-}
+};
 function renderClassement(){
   showScreen("classement");
   const sorted=Object.values(currentLobby.players).sort((a,b)=>(b.points||0)-(a.points||0));
