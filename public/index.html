@@ -68,7 +68,6 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 .loading-screen{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
 .result-score{background:#111;border-radius:8px;padding:4px 10px;font-weight:900;font-size:14px;color:#F2F2F2;}
 .recent-lobby-card{background:#1A1A1A;border:1px solid #2E2E2E;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer;}
-.debug-box{background:#0a0a0a;border:1px solid #333;border-radius:8px;padding:10px;font-size:10px;color:#39E979;word-break:break-all;white-space:pre-wrap;max-height:300px;overflow-y:auto;margin-top:8px;font-family:monospace;}
 </style>
 </head>
 <body>
@@ -346,42 +345,79 @@ const PHRASES_DRAW = ["Un nul... t'as survecu a quoi exactement ? A rien 😭","
 const PHRASES_NO_PICK = ["T'as meme pas choisi d'equipe. Respect du niveau zero 🫥","Oublier de jouer c'est un talent rare... et pas utile 🤔","T'etais ou ? Peu importe, t'es elimine de toute facon 👋","La prochaine fois mets une alarme mon grand 📱","Elimine sans meme avoir essaye. C'est un exploit en soi 🏆"];
 const PHRASES_WINNER = ["Indestructible ! Personne a pu t'arreter !","LE survivant. Les autres cherchent encore comment c'est possible 😂","Champion ! Tout le monde peut aller s'entrainer, t'es trop fort !","Dernier survivant ! Legende vivante !","T'as gagne. Les autres vont faire semblant d'etre contents pour toi 😅","CHAAMPION MON FREREUUU ! 🏆🔥"];
 
+// ── TEAMS avec mapping par nom (l'API fotmob utilise ses propres IDs) ─────────
 const TEAMS = [
-  {id:"psg",name:"PSG",        apiId:85},
-  {id:"om", name:"Marseille",  apiId:81},
-  {id:"mon",name:"Monaco",     apiId:91},
-  {id:"lil",name:"Lille",      apiId:79},
-  {id:"nic",name:"Nice",       apiId:84},
-  {id:"oly",name:"Lyon",       apiId:80},
-  {id:"ren",name:"Rennes",     apiId:94},
-  {id:"len",name:"Lens",       apiId:116},
-  {id:"str",name:"Strasbourg", apiId:95},
-  {id:"nan",name:"Nantes",     apiId:83},
-  {id:"tls",name:"Toulouse",   apiId:96},
-  {id:"aux",name:"Auxerre",    apiId:778},
-  {id:"ang",name:"Angers",     apiId:77},
-  {id:"hac",name:"Le Havre",   apiId:1080},
-  {id:"mtz",name:"Metz",       apiId:82},
-  {id:"lor",name:"Lorient",    apiId:1160},
-  {id:"pfc",name:"Paris FC",   apiId:111},
-  {id:"bst",name:"Brest",      apiId:130},
+  {id:"psg", name:"PSG",        fotmobName:"Paris",       apiId:85},
+  {id:"om",  name:"Marseille",  fotmobName:"Marseille",   apiId:81},
+  {id:"mon", name:"Monaco",     fotmobName:"Monaco",      apiId:91},
+  {id:"lil", name:"Lille",      fotmobName:"Lille",       apiId:79},
+  {id:"nic", name:"Nice",       fotmobName:"Nice",        apiId:84},
+  {id:"oly", name:"Lyon",       fotmobName:"Lyon",        apiId:80},
+  {id:"ren", name:"Rennes",     fotmobName:"Rennes",      apiId:94},
+  {id:"len", name:"Lens",       fotmobName:"Lens",        apiId:116},
+  {id:"str", name:"Strasbourg", fotmobName:"Strasbourg",  apiId:95},
+  {id:"nan", name:"Nantes",     fotmobName:"Nantes",      apiId:83},
+  {id:"tls", name:"Toulouse",   fotmobName:"Toulouse",    apiId:96},
+  {id:"aux", name:"Auxerre",    fotmobName:"Auxerre",     apiId:778},
+  {id:"ang", name:"Angers",     fotmobName:"Angers",      apiId:77},
+  {id:"hac", name:"Le Havre",   fotmobName:"Le Havre",    apiId:1080},
+  {id:"mtz", name:"Metz",       fotmobName:"Metz",        apiId:82},
+  {id:"lor", name:"Lorient",    fotmobName:"Lorient",     apiId:1160},
+  {id:"pfc", name:"Paris FC",   fotmobName:"Paris FC",    apiId:111},
+  {id:"bst", name:"Brest",      fotmobName:"Brest",       apiId:130},
 ];
 
 const FIXTURES = [
-  {home:"nan",away:"om", day:"Sam. 15:00",homeApiId:83, awayApiId:81},
-  {home:"psg",away:"lor",day:"Sam. 17:00",homeApiId:85, awayApiId:1160},
-  {home:"mtz",away:"mon",day:"Sam. 19:00",homeApiId:82, awayApiId:91},
-  {home:"nic",away:"len",day:"Sam. 21:05",homeApiId:84, awayApiId:116},
-  {home:"lil",away:"hac",day:"Dim. 15:00",homeApiId:79, awayApiId:1080},
-  {home:"str",away:"tls",day:"Dim. 17:15",homeApiId:95, awayApiId:96},
-  {home:"aux",away:"ang",day:"Dim. 17:15",homeApiId:778,awayApiId:77},
-  {home:"oly",away:"ren",day:"Dim. 20:45",homeApiId:80, awayApiId:94},
+  {home:"nan",away:"om", day:"Sam. 15:00"},
+  {home:"psg",away:"lor",day:"Sam. 17:00"},
+  {home:"mtz",away:"mon",day:"Sam. 19:00"},
+  {home:"nic",away:"len",day:"Sam. 21:05"},
+  {home:"lil",away:"hac",day:"Dim. 15:00"},
+  {home:"str",away:"tls",day:"Dim. 17:15"},
+  {home:"aux",away:"ang",day:"Dim. 17:15"},
+  {home:"oly",away:"ren",day:"Dim. 20:45"},
 ];
+
+// ── Mapping fotmob IDs → nos IDs (construit dynamiquement depuis les matchs) ─
+const fotmobIdMap = {}; // fotmobId -> notre teamId
+
+function registerFotmobId(fotmobId, name) {
+  if(fotmobIdMap[fotmobId]) return;
+  const n = String(name||"").toLowerCase().trim();
+  // Cherche par fotmobName
+  const t = TEAMS.find(t => {
+    const fn = t.fotmobName.toLowerCase();
+    return n===fn || n.includes(fn) || fn.includes(n);
+  });
+  if(t) fotmobIdMap[fotmobId] = t.id;
+}
+
+function getTeam(id){return TEAMS.find(t=>t.id===id)||{name:"?",apiId:0};}
+function getTeamByFotmobId(fid){const tid=fotmobIdMap[fid];return tid?getTeam(tid):null;}
+
+// ── Détection match terminé (structure fotmob) ────────────────────────────────
+// notStarted:false + scores présents = match joué
+function isMatchFinished(m) {
+  if(m?.notStarted === true) return false;
+  // Vérifier qu'on a un score non-null
+  const hScore = m?.home?.score;
+  const aScore = m?.away?.score;
+  if(hScore === null || hScore === undefined) return false;
+  if(aScore === null || aScore === undefined) return false;
+  // status peut être un objet, on cherche finished/utc
+  const st = m?.status;
+  if(st && typeof st === "object") {
+    if(st.finished === true) return true;
+    if(st.started === true && st.ongoing === false) return true;
+    // Certaines APIs fotmob mettent started:true finished:false pendant le match
+    // On se fie à notStarted:false + scores numériques
+  }
+  return typeof hScore === "number" && typeof aScore === "number";
+}
 
 let currentUser=null,currentLobby=null,lobbyUnsub=null,timerInterval=null,authMode="login",pendingPick=null;
 
 function getPhrase(arr){return arr[Math.floor(Math.random()*arr.length)];}
-function getTeam(id){return TEAMS.find(t=>t.id===id)||{name:"?",apiId:0};}
 function genCode(){const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";return Array.from({length:6},()=>c[Math.floor(Math.random()*c.length)]).join("");}
 function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.style.display="block";setTimeout(()=>t.style.display="none",2500);}
 function showScreen(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));const el=document.getElementById("screen-"+id);if(el)el.classList.add("active");}
@@ -397,13 +433,6 @@ function scoresHtml(matchResults){
     h+=`<div class="row"><div style="flex:1;text-align:right;font-size:13px;font-weight:600;">${ht.name}</div><div style="display:flex;gap:4px;margin:0 10px;"><span class="result-score">${m.homeGoals}</span><span style="color:#888;align-self:center;">-</span><span class="result-score">${m.awayGoals}</span></div><div style="flex:1;text-align:left;font-size:13px;font-weight:600;">${at.name}</div></div>`;
   });
   return h+'</div>';
-}
-
-// ── Fonction utilitaire : extrait le statut d'un match en toute sécurité ──────
-function matchStatus(m) {
-  // Retourne toujours une string, même si le champ est un nombre ou objet
-  const raw = m?.status?.short ?? m?.status?.status ?? m?.status ?? m?.fixture?.status?.short ?? m?.fixture?.status ?? "";
-  return String(raw).toUpperCase().trim();
 }
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
@@ -610,7 +639,7 @@ window.confirmPick=async function(){
 };
 window.closeSelections=async function(){await saveF("status","closed");};
 
-// ── RESOLVE ───────────────────────────────────────────────────────────────────
+// ── RESOLVE ── utilise le même parsing fotmob ─────────────────────────────────
 window.resolveRound=async function(){
   if(!currentUser||currentUser.email!==ADMIN_EMAIL)return showToast("Acces refuse.");
   document.getElementById("modal-loading").classList.add("open");
@@ -620,21 +649,21 @@ window.resolveRound=async function(){
       method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}
     });
     const data=await resp.json();
-    const rawMatches=data?.response?.matches||data?.matches||data?.response||[];
-    const matchArray=Array.isArray(rawMatches)?rawMatches:[];
-    matchArray.forEach(match=>{
-      const s=matchStatus(match);
-      if(s!=="FT"&&s!=="AET"&&s!=="PEN"&&s!=="FINISHED"&&s!=="FULL_TIME"&&s!=="3")return;
-      const roundStr=match.league?.round||match.round||"";
-      const rn=parseInt(String(roundStr).replace(/\D/g,""));
-      if(rn!==currentLobby.round)return;
-      const hApiId=match.teams?.home?.id||match.homeTeam?.id;
-      const aApiId=match.teams?.away?.id||match.awayTeam?.id;
-      const hG=match.goals?.home??match.score?.home??null;
-      const aG=match.goals?.away??match.score?.away??null;
-      if(!hApiId||!aApiId||hG===null||aG===null)return;
-      const ht=TEAMS.find(t=>t.apiId===hApiId);
-      const at=TEAMS.find(t=>t.apiId===aApiId);
+    const matchArray=extractMatches(data);
+    // Enregistrer d'abord tous les IDs
+    matchArray.forEach(m=>{
+      if(m?.home?.id)registerFotmobId(String(m.home.id),m.home.name);
+      if(m?.away?.id)registerFotmobId(String(m.away.id),m.away.name);
+    });
+    matchArray.forEach(m=>{
+      if(!isMatchFinished(m))return;
+      const hId=String(m?.home?.id||"");
+      const aId=String(m?.away?.id||"");
+      const hG=m?.home?.score;
+      const aG=m?.away?.score;
+      if(!hId||!aId||hG===null||hG===undefined||aG===null||aG===undefined)return;
+      const ht=getTeamByFotmobId(hId);
+      const at=getTeamByFotmobId(aId);
       if(!ht||!at)return;
       if(hG>aG){apiResults[ht.id]="win";apiResults[at.id]="loss";}
       else if(aG>hG){apiResults[at.id]="win";apiResults[ht.id]="loss";}
@@ -664,6 +693,20 @@ window.resolveRound=async function(){
   } else {updates.status="roundEnd";}
   await updateDoc(doc(db,"lobbies",currentLobby.code),updates);
 };
+
+// ── HELPER : extraire le tableau de matchs ────────────────────────────────────
+function extractMatches(data){
+  if(Array.isArray(data))return data;
+  if(Array.isArray(data?.response))return data.response;
+  if(Array.isArray(data?.response?.matches))return data.response.matches;
+  if(Array.isArray(data?.matches))return data.matches;
+  if(Array.isArray(data?.data))return data.data;
+  if(data?.response&&typeof data.response==="object"&&!Array.isArray(data.response)){
+    const vals=Object.values(data.response);
+    if(vals.length>0&&typeof vals[0]==="object")return vals;
+  }
+  return [];
+}
 
 // ── RESULTS ───────────────────────────────────────────────────────────────────
 function renderResults(){
@@ -770,93 +813,74 @@ window.refreshLigue1=async function(){
       method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}
     });
     const data=await resp.json();
-
-    // Trouver le tableau de matchs quelle que soit la structure
-    let matchArray=[];
-    if(Array.isArray(data))matchArray=data;
-    else if(Array.isArray(data?.response))matchArray=data.response;
-    else if(Array.isArray(data?.response?.matches))matchArray=data.response.matches;
-    else if(Array.isArray(data?.matches))matchArray=data.matches;
-    else if(Array.isArray(data?.data))matchArray=data.data;
-    else if(data?.response&&typeof data.response==="object"){
-      const vals=Object.values(data.response);
-      if(vals.length>0&&typeof vals[0]==="object")matchArray=vals;
-    }
-
+    const matchArray=extractMatches(data);
     if(matchArray.length===0){
-      content.innerHTML=`<div style="background:#0a1a0a;border:1px solid #39E979;border-radius:10px;padding:12px;">
-        <div style="font-size:12px;color:#39E979;font-weight:700;margin-bottom:6px;">🔍 DEBUG — 0 match trouve</div>
-        <div style="font-size:10px;color:#888;margin-bottom:4px;">Cles : ${Object.keys(data||{}).join(", ")||"vide"}</div>
-        <div class="debug-box">${JSON.stringify(data).substring(0,500)}</div>
-        <button onclick="navigator.clipboard&&navigator.clipboard.writeText(JSON.stringify(${JSON.stringify(data).substring(0,500)}))" style="background:#39E979;color:#000;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;width:100%;">📋 Copier</button>
-      </div>`;
-      return;
+      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Aucune donnee recue.</p>';return;
     }
 
-    // Compter les statuts uniques (avec String() safe)
-    const statusCounts={};
+    // Enregistrer tous les IDs fotmob → nos IDs par nom
     matchArray.forEach(m=>{
-      const s=matchStatus(m);
-      statusCounts[s]=(statusCounts[s]||0)+1;
+      if(m?.home?.id)registerFotmobId(String(m.home.id),m.home.name);
+      if(m?.away?.id)registerFotmobId(String(m.away.id),m.away.name);
     });
 
-    // Filtrer les matchs terminés — on accepte tout statut qui ressemble à "terminé"
-    const finished=matchArray.filter(m=>{
-      const s=matchStatus(m);
-      return s==="FT"||s==="AET"||s==="PEN"||s==="FINISHED"||s==="FULL_TIME"||s==="COMPLETE"||s==="3"||s==="5";
-    });
+    // Tous les matchs terminés = notStarted:false + scores numériques
+    const finished=matchArray.filter(m=>isMatchFinished(m));
 
     if(finished.length===0){
-      content.innerHTML=`<div style="background:#1a0a0a;border:1px solid #FF4444;border-radius:10px;padding:12px;">
-        <div style="font-size:12px;color:#FF4444;font-weight:700;margin-bottom:6px;">⚠️ ${matchArray.length} matchs — aucun termine detecte</div>
-        <div style="font-size:11px;color:#888;margin-bottom:4px;">Statuts presents :</div>
-        <div class="debug-box">${JSON.stringify(statusCounts,null,2)}</div>
-        <div style="font-size:11px;color:#888;margin-top:8px;margin-bottom:4px;">Match[0] :</div>
-        <div class="debug-box">${JSON.stringify(matchArray[0],null,2).substring(0,400)}</div>
-        <button onclick="navigator.clipboard&&navigator.clipboard.writeText(JSON.stringify({statusCounts:${JSON.stringify(statusCounts)},match0:${JSON.stringify(matchArray[0])}}))" style="background:#FF4444;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;width:100%;">📋 Copier debug</button>
-      </div>`;
+      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Aucun match termine pour l\'instant.<br><small style="font-size:11px;">Les matchs s\'afficheront apres le coup de sifflet final.</small></p>';
       return;
     }
 
-    // Construire classement
-    const teams={},teamForm={},teamNames={};
-    const getHomeId=m=>m?.teams?.home?.id??m?.homeTeam?.id??m?.home?.id??null;
-    const getAwayId=m=>m?.teams?.away?.id??m?.awayTeam?.id??m?.away?.id??null;
-    const getHomeName=m=>m?.teams?.home?.name||m?.homeTeam?.name||m?.home?.name||"?";
-    const getAwayName=m=>m?.teams?.away?.name||m?.awayTeam?.name||m?.away?.name||"?";
-    const getHG=m=>{const v=m?.goals?.home??m?.score?.home??m?.homeGoals??null;return v!==null?parseInt(v):null;};
-    const getAG=m=>{const v=m?.goals?.away??m?.score?.away??m?.awayGoals??null;return v!==null?parseInt(v):null;};
-
-    finished.sort((a,b)=>(a?.fixture?.timestamp||a?.timestamp||0)-(b?.fixture?.timestamp||b?.timestamp||0));
+    // Construire classement par nom d'équipe directement (plus fiable)
+    const byName={}; // nomNormalisé -> stats
+    const nameForm={}; // nomNormalisé -> forme
 
     finished.forEach(m=>{
-      const hId=getHomeId(m),aId=getAwayId(m);
-      const hG=getHG(m),aG=getAG(m);
-      if(!hId||!aId||hG===null||aG===null||isNaN(hG)||isNaN(aG))return;
-      teamNames[hId]=getHomeName(m);teamNames[aId]=getAwayName(m);
-      if(!teams[hId])teams[hId]={id:hId,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
-      if(!teams[aId])teams[aId]={id:aId,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
-      if(!teamForm[hId])teamForm[hId]=[];if(!teamForm[aId])teamForm[aId]=[];
-      teams[hId].p++;teams[aId].p++;
-      teams[hId].gf+=hG;teams[hId].ga+=aG;teams[aId].gf+=aG;teams[aId].ga+=hG;
-      if(hG>aG){teams[hId].w++;teams[hId].pts+=3;teams[aId].l++;teamForm[hId].push("W");teamForm[aId].push("L");}
-      else if(aG>hG){teams[aId].w++;teams[aId].pts+=3;teams[hId].l++;teamForm[aId].push("W");teamForm[hId].push("L");}
-      else{teams[hId].d++;teams[hId].pts++;teams[aId].d++;teams[aId].pts++;teamForm[hId].push("D");teamForm[aId].push("D");}
+      const hName=String(m?.home?.name||"?");
+      const aName=String(m?.away?.name||"?");
+      const hG=m?.home?.score;
+      const aG=m?.away?.score;
+      if(hG===null||hG===undefined||aG===null||aG===undefined)return;
+      const hg=parseInt(hG),ag=parseInt(aG);
+      if(isNaN(hg)||isNaN(ag))return;
+
+      if(!byName[hName])byName[hName]={name:hName,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
+      if(!byName[aName])byName[aName]={name:aName,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
+      if(!nameForm[hName])nameForm[hName]=[];
+      if(!nameForm[aName])nameForm[aName]=[];
+
+      byName[hName].p++;byName[aName].p++;
+      byName[hName].gf+=hg;byName[hName].ga+=ag;
+      byName[aName].gf+=ag;byName[aName].ga+=hg;
+
+      if(hg>ag){byName[hName].w++;byName[hName].pts+=3;byName[aName].l++;nameForm[hName].push("W");nameForm[aName].push("L");}
+      else if(ag>hg){byName[aName].w++;byName[aName].pts+=3;byName[hName].l++;nameForm[aName].push("W");nameForm[hName].push("L");}
+      else{byName[hName].d++;byName[hName].pts++;byName[aName].d++;byName[aName].pts++;nameForm[hName].push("D");nameForm[aName].push("D");}
     });
 
-    const sorted=Object.values(teams).sort((a,b)=>b.pts!==a.pts?b.pts-a.pts:(b.gf-b.ga)-(a.gf-a.ga));
+    const sorted=Object.values(byName).sort((a,b)=>b.pts!==a.pts?b.pts-a.pts:(b.gf-b.ga)-(a.gf-a.ga));
+
     let html='<div class="card">';
     html+='<div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #2E2E2E;"><span style="width:24px;font-size:11px;color:#888;text-align:center;">#</span><span style="flex:1;font-size:11px;color:#888;margin-left:8px;">EQUIPE</span><span style="width:24px;font-size:11px;color:#888;text-align:center;">J</span><span style="width:28px;font-size:11px;color:#888;text-align:center;">Pts</span><span style="width:80px;font-size:11px;color:#888;text-align:center;">FORME</span></div>';
+
     sorted.forEach((t,i)=>{
-      const rank=i+1,name=teamNames[t.id]||"?";
-      const form=(teamForm[t.id]||[]).slice(-5).reverse();
+      const rank=i+1;
       const rankColor=rank<=3?"#39E979":rank<=5?"#4A90E2":rank>=17?"#FF4444":"#F2F2F2";
+      const form=(nameForm[t.name]||[]).slice(-5).reverse();
       let sq='<div style="display:flex;gap:3px;justify-content:center;">';
       for(let f=0;f<5;f++){const r=form[f];sq+=`<div style="width:13px;height:13px;border-radius:3px;background:${r==="W"?"#39E979":r==="D"?"#888":r==="L"?"#FF4444":"#2E2E2E"};opacity:${r?1:0.3};"></div>`;}
       sq+='</div>';
-      html+=`<div style="display:flex;align-items:center;padding:9px 12px;border-bottom:1px solid #111;"><span style="width:24px;font-size:13px;font-weight:700;text-align:center;color:${rankColor};">${rank}</span><span style="flex:1;font-size:13px;font-weight:600;margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span><span style="width:24px;font-size:12px;color:#888;text-align:center;">${t.p}</span><span style="width:28px;font-size:13px;font-weight:700;text-align:center;">${t.pts}</span><div style="width:80px;">${sq}</div></div>`;
+      html+=`<div style="display:flex;align-items:center;padding:9px 12px;border-bottom:1px solid #111;">
+        <span style="width:24px;font-size:13px;font-weight:700;text-align:center;color:${rankColor};">${rank}</span>
+        <span style="flex:1;font-size:13px;font-weight:600;margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.name}</span>
+        <span style="width:24px;font-size:12px;color:#888;text-align:center;">${t.p}</span>
+        <span style="width:28px;font-size:13px;font-weight:700;text-align:center;">${t.pts}</span>
+        <div style="width:80px;">${sq}</div>
+      </div>`;
     });
-    html+='</div><p style="font-size:11px;color:#555;text-align:center;margin-top:8px;">🟢 Ligue des Champions &nbsp;🔵 Europa &nbsp;🔴 Relegation</p>';
+    html+='</div>';
+    html+='<p style="font-size:11px;color:#555;text-align:center;margin-top:8px;">🟢 Ligue des Champions &nbsp;🔵 Europa &nbsp;🔴 Relegation</p>';
     html+=`<p style="font-size:10px;color:#333;text-align:center;margin-top:2px;">${finished.length} matchs — ${sorted.length} equipes</p>`;
 
     localStorage.setItem("ligue1Cache",html);
