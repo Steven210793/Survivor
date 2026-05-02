@@ -399,6 +399,13 @@ function scoresHtml(matchResults){
   return h+'</div>';
 }
 
+// ── Fonction utilitaire : extrait le statut d'un match en toute sécurité ──────
+function matchStatus(m) {
+  // Retourne toujours une string, même si le champ est un nombre ou objet
+  const raw = m?.status?.short ?? m?.status?.status ?? m?.status ?? m?.fixture?.status?.short ?? m?.fixture?.status ?? "";
+  return String(raw).toUpperCase().trim();
+}
+
 // ── AUTH ──────────────────────────────────────────────────────────────────────
 onAuthStateChanged(auth,async(fu)=>{
   try{
@@ -616,8 +623,8 @@ window.resolveRound=async function(){
     const rawMatches=data?.response?.matches||data?.matches||data?.response||[];
     const matchArray=Array.isArray(rawMatches)?rawMatches:[];
     matchArray.forEach(match=>{
-      const status=match.status?.short||match.status||"";
-      if(status!=="FT"&&status!=="AET"&&status!=="PEN")return;
+      const s=matchStatus(match);
+      if(s!=="FT"&&s!=="AET"&&s!=="PEN"&&s!=="FINISHED"&&s!=="FULL_TIME"&&s!=="3")return;
       const roundStr=match.league?.round||match.round||"";
       const rn=parseInt(String(roundStr).replace(/\D/g,""));
       if(rn!==currentLobby.round)return;
@@ -748,7 +755,7 @@ function renderLigue1(){
     document.getElementById("ligue1-last-update").textContent="Mis a jour le "+d.toLocaleDateString("fr-FR")+" a "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
   } else {
     document.getElementById("ligue1-content").innerHTML=currentUser&&currentUser.email===ADMIN_EMAIL
-      ?'<p style="color:#888;text-align:center;margin-top:40px;">Clique sur "Rafraichir" pour charger le classement.</p>'
+      ?'<p style="color:#888;text-align:center;margin-top:40px;">Clique sur Rafraichir pour charger le classement.</p>'
       :'<p style="color:#888;text-align:center;margin-top:40px;">Le classement sera disponible apres la mise a jour de l\'admin.</p>';
     document.getElementById("ligue1-last-update").textContent="Jamais mis a jour";
   }
@@ -764,81 +771,69 @@ window.refreshLigue1=async function(){
     });
     const data=await resp.json();
 
-    // ── EXPLORATION STRUCTURE REPONSE ─────────────────────────────────────────
-    // On tente toutes les structures connues pour trouver le tableau de matchs
+    // Trouver le tableau de matchs quelle que soit la structure
     let matchArray=[];
     if(Array.isArray(data))matchArray=data;
     else if(Array.isArray(data?.response))matchArray=data.response;
     else if(Array.isArray(data?.response?.matches))matchArray=data.response.matches;
     else if(Array.isArray(data?.matches))matchArray=data.matches;
     else if(Array.isArray(data?.data))matchArray=data.data;
-    else if(typeof data?.response==="object"&&data?.response!==null){
-      // Parfois c'est un objet indexé { "0": match, "1": match }
+    else if(data?.response&&typeof data.response==="object"){
       const vals=Object.values(data.response);
       if(vals.length>0&&typeof vals[0]==="object")matchArray=vals;
     }
 
-    // ── DEBUG : afficher la structure si aucun match trouvé ──────────────────
     if(matchArray.length===0){
-      const sample=JSON.stringify(data).substring(0,600);
-      content.innerHTML=`
-        <div style="background:#0a1a0a;border:1px solid #39E979;border-radius:10px;padding:12px;margin-bottom:12px;">
-          <div style="font-size:12px;color:#39E979;font-weight:700;margin-bottom:6px;">🔍 DEBUG — Envoie ça a Stev</div>
-          <div style="font-size:10px;color:#888;margin-bottom:6px;">Cles top-level : ${Object.keys(data||{}).join(", ")||"(vide)"}</div>
-          <div style="font-size:10px;color:#888;margin-bottom:6px;">Type response : ${typeof data?.response} — isArray : ${Array.isArray(data?.response)}</div>
-          <div class="debug-box">${sample}</div>
-          <button onclick="navigator.clipboard&&navigator.clipboard.writeText(document.querySelector('.debug-box').textContent).then(()=>{})" style="background:#39E979;color:#000;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;width:100%;">📋 Copier</button>
-        </div>`;
+      content.innerHTML=`<div style="background:#0a1a0a;border:1px solid #39E979;border-radius:10px;padding:12px;">
+        <div style="font-size:12px;color:#39E979;font-weight:700;margin-bottom:6px;">🔍 DEBUG — 0 match trouve</div>
+        <div style="font-size:10px;color:#888;margin-bottom:4px;">Cles : ${Object.keys(data||{}).join(", ")||"vide"}</div>
+        <div class="debug-box">${JSON.stringify(data).substring(0,500)}</div>
+        <button onclick="navigator.clipboard&&navigator.clipboard.writeText(JSON.stringify(${JSON.stringify(data).substring(0,500)}))" style="background:#39E979;color:#000;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;width:100%;">📋 Copier</button>
+      </div>`;
       return;
     }
-    // ─────────────────────────────────────────────────────────────────────────
 
-    // Construire classement depuis les matchs terminés
-    const teams={},teamForm={},teamNames={};
-
-    // Détecter le champ statut sur le 1er match
-    const s0=matchArray[0];
-    const getStatus=m=>m?.status?.short||m?.status?.status||m?.status||m?.fixture?.status?.short||"";
-    const getHomeId=m=>m?.teams?.home?.id||m?.homeTeam?.id||m?.home?.id||m?.home_team?.id;
-    const getAwayId=m=>m?.teams?.away?.id||m?.awayTeam?.id||m?.away?.id||m?.away_team?.id;
-    const getHomeName=m=>m?.teams?.home?.name||m?.homeTeam?.name||m?.home?.name||m?.home_team?.name||"?";
-    const getAwayName=m=>m?.teams?.away?.name||m?.awayTeam?.name||m?.away?.name||m?.away_team?.name||"?";
-    const getHomeGoals=m=>{const v=m?.goals?.home??m?.score?.home??m?.homeGoals??m?.home_score??m?.result?.split("-")?.[0];return v!==undefined&&v!==null?parseInt(v):null;};
-    const getAwayGoals=m=>{const v=m?.goals?.away??m?.score?.away??m?.awayGoals??m?.away_score??m?.result?.split("-")?.[1];return v!==undefined&&v!==null?parseInt(v):null;};
-
-    // Compter les statuts uniques pour debug si besoin
+    // Compter les statuts uniques (avec String() safe)
     const statusCounts={};
-    matchArray.forEach(m=>{const s=getStatus(m);statusCounts[s]=(statusCounts[s]||0)+1;});
+    matchArray.forEach(m=>{
+      const s=matchStatus(m);
+      statusCounts[s]=(statusCounts[s]||0)+1;
+    });
 
+    // Filtrer les matchs terminés — on accepte tout statut qui ressemble à "terminé"
     const finished=matchArray.filter(m=>{
-      const s=getStatus(m).toUpperCase();
-      return s==="FT"||s==="AET"||s==="PEN"||s==="FINISHED"||s==="FULL_TIME"||s==="COMPLETE";
-    }).sort((a,b)=>{
-      const ta=a?.fixture?.timestamp||a?.timestamp||a?.date||0;
-      const tb=b?.fixture?.timestamp||b?.timestamp||b?.date||0;
-      return ta-tb;
+      const s=matchStatus(m);
+      return s==="FT"||s==="AET"||s==="PEN"||s==="FINISHED"||s==="FULL_TIME"||s==="COMPLETE"||s==="3"||s==="5";
     });
 
     if(finished.length===0){
-      // Afficher les statuts disponibles pour debugger
-      content.innerHTML=`
-        <div style="background:#1a0a0a;border:1px solid #FF4444;border-radius:10px;padding:12px;margin-bottom:12px;">
-          <div style="font-size:12px;color:#FF4444;font-weight:700;margin-bottom:6px;">⚠️ ${matchArray.length} matchs recus — aucun "FT" trouve</div>
-          <div style="font-size:11px;color:#888;margin-bottom:4px;">Statuts presents :</div>
-          <div class="debug-box">${JSON.stringify(statusCounts,null,2)}</div>
-          <div style="font-size:11px;color:#888;margin-top:8px;margin-bottom:4px;">Exemple match[0] :</div>
-          <div class="debug-box">${JSON.stringify(matchArray[0],null,2).substring(0,400)}</div>
-          <button onclick="navigator.clipboard&&navigator.clipboard.writeText(JSON.stringify({statusCounts:${JSON.stringify(statusCounts)},match0:${JSON.stringify(matchArray[0])}}))" style="background:#FF4444;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;width:100%;">📋 Copier debug</button>
-        </div>`;
+      content.innerHTML=`<div style="background:#1a0a0a;border:1px solid #FF4444;border-radius:10px;padding:12px;">
+        <div style="font-size:12px;color:#FF4444;font-weight:700;margin-bottom:6px;">⚠️ ${matchArray.length} matchs — aucun termine detecte</div>
+        <div style="font-size:11px;color:#888;margin-bottom:4px;">Statuts presents :</div>
+        <div class="debug-box">${JSON.stringify(statusCounts,null,2)}</div>
+        <div style="font-size:11px;color:#888;margin-top:8px;margin-bottom:4px;">Match[0] :</div>
+        <div class="debug-box">${JSON.stringify(matchArray[0],null,2).substring(0,400)}</div>
+        <button onclick="navigator.clipboard&&navigator.clipboard.writeText(JSON.stringify({statusCounts:${JSON.stringify(statusCounts)},match0:${JSON.stringify(matchArray[0])}}))" style="background:#FF4444;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;width:100%;">📋 Copier debug</button>
+      </div>`;
       return;
     }
 
+    // Construire classement
+    const teams={},teamForm={},teamNames={};
+    const getHomeId=m=>m?.teams?.home?.id??m?.homeTeam?.id??m?.home?.id??null;
+    const getAwayId=m=>m?.teams?.away?.id??m?.awayTeam?.id??m?.away?.id??null;
+    const getHomeName=m=>m?.teams?.home?.name||m?.homeTeam?.name||m?.home?.name||"?";
+    const getAwayName=m=>m?.teams?.away?.name||m?.awayTeam?.name||m?.away?.name||"?";
+    const getHG=m=>{const v=m?.goals?.home??m?.score?.home??m?.homeGoals??null;return v!==null?parseInt(v):null;};
+    const getAG=m=>{const v=m?.goals?.away??m?.score?.away??m?.awayGoals??null;return v!==null?parseInt(v):null;};
+
+    finished.sort((a,b)=>(a?.fixture?.timestamp||a?.timestamp||0)-(b?.fixture?.timestamp||b?.timestamp||0));
+
     finished.forEach(m=>{
       const hId=getHomeId(m),aId=getAwayId(m);
-      const hName=getHomeName(m),aName=getAwayName(m);
-      const hG=getHomeGoals(m),aG=getAwayGoals(m);
+      const hG=getHG(m),aG=getAG(m);
       if(!hId||!aId||hG===null||aG===null||isNaN(hG)||isNaN(aG))return;
-      teamNames[hId]=hName;teamNames[aId]=aName;
+      teamNames[hId]=getHomeName(m);teamNames[aId]=getAwayName(m);
       if(!teams[hId])teams[hId]={id:hId,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
       if(!teams[aId])teams[aId]={id:aId,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
       if(!teamForm[hId])teamForm[hId]=[];if(!teamForm[aId])teamForm[aId]=[];
@@ -850,20 +845,19 @@ window.refreshLigue1=async function(){
     });
 
     const sorted=Object.values(teams).sort((a,b)=>b.pts!==a.pts?b.pts-a.pts:(b.gf-b.ga)-(a.gf-a.ga));
-
     let html='<div class="card">';
     html+='<div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #2E2E2E;"><span style="width:24px;font-size:11px;color:#888;text-align:center;">#</span><span style="flex:1;font-size:11px;color:#888;margin-left:8px;">EQUIPE</span><span style="width:24px;font-size:11px;color:#888;text-align:center;">J</span><span style="width:28px;font-size:11px;color:#888;text-align:center;">Pts</span><span style="width:80px;font-size:11px;color:#888;text-align:center;">FORME</span></div>';
     sorted.forEach((t,i)=>{
       const rank=i+1,name=teamNames[t.id]||"?";
       const form=(teamForm[t.id]||[]).slice(-5).reverse();
       const rankColor=rank<=3?"#39E979":rank<=5?"#4A90E2":rank>=17?"#FF4444":"#F2F2F2";
-      let formSquares='<div style="display:flex;gap:3px;justify-content:center;">';
-      for(let f=0;f<5;f++){const r=form[f];const bg=r==="W"?"#39E979":r==="D"?"#888":r==="L"?"#FF4444":"#2E2E2E";formSquares+=`<div style="width:13px;height:13px;border-radius:3px;background:${bg};opacity:${r?1:0.3};"></div>`;}
-      formSquares+='</div>';
-      html+=`<div style="display:flex;align-items:center;padding:9px 12px;border-bottom:1px solid #111;"><span style="width:24px;font-size:13px;font-weight:700;text-align:center;color:${rankColor};">${rank}</span><span style="flex:1;font-size:13px;font-weight:600;margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span><span style="width:24px;font-size:12px;color:#888;text-align:center;">${t.p}</span><span style="width:28px;font-size:13px;font-weight:700;text-align:center;">${t.pts}</span><div style="width:80px;">${formSquares}</div></div>`;
+      let sq='<div style="display:flex;gap:3px;justify-content:center;">';
+      for(let f=0;f<5;f++){const r=form[f];sq+=`<div style="width:13px;height:13px;border-radius:3px;background:${r==="W"?"#39E979":r==="D"?"#888":r==="L"?"#FF4444":"#2E2E2E"};opacity:${r?1:0.3};"></div>`;}
+      sq+='</div>';
+      html+=`<div style="display:flex;align-items:center;padding:9px 12px;border-bottom:1px solid #111;"><span style="width:24px;font-size:13px;font-weight:700;text-align:center;color:${rankColor};">${rank}</span><span style="flex:1;font-size:13px;font-weight:600;margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span><span style="width:24px;font-size:12px;color:#888;text-align:center;">${t.p}</span><span style="width:28px;font-size:13px;font-weight:700;text-align:center;">${t.pts}</span><div style="width:80px;">${sq}</div></div>`;
     });
     html+='</div><p style="font-size:11px;color:#555;text-align:center;margin-top:8px;">🟢 Ligue des Champions &nbsp;🔵 Europa &nbsp;🔴 Relegation</p>';
-    html+=`<p style="font-size:10px;color:#333;text-align:center;margin-top:4px;">${finished.length} matchs termines — ${sorted.length} equipes</p>`;
+    html+=`<p style="font-size:10px;color:#333;text-align:center;margin-top:2px;">${finished.length} matchs — ${sorted.length} equipes</p>`;
 
     localStorage.setItem("ligue1Cache",html);
     localStorage.setItem("ligue1CacheTime",Date.now().toString());
@@ -913,7 +907,7 @@ function scheduleNotif(){
   if(n30>now)setTimeout(()=>new Notification("⚽ Survivor - T'as choisi ton equipe ?",{body:"Le premier match commence dans 30 minutes !",icon:"https://i.imgur.com/HSHTdzU.png"}),n30-now);
   if(currentUser&&currentUser.email===ADMIN_EMAIL){
     const n9=deadline-(9*60*1000);
-    if(n9>now)setTimeout(()=>new Notification("🔒 Survivor ADMIN - Ferme les selections !",{body:"Le premier match commence dans 9 minutes !",icon:"https://i.imgur.com/HSHTdzU.png"}),n9-now);
+    if(n9>now)setTimeout(()=>new Notification("🔒 Survivor ADMIN - Ferme les selections !",{body:"9 minutes avant le premier match !",icon:"https://i.imgur.com/HSHTdzU.png"}),n9-now);
   }
   showToast("Rappels programmes !");
 }
