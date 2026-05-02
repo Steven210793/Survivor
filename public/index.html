@@ -91,7 +91,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
   </div>
   <div class="sec">
     <button class="btn btn-google" onclick="loginGoogle()">
-      <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
       Continuer avec Google
     </button>
     <div class="divider">ou</div>
@@ -337,6 +337,8 @@ const ADMIN_EMAIL = "groliersteven@gmail.com";
 const RAPIDAPI_KEY = "39c5cc9625mshc2f52e154b3255fp11e5b9jsn0f4c49435a11";
 const APP_URL = "https://survivor-chi-ecru.vercel.app";
 const CURRENT_ROUND = 34;
+// ✅ ID correct pour la Ligue 1 française (vérifié via Get Popular Leagues)
+const LIGUE1_ID = 53;
 
 const PHRASES_WIN = [
   "Qualifie ! T'as le niveau, contrairement aux autres 😎",
@@ -688,26 +690,43 @@ window.resolveRound=async function(){
   document.getElementById("modal-loading").classList.add("open");
   let apiResults={},matchResults={};
   try{
-    const resp=await fetch("https://free-api-live-football-data.p.rapidapi.com/football-get-all-fixtures-by-league-and-season?leagueId=61&season=2025",{method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}});
+    // ✅ leagueId=53 (Ligue 1 française), format réponse : response.matches[]
+    const resp=await fetch(`https://free-api-live-football-data.p.rapidapi.com/football-get-all-matches-by-league?leagueid=${LIGUE1_ID}`,{
+      method:"GET",
+      headers:{
+        "x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com",
+        "x-rapidapi-key":RAPIDAPI_KEY
+      }
+    });
     const data=await resp.json();
-    if(data&&data.response){
-      data.response.forEach(match=>{
-        if(match.fixture?.status?.short==="FT"&&match.league?.round){
-          const rn=parseInt(match.league.round.replace(/\D/g,""));
-          if(rn===currentLobby.round){
-            const ht=TEAMS.find(t=>t.apiId===match.teams?.home?.id);
-            const at=TEAMS.find(t=>t.apiId===match.teams?.away?.id);
-            const hg=match.goals?.home,ag=match.goals?.away;
-            if(ht&&at&&hg!==null&&ag!==null){
-              if(hg>ag){apiResults[ht.id]="win";apiResults[at.id]="loss";}
-              else if(ag>hg){apiResults[at.id]="win";apiResults[ht.id]="loss";}
-              else{apiResults[ht.id]="draw";apiResults[at.id]="draw";}
-              matchResults[ht.id+"-"+at.id]={home:ht.id,away:at.id,homeGoals:hg,awayGoals:ag};
-            }
-          }
-        }
-      });
-    }
+    // L'API retourne { response: { matches: [...] } }
+    const matches=data?.response?.matches||data?.matches||data?.response||[];
+    const matchArray=Array.isArray(matches)?matches:[];
+
+    matchArray.forEach(match=>{
+      // Filtrer les matchs terminés
+      const status=match.status?.short||match.status||"";
+      if(status!=="FT"&&status!=="AET"&&status!=="PEN")return;
+      // Identifier la journée
+      const roundStr=match.league?.round||match.round||"";
+      const rn=parseInt(String(roundStr).replace(/\D/g,""));
+      if(rn!==currentLobby.round)return;
+
+      const hApiId=match.teams?.home?.id||match.homeTeam?.id;
+      const aApiId=match.teams?.away?.id||match.awayTeam?.id;
+      const hG=match.goals?.home??match.score?.home??null;
+      const aG=match.goals?.away??match.score?.away??null;
+      if(!hApiId||!aApiId||hG===null||aG===null)return;
+
+      const ht=TEAMS.find(t=>t.apiId===hApiId);
+      const at=TEAMS.find(t=>t.apiId===aApiId);
+      if(!ht||!at)return;
+
+      if(hG>aG){apiResults[ht.id]="win";apiResults[at.id]="loss";}
+      else if(aG>hG){apiResults[at.id]="win";apiResults[ht.id]="loss";}
+      else{apiResults[ht.id]="draw";apiResults[at.id]="draw";}
+      matchResults[ht.id+"-"+at.id]={home:ht.id,away:at.id,homeGoals:hG,awayGoals:aG};
+    });
   } catch(e){showToast("API indisponible - simulation");}
   document.getElementById("modal-loading").classList.remove("open");
 
@@ -772,7 +791,6 @@ function renderWinner(){
   const winner=Object.values(currentLobby.players).find(p=>p.alive)||Object.values(currentLobby.players)[0];
   document.getElementById("winner-name").textContent="🏆 "+(winner?winner.pseudo:"?")+" 🏆";
   document.getElementById("winner-phrase").textContent=getPhrase(PHRASES_WINNER);
-  // Joueurs
   let playersHtml='<p class="sec-label">RESULTATS DES JOUEURS</p><div class="card" style="margin-bottom:12px;">';
   Object.values(currentLobby.players).forEach(p=>{
     const t=getTeam(p.pick);
@@ -830,13 +848,11 @@ function renderResultats(){
   document.getElementById("resultats-content").innerHTML=html;
 }
 
-// ── LIGUE 1 CLASSEMENT ───────────────────────────────────────────────────────
+// ── LIGUE 1 CLASSEMENT ────────────────────────────────────────────────────────
 function renderLigue1(){
   showScreen("ligue1");
-  // Afficher le bouton refresh uniquement pour l'admin
   const refreshBtn=document.getElementById("ligue1-refresh-btn");
   if(refreshBtn)refreshBtn.style.display=currentUser&&currentUser.email===ADMIN_EMAIL?"block":"none";
-  // Afficher les donnees en cache si disponibles
   const cached=localStorage.getItem("ligue1Cache");
   const cachedTime=localStorage.getItem("ligue1CacheTime");
   if(cached){
@@ -844,7 +860,9 @@ function renderLigue1(){
     const d=new Date(parseInt(cachedTime));
     document.getElementById("ligue1-last-update").textContent="Mis a jour le "+d.toLocaleDateString("fr-FR")+" a "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
   } else {
-    document.getElementById("ligue1-content").innerHTML=currentUser&&currentUser.email===ADMIN_EMAIL?'<p style="color:#888;text-align:center;margin-top:40px;">Clique sur "Rafraichir" pour charger le classement.</p>':'<p style="color:#888;text-align:center;margin-top:40px;">Le classement sera disponible apres la mise a jour de l\'admin.</p>';
+    document.getElementById("ligue1-content").innerHTML=currentUser&&currentUser.email===ADMIN_EMAIL
+      ?'<p style="color:#888;text-align:center;margin-top:40px;">Clique sur "Rafraichir" pour charger le classement.</p>'
+      :'<p style="color:#888;text-align:center;margin-top:40px;">Le classement sera disponible apres la mise a jour de l\'admin.</p>';
     document.getElementById("ligue1-last-update").textContent="Jamais mis a jour";
   }
 }
@@ -854,30 +872,33 @@ window.refreshLigue1=async function(){
   const content=document.getElementById("ligue1-content");
   content.innerHTML='<div style="text-align:center;padding:40px;color:#888;">Chargement...</div>';
   try{
-    // On utilise uniquement les fixtures — 1 seule requete
-    const formResp=await fetch("https://free-api-live-football-data.p.rapidapi.com/football-get-all-matches-by-league?leagueid=61",{method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}});
-    const formData=await formResp.json();
+    // ✅ leagueId=53 Ligue 1 française — format réponse : response.matches[]
+    const resp=await fetch(`https://free-api-live-football-data.p.rapidapi.com/football-get-all-matches-by-league?leagueid=${LIGUE1_ID}`,{
+      method:"GET",
+      headers:{
+        "x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com",
+        "x-rapidapi-key":RAPIDAPI_KEY
+      }
+    });
+    const data=await resp.json();
 
-    if(!formData||(!formData.response&&!formData.data&&!formData.matches)){
-      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Donnees indisponibles.<br><small style="font-size:11px;">'+JSON.stringify(formData).substring(0,300)+'</small></p>';
-      return;
-    }
+    // ✅ Adapter selon la structure réelle retournée par l'API
+    const rawMatches=data?.response?.matches||data?.matches||data?.response||[];
+    const matches=Array.isArray(rawMatches)?rawMatches:[];
 
-    // Adapter selon le format retourne
-    const matches=formData.response||formData.data||formData.matches||[];
     if(!matches.length){
-      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Aucune donnee.<br><small>'+JSON.stringify(formData).substring(0,200)+'</small></p>';
+      content.innerHTML=`<p style="color:#888;text-align:center;margin-top:40px;">Aucune donnee disponible.<br><small style="font-size:11px;color:#555;">${JSON.stringify(data).substring(0,200)}</small></p>`;
       return;
     }
 
-    // Construire classement + forme depuis les fixtures
+    // Construire classement + forme depuis les matchs terminés
     const teams={};
     const teamForm={};
     const teamNames={};
 
-    const finished=(matches).filter(m=>{
-      const status=m.fixture?.status?.short||m.status?.short||m.status||"";
-      return status==="FT"||status==="AET"||status==="PEN";
+    const finished=matches.filter(m=>{
+      const s=m.status?.short||m.status||"";
+      return s==="FT"||s==="AET"||s==="PEN";
     }).sort((a,b)=>{
       const ta=a.fixture?.timestamp||a.timestamp||0;
       const tb=b.fixture?.timestamp||b.timestamp||0;
@@ -885,12 +906,12 @@ window.refreshLigue1=async function(){
     });
 
     finished.forEach(m=>{
-      const hId=m.teams?.home?.id||m.homeTeam?.id||m.home_team?.id;
-      const aId=m.teams?.away?.id||m.awayTeam?.id||m.away_team?.id;
-      const hName=m.teams?.home?.name||m.homeTeam?.name||m.home_team?.name;
-      const aName=m.teams?.away?.name||m.awayTeam?.name||m.away_team?.name;
-      const hG=m.goals?.home??m.score?.home??m.homeScore??null;
-      const aG=m.goals?.away??m.score?.away??m.awayScore??null;
+      const hId=m.teams?.home?.id||m.homeTeam?.id;
+      const aId=m.teams?.away?.id||m.awayTeam?.id;
+      const hName=m.teams?.home?.name||m.homeTeam?.name||"?";
+      const aName=m.teams?.away?.name||m.awayTeam?.name||"?";
+      const hG=m.goals?.home??m.score?.home??null;
+      const aG=m.goals?.away??m.score?.away??null;
       if(!hId||!aId||hG===null||aG===null)return;
 
       teamNames[hId]=hName;
@@ -906,38 +927,40 @@ window.refreshLigue1=async function(){
       teams[aId].gf+=aG;teams[aId].ga+=hG;
 
       if(hG>aG){
-        teams[hId].w++;teams[hId].pts+=3;
-        teams[aId].l++;
+        teams[hId].w++;teams[hId].pts+=3;teams[aId].l++;
         teamForm[hId].push("W");teamForm[aId].push("L");
       } else if(aG>hG){
-        teams[aId].w++;teams[aId].pts+=3;
-        teams[hId].l++;
+        teams[aId].w++;teams[aId].pts+=3;teams[hId].l++;
         teamForm[aId].push("W");teamForm[hId].push("L");
       } else {
-        teams[hId].d++;teams[hId].pts++;
-        teams[aId].d++;teams[aId].pts++;
+        teams[hId].d++;teams[hId].pts++;teams[aId].d++;teams[aId].pts++;
         teamForm[hId].push("D");teamForm[aId].push("D");
       }
     });
 
-    // Trier par points, puis diff de buts
     const sorted=Object.values(teams).sort((a,b)=>{
       if(b.pts!==a.pts)return b.pts-a.pts;
       return (b.gf-b.ga)-(a.gf-a.ga);
     });
 
     if(!sorted.length){
-      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Aucune donnee disponible.</p>';
+      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Aucun match termine trouve.</p>';
       return;
     }
 
     let html='<div class="card">';
-    html+='<div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #2E2E2E;"><span style="width:24px;font-size:11px;color:#888;text-align:center;">#</span><span style="flex:1;font-size:11px;color:#888;margin-left:8px;">EQUIPE</span><span style="width:24px;font-size:11px;color:#888;text-align:center;">J</span><span style="width:28px;font-size:11px;color:#888;text-align:center;">Pts</span><span style="width:80px;font-size:11px;color:#888;text-align:center;">FORME</span></div>';
+    html+='<div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #2E2E2E;">'
+      +'<span style="width:24px;font-size:11px;color:#888;text-align:center;">#</span>'
+      +'<span style="flex:1;font-size:11px;color:#888;margin-left:8px;">EQUIPE</span>'
+      +'<span style="width:24px;font-size:11px;color:#888;text-align:center;">J</span>'
+      +'<span style="width:28px;font-size:11px;color:#888;text-align:center;">Pts</span>'
+      +'<span style="width:80px;font-size:11px;color:#888;text-align:center;">FORME</span>'
+      +'</div>';
 
     sorted.forEach((t,i)=>{
       const rank=i+1;
       const name=teamNames[t.id]||"?";
-      // 5 derniers matchs du plus recent au plus ancien
+      // 5 derniers résultats (du + récent au + ancien)
       const form=(teamForm[t.id]||[]).slice(-5).reverse();
       let rankColor="#F2F2F2";
       if(rank<=3)rankColor="#39E979";
@@ -947,13 +970,19 @@ window.refreshLigue1=async function(){
       let formSquares='<div style="display:flex;gap:3px;justify-content:center;">';
       for(let f=0;f<5;f++){
         const r=form[f];
-        const bg=r==="W"?"#39E979":r==="D"?"#888":"#FF4444";
-        const opacity=r?1:0.15;
+        const bg=r==="W"?"#39E979":r==="D"?"#888":r==="L"?"#FF4444":"#2E2E2E";
+        const opacity=r?1:0.3;
         formSquares+=`<div style="width:13px;height:13px;border-radius:3px;background:${bg};opacity:${opacity};"></div>`;
       }
       formSquares+='</div>';
 
-      html+=`<div style="display:flex;align-items:center;padding:9px 12px;border-bottom:1px solid #111;"><span style="width:24px;font-size:13px;font-weight:700;text-align:center;color:${rankColor};">${rank}</span><span style="flex:1;font-size:13px;font-weight:600;margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span><span style="width:24px;font-size:12px;color:#888;text-align:center;">${t.p}</span><span style="width:28px;font-size:13px;font-weight:700;text-align:center;">${t.pts}</span><div style="width:80px;">${formSquares}</div></div>`;
+      html+=`<div style="display:flex;align-items:center;padding:9px 12px;border-bottom:1px solid #111;">`
+        +`<span style="width:24px;font-size:13px;font-weight:700;text-align:center;color:${rankColor};">${rank}</span>`
+        +`<span style="flex:1;font-size:13px;font-weight:600;margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span>`
+        +`<span style="width:24px;font-size:12px;color:#888;text-align:center;">${t.p}</span>`
+        +`<span style="width:28px;font-size:13px;font-weight:700;text-align:center;">${t.pts}</span>`
+        +`<div style="width:80px;">${formSquares}</div>`
+        +`</div>`;
     });
 
     html+='</div><p style="font-size:11px;color:#555;text-align:center;margin-top:8px;">🟢 Ligue des Champions &nbsp;🔵 Europa &nbsp;🔴 Relegation</p>';
@@ -965,9 +994,11 @@ window.refreshLigue1=async function(){
     document.getElementById("ligue1-last-update").textContent="Mis a jour le "+d.toLocaleDateString("fr-FR")+" a "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
     showToast("Classement mis a jour !");
   } catch(e){
-    content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Erreur : '+e.message+'</p>';
+    content.innerHTML=`<p style="color:#888;text-align:center;margin-top:40px;">Erreur : ${e.message}</p>`;
   }
 };
+
+// ── CLASSEMENT TAB ────────────────────────────────────────────────────────────
 function renderClassement(){
   showScreen("classement");
   const sorted=Object.values(currentLobby.players).sort((a,b)=>(b.points||0)-(a.points||0));
@@ -1005,8 +1036,6 @@ function scheduleNotif(){
   if(!currentLobby||Notification.permission!=="granted")return;
   const deadline=currentLobby.deadline;
   const now=Date.now();
-
-  // Notif 30 min avant pour TOUS les joueurs
   const notif30=deadline-(30*60*1000);
   if(notif30>now){
     setTimeout(()=>{
@@ -1016,8 +1045,6 @@ function scheduleNotif(){
       });
     },notif30-now);
   }
-
-  // Notif 9 min avant UNIQUEMENT pour l'admin
   if(currentUser&&currentUser.email===ADMIN_EMAIL){
     const notif9=deadline-(9*60*1000);
     if(notif9>now){
@@ -1029,7 +1056,6 @@ function scheduleNotif(){
       },notif9-now);
     }
   }
-
   showToast("Rappels programmes !");
 }
 
