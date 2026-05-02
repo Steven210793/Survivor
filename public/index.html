@@ -68,6 +68,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 .loading-screen{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
 .result-score{background:#111;border-radius:8px;padding:4px 10px;font-weight:900;font-size:14px;color:#F2F2F2;}
 .recent-lobby-card{background:#1A1A1A;border:1px solid #2E2E2E;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.debug-box{background:#0a0a0a;border:1px solid #333;border-radius:8px;padding:10px;font-size:10px;color:#39E979;word-break:break-all;white-space:pre-wrap;max-height:300px;overflow-y:auto;margin-top:8px;font-family:monospace;}
 </style>
 </head>
 <body>
@@ -154,7 +155,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 <div class="screen" id="screen-picking">
   <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;flex-shrink:0;">
     <div style="flex:1;text-align:center;font-weight:700;" id="pick-round">Journee 34</div>
-    <button onclick="requestNotifPermission()" style="background:none;border:none;color:#FFD000;font-size:20px;cursor:pointer;" title="Activer les rappels">🔔</button>
+    <button onclick="requestNotifPermission()" style="background:none;border:none;color:#FFD000;font-size:20px;cursor:pointer;">🔔</button>
     <button onclick="shareLigue()" style="background:none;border:none;color:#4A90E2;font-size:20px;cursor:pointer;">📤</button>
   </div>
   <div style="padding:18px;flex:1;overflow-y:auto;padding-bottom:80px;">
@@ -188,7 +189,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
   </div>
 </div>
 
-<!-- RESULTS (journee en cours) -->
+<!-- RESULTS -->
 <div class="screen" id="screen-results">
   <div style="text-align:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;font-weight:700;font-size:18px;flex-shrink:0;" id="results-title">Resultats</div>
   <div style="padding:18px;flex:1;overflow-y:auto;">
@@ -337,65 +338,33 @@ const ADMIN_EMAIL = "groliersteven@gmail.com";
 const RAPIDAPI_KEY = "39c5cc9625mshc2f52e154b3255fp11e5b9jsn0f4c49435a11";
 const APP_URL = "https://survivor-chi-ecru.vercel.app";
 const CURRENT_ROUND = 34;
-// ✅ ID correct pour la Ligue 1 française (vérifié via Get Popular Leagues)
 const LIGUE1_ID = 53;
 
-const PHRASES_WIN = [
-  "Qualifie ! T'as le niveau, contrairement aux autres 😎",
-  "Ton equipe a assure... pour une fois 🙄",
-  "Encore en vie ! Profites-en ca va pas durer 😏",
-  "Quel choix de genie. On est impressionnes. Vraiment 👏",
-  "Survie confirmee. Les autres peuvent aller se coucher 🛏️",
-];
-const PHRASES_LOSS = [
-  "Elimine. C'est beau d'avoir essaye au moins 🪦",
-  "T'as choisi cette equipe-la... avec tous les autres choix possibles... t'as choisi CELLE-LA 😭",
-  "T'aurais du lancer une piece, ca aurait ete plus efficace 🪙",
-  "On te l'avait dit. T'as pas ecoute. Voila 🤷",
-  "Rentre chez toi, c'est termine pour cette saison 👋",
-];
-const PHRASES_DRAW = [
-  "Un nul... t'as survecu a quoi exactement ? A rien 😭",
-  "1-1. Pas de gagnant. Sauf que toi t'es elimine quand meme 🫠",
-  "Ton equipe a fait match nul. Bravo pour le demi-effort 😒",
-  "Un nul c'est pour les gens qui osent pas gagner 😂",
-  "Ni gagnant ni perdant... sauf toi, qui es perdant 💀",
-];
-const PHRASES_NO_PICK = [
-  "T'as meme pas choisi d'equipe. Respect du niveau zero 🫥",
-  "Oublier de jouer c'est un talent rare... et pas utile 🤔",
-  "T'etais ou ? Peu importe, t'es elimine de toute facon 👋",
-  "La prochaine fois mets une alarme mon grand 📱",
-  "Elimine sans meme avoir essaye. C'est un exploit en soi 🏆",
-];
-const PHRASES_WINNER = [
-  "Indestructible ! Personne a pu t'arreter !",
-  "LE survivant. Les autres cherchent encore comment c'est possible 😂",
-  "Champion ! Tout le monde peut aller s'entrainer, t'es trop fort !",
-  "Dernier survivant ! Legende vivante !",
-  "T'as gagne. Les autres vont faire semblant d'etre contents pour toi 😅",
-  "CHAAMPION MON FREREUUU ! 🏆🔥",
-];
+const PHRASES_WIN = ["Qualifie ! T'as le niveau, contrairement aux autres 😎","Ton equipe a assure... pour une fois 🙄","Encore en vie ! Profites-en ca va pas durer 😏","Quel choix de genie. On est impressionnes. Vraiment 👏","Survie confirmee. Les autres peuvent aller se coucher 🛏️"];
+const PHRASES_LOSS = ["Elimine. C'est beau d'avoir essaye au moins 🪦","T'as choisi cette equipe-la... avec tous les autres choix possibles... t'as choisi CELLE-LA 😭","T'aurais du lancer une piece, ca aurait ete plus efficace 🪙","On te l'avait dit. T'as pas ecoute. Voila 🤷","Rentre chez toi, c'est termine pour cette saison 👋"];
+const PHRASES_DRAW = ["Un nul... t'as survecu a quoi exactement ? A rien 😭","1-1. Pas de gagnant. Sauf que toi t'es elimine quand meme 🫠","Ton equipe a fait match nul. Bravo pour le demi-effort 😒","Un nul c'est pour les gens qui osent pas gagner 😂","Ni gagnant ni perdant... sauf toi, qui es perdant 💀"];
+const PHRASES_NO_PICK = ["T'as meme pas choisi d'equipe. Respect du niveau zero 🫥","Oublier de jouer c'est un talent rare... et pas utile 🤔","T'etais ou ? Peu importe, t'es elimine de toute facon 👋","La prochaine fois mets une alarme mon grand 📱","Elimine sans meme avoir essaye. C'est un exploit en soi 🏆"];
+const PHRASES_WINNER = ["Indestructible ! Personne a pu t'arreter !","LE survivant. Les autres cherchent encore comment c'est possible 😂","Champion ! Tout le monde peut aller s'entrainer, t'es trop fort !","Dernier survivant ! Legende vivante !","T'as gagne. Les autres vont faire semblant d'etre contents pour toi 😅","CHAAMPION MON FREREUUU ! 🏆🔥"];
 
 const TEAMS = [
-  {id:"psg",name:"PSG",        logo:"https://media.api-sports.io/football/teams/85.png",  apiId:85},
-  {id:"om", name:"Marseille",  logo:"https://media.api-sports.io/football/teams/81.png",  apiId:81},
-  {id:"mon",name:"Monaco",     logo:"https://media.api-sports.io/football/teams/91.png",  apiId:91},
-  {id:"lil",name:"Lille",      logo:"https://media.api-sports.io/football/teams/79.png",  apiId:79},
-  {id:"nic",name:"Nice",       logo:"https://media.api-sports.io/football/teams/84.png",  apiId:84},
-  {id:"oly",name:"Lyon",       logo:"https://media.api-sports.io/football/teams/80.png",  apiId:80},
-  {id:"ren",name:"Rennes",     logo:"https://media.api-sports.io/football/teams/94.png",  apiId:94},
-  {id:"len",name:"Lens",       logo:"https://media.api-sports.io/football/teams/116.png", apiId:116},
-  {id:"str",name:"Strasbourg", logo:"https://media.api-sports.io/football/teams/95.png",  apiId:95},
-  {id:"nan",name:"Nantes",     logo:"https://media.api-sports.io/football/teams/83.png",  apiId:83},
-  {id:"tls",name:"Toulouse",   logo:"https://media.api-sports.io/football/teams/96.png",  apiId:96},
-  {id:"aux",name:"Auxerre",    logo:"https://media.api-sports.io/football/teams/778.png", apiId:778},
-  {id:"ang",name:"Angers",     logo:"https://media.api-sports.io/football/teams/77.png",  apiId:77},
-  {id:"hac",name:"Le Havre",   logo:"https://media.api-sports.io/football/teams/1080.png",apiId:1080},
-  {id:"mtz",name:"Metz",       logo:"https://media.api-sports.io/football/teams/82.png",  apiId:82},
-  {id:"lor",name:"Lorient",    logo:"https://media.api-sports.io/football/teams/1160.png",apiId:1160},
-  {id:"pfc",name:"Paris FC",   logo:"https://media.api-sports.io/football/teams/111.png", apiId:111},
-  {id:"bst",name:"Brest",      logo:"https://media.api-sports.io/football/teams/130.png", apiId:130},
+  {id:"psg",name:"PSG",        apiId:85},
+  {id:"om", name:"Marseille",  apiId:81},
+  {id:"mon",name:"Monaco",     apiId:91},
+  {id:"lil",name:"Lille",      apiId:79},
+  {id:"nic",name:"Nice",       apiId:84},
+  {id:"oly",name:"Lyon",       apiId:80},
+  {id:"ren",name:"Rennes",     apiId:94},
+  {id:"len",name:"Lens",       apiId:116},
+  {id:"str",name:"Strasbourg", apiId:95},
+  {id:"nan",name:"Nantes",     apiId:83},
+  {id:"tls",name:"Toulouse",   apiId:96},
+  {id:"aux",name:"Auxerre",    apiId:778},
+  {id:"ang",name:"Angers",     apiId:77},
+  {id:"hac",name:"Le Havre",   apiId:1080},
+  {id:"mtz",name:"Metz",       apiId:82},
+  {id:"lor",name:"Lorient",    apiId:1160},
+  {id:"pfc",name:"Paris FC",   apiId:111},
+  {id:"bst",name:"Brest",      apiId:130},
 ];
 
 const FIXTURES = [
@@ -409,19 +378,17 @@ const FIXTURES = [
   {home:"oly",away:"ren",day:"Dim. 20:45",homeApiId:80, awayApiId:94},
 ];
 
-let currentUser=null, currentLobby=null, lobbyUnsub=null, timerInterval=null, authMode="login", pendingPick=null;
+let currentUser=null,currentLobby=null,lobbyUnsub=null,timerInterval=null,authMode="login",pendingPick=null;
 
 function getPhrase(arr){return arr[Math.floor(Math.random()*arr.length)];}
-function getTeam(id){return TEAMS.find(t=>t.id===id)||{name:"?",logo:"",apiId:0};}
+function getTeam(id){return TEAMS.find(t=>t.id===id)||{name:"?",apiId:0};}
 function genCode(){const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";return Array.from({length:6},()=>c[Math.floor(Math.random()*c.length)]).join("");}
 function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.style.display="block";setTimeout(()=>t.style.display="none",2500);}
 function showScreen(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));const el=document.getElementById("screen-"+id);if(el)el.classList.add("active");}
 function avEl(u){if(u&&u.photoURL)return`<img src="${u.photoURL}" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;return(u&&u.pseudo?u.pseudo[0].toUpperCase():"?");}
-
 function saveLastCode(c){try{localStorage.setItem("lastLobbyCode",c);}catch(e){}}
 function getLastCode(){try{return localStorage.getItem("lastLobbyCode");}catch(e){return null;}}
 function clearLastCode(){try{localStorage.removeItem("lastLobbyCode");}catch(e){}}
-
 function scoresHtml(matchResults){
   if(!matchResults||!Object.keys(matchResults).length)return'';
   let h='<p class="sec-label" style="margin-top:16px;">SCORES DE LA JOURNEE</p><div class="card">';
@@ -433,29 +400,20 @@ function scoresHtml(matchResults){
 }
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
-onAuthStateChanged(auth, async (fu)=>{
-  try {
+onAuthStateChanged(auth,async(fu)=>{
+  try{
     if(fu){
       const ud=await getDoc(doc(db,"users",fu.uid));
       currentUser=ud.exists()?ud.data():{uid:fu.uid,pseudo:fu.displayName||fu.email.split("@")[0],email:fu.email,photoURL:fu.photoURL||null,points:0,totalGames:0,totalWins:0,bestStreak:0,currentStreak:0};
       if(!ud.exists())await setDoc(doc(db,"users",fu.uid),currentUser);
       const lc=getLastCode();
-      if(lc){
-        try{const ld=await getDoc(doc(db,"lobbies",lc));if(ld.exists()){openLobby(lc);return;}}catch(e){}
-        clearLastCode();
-      }
+      if(lc){try{const ld=await getDoc(doc(db,"lobbies",lc));if(ld.exists()){openLobby(lc);return;}}catch(e){}clearLastCode();}
       goHome();
-    } else {
-      currentUser=null;showScreen("auth");
-    }
-  } catch(e){
-    const el=document.getElementById("load-error");
-    if(el){el.textContent="Erreur : "+e.message;el.style.display="block";}
-  }
+    } else {currentUser=null;showScreen("auth");}
+  }catch(e){const el=document.getElementById("load-error");if(el){el.textContent="Erreur : "+e.message;el.style.display="block";}}
 });
 
 window.loginGoogle=async function(){try{await signInWithPopup(auth,googleProvider);}catch(e){showErrAuth("Connexion Google annulee.");}};
-
 window.setMode=function(mode){
   authMode=mode;const isSig=mode==="signup";
   document.getElementById("signup-field").style.display=isSig?"block":"none";
@@ -464,7 +422,6 @@ window.setMode=function(mode){
   document.getElementById("auth-btn").textContent=isSig?"CREER MON COMPTE":"SE CONNECTER";
   document.getElementById("auth-err").style.display="none";
 };
-
 window.doAuth=async function(){
   const email=document.getElementById("auth-email").value.trim().toLowerCase();
   const pwd=document.getElementById("auth-pwd").value;
@@ -477,18 +434,15 @@ window.doAuth=async function(){
       await updateProfile(user,{displayName:pseudo});
       await setDoc(doc(db,"users",user.uid),{uid:user.uid,pseudo,email,photoURL:null,points:0,totalGames:0,totalWins:0,bestStreak:0,currentStreak:0});
     } else {await signInWithEmailAndPassword(auth,email,pwd);}
-  } catch(e){
+  }catch(e){
     const m={"auth/email-already-in-use":"Email deja utilise.","auth/user-not-found":"Email inconnu.","auth/wrong-password":"Mot de passe incorrect.","auth/invalid-email":"Email invalide.","auth/weak-password":"Mot de passe trop court.","auth/invalid-credential":"Email ou mot de passe incorrect."};
     showErrAuth(m[e.code]||"Erreur de connexion.");
   }
 };
-
 function showErrAuth(msg){const el=document.getElementById("auth-err");el.textContent=msg;el.style.display="block";}
-
 window.logout=async function(){
   if(lobbyUnsub){lobbyUnsub();lobbyUnsub=null;}
-  currentLobby=null;clearLastCode();
-  await signOut(auth);
+  currentLobby=null;clearLastCode();await signOut(auth);
   document.getElementById("bottom-nav").style.display="none";
 };
 
@@ -498,10 +452,8 @@ function goHome(){
   const zone=document.getElementById("create-btn-zone");
   zone.innerHTML=currentUser&&currentUser.email===ADMIN_EMAIL?'<button class="btn btn-g" onclick="createLobby()">CREER UNE LIGUE</button><button class="btn btn-b" onclick="requestNotifPermission()" style="margin-bottom:10px;">🔔 Activer les rappels</button>':'';
   const lc=getLastCode();
-  const rz=document.getElementById("recent-lobby-zone");
-  rz.innerHTML=lc?`<div class="recent-lobby-card" onclick="rejoinLobby('${lc}')"><span style="font-size:28px;">⚽</span><div><div style="font-weight:700;font-size:15px;">Rejoindre ma ligue</div><div style="font-size:12px;color:#888;margin-top:2px;">Code : ${lc}</div></div><span style="color:#39E979;font-size:20px;">→</span></div>`:'';
+  document.getElementById("recent-lobby-zone").innerHTML=lc?`<div class="recent-lobby-card" onclick="rejoinLobby('${lc}')"><span style="font-size:28px;">⚽</span><div><div style="font-weight:700;font-size:15px;">Rejoindre ma ligue</div><div style="font-size:12px;color:#888;margin-top:2px;">Code : ${lc}</div></div><span style="color:#39E979;font-size:20px;">→</span></div>`:'';
 }
-
 window.rejoinLobby=async function(code){
   try{const ld=await getDoc(doc(db,"lobbies",code));if(ld.exists())openLobby(code);else{clearLastCode();showToast("Ligue introuvable.");goHome();}}
   catch(e){showToast("Erreur de connexion.");}
@@ -514,7 +466,6 @@ window.createLobby=async function(){
   await setDoc(doc(db,"lobbies",code),{code,name:"Ligue de "+currentUser.pseudo,host:currentUser.uid,hostEmail:currentUser.email,status:"waiting",round:CURRENT_ROUND,deadline:new Date("2026-05-09T13:00:00").getTime(),players:{[currentUser.uid]:{uid:currentUser.uid,pseudo:currentUser.pseudo,photoURL:currentUser.photoURL||null,alive:true,pick:null,result:null,usedTeams:[],points:0,phrase:null}},matchResults:{},createdAt:Date.now()});
   saveLastCode(code);openLobby(code);
 };
-
 window.joinLobby=async function(){
   const code=document.getElementById("join-code").value.trim().toUpperCase();
   const errEl=document.getElementById("join-err");errEl.style.display="none";
@@ -523,9 +474,8 @@ window.joinLobby=async function(){
     if(!ld.exists()){errEl.textContent="Code introuvable.";errEl.style.display="block";return;}
     if(!ld.data().players[currentUser.uid])await updateDoc(doc(db,"lobbies",code),{[`players.${currentUser.uid}`]:{uid:currentUser.uid,pseudo:currentUser.pseudo,photoURL:currentUser.photoURL||null,alive:true,pick:null,result:null,usedTeams:[],points:0,phrase:null}});
     saveLastCode(code);openLobby(code);
-  } catch(e){errEl.textContent="Erreur : "+e.message;errEl.style.display="block";}
+  }catch(e){errEl.textContent="Erreur : "+e.message;errEl.style.display="block";}
 };
-
 function openLobby(code){
   if(lobbyUnsub){lobbyUnsub();lobbyUnsub=null;}
   lobbyUnsub=onSnapshot(doc(db,"lobbies",code),snap=>{
@@ -536,13 +486,10 @@ function openLobby(code){
     }
   });
 }
-
 function refreshCurrentView(){const b=document.querySelector(".nav button.active");if(b)navTo(b.id.replace("nav-",""));}
-
 window.leaveLobby=function(){if(lobbyUnsub){lobbyUnsub();lobbyUnsub=null;}currentLobby=null;clearLastCode();document.getElementById("bottom-nav").style.display="none";goHome();};
 async function saveF(f,v){await updateDoc(doc(db,"lobbies",currentLobby.code),{[f]:v});}
 async function saveFs(fs){await updateDoc(doc(db,"lobbies",currentLobby.code),fs);}
-
 window.openRename=function(){document.getElementById("new-name-input").value=currentLobby.name;document.getElementById("modal-rename").classList.add("open");};
 window.closeRename=function(){document.getElementById("modal-rename").classList.remove("open");};
 window.saveName=async function(){const n=document.getElementById("new-name-input").value.trim();if(!n)return showToast("Nom vide !");await saveF("name",n);closeRename();showToast("Nom mis a jour !");};
@@ -559,7 +506,6 @@ window.navTo=function(tab){
   else if(tab==="classement")renderClassement();
   else if(tab==="profil")renderProfil();
 };
-
 function renderAccueil(){
   const s=currentLobby.status;
   if(s==="waiting")renderLobby();
@@ -583,7 +529,6 @@ function renderLobby(){
   document.getElementById("btn-start").style.display=isHost?"block":"none";
   document.getElementById("wait-host").style.display=isHost?"none":"block";
 }
-
 window.startGame=async function(){
   await saveFs({status:"picking",deadline:new Date("2026-05-02T15:00:00").getTime()});
   scheduleNotif();
@@ -603,28 +548,12 @@ function renderPicking(){
     const h=Math.floor(d/3600000),m=Math.floor((d%3600000)/60000),s=Math.floor((d%60000)/1000);
     document.getElementById("timer").textContent=`${h<10?"0"+h:h}:${m<10?"0"+m:m}:${s<10?"0"+s:s}`;
   },1000);
-
   const pendingBox=document.getElementById("pending-pick-box");
   const myPickBox=document.getElementById("my-pick-box");
   const validateBar=document.getElementById("validate-bar");
-
-  if(myPick){
-    pendingBox.style.display="none";
-    document.getElementById("my-pick-name").textContent=getTeam(myPick).name;
-    myPickBox.style.display="flex";
-    validateBar.style.display="none";
-    pendingPick=null;
-  } else if(pendingPick){
-    document.getElementById("pending-pick-name").textContent=getTeam(pendingPick).name;
-    pendingBox.style.display="block";
-    myPickBox.style.display="none";
-    validateBar.style.display="block";
-  } else {
-    pendingBox.style.display="none";
-    myPickBox.style.display="none";
-    validateBar.style.display="none";
-  }
-
+  if(myPick){pendingBox.style.display="none";document.getElementById("my-pick-name").textContent=getTeam(myPick).name;myPickBox.style.display="flex";validateBar.style.display="none";pendingPick=null;}
+  else if(pendingPick){document.getElementById("pending-pick-name").textContent=getTeam(pendingPick).name;pendingBox.style.display="block";myPickBox.style.display="none";validateBar.style.display="block";}
+  else{pendingBox.style.display="none";myPickBox.style.display="none";validateBar.style.display="none";}
   const othersZone=document.getElementById("others-picks-zone");
   if(closed){
     const others=Object.values(currentLobby.players).filter(p=>p.uid!==currentUser.uid&&p.alive);
@@ -639,14 +568,11 @@ function renderPicking(){
       othersZone.innerHTML=html+'</div></div>';
     }
   } else {othersZone.innerHTML='';}
-
   const fl=document.getElementById("fixtures-list");fl.innerHTML="";
   FIXTURES.forEach(fix=>{
     [{id:fix.home,time:fix.day},{id:fix.away,time:"—"}].forEach(item=>{
       const t=getTeam(item.id);
-      const sel=pendingPick===item.id;
-      const confirmed=myPick===item.id;
-      const used=usedTeams.includes(item.id);
+      const sel=pendingPick===item.id,confirmed=myPick===item.id,used=usedTeams.includes(item.id);
       const canPick=me&&me.alive&&!myPick&&!used&&!closed;
       const dot=confirmed?'<div style="width:22px;height:22px;border-radius:50%;background:#39E979;display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;font-weight:700;flex-shrink:0;">✓</div>':sel?'<div style="width:22px;height:22px;border-radius:50%;background:#FFD000;display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;font-weight:700;flex-shrink:0;">●</div>':used?'<div style="width:22px;height:22px;border-radius:50%;background:#FF4444;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex-shrink:0;">✗</div>':'<div style="width:22px;height:22px;border-radius:50%;border:2px solid #2E2E2E;flex-shrink:0;"></div>';
       const bg=confirmed?'rgba(57,233,121,0.06)':sel?'rgba(255,208,0,0.08)':'transparent';
@@ -654,25 +580,18 @@ function renderPicking(){
       fl.innerHTML+='<div onclick="'+onclick+'" style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid #2E2E2E;gap:10px;background:'+bg+';opacity:'+(used?0.35:1)+';cursor:'+(canPick?'pointer':'default')+';">'+dot+'<span style="flex:1;font-weight:600;font-size:15px;">'+t.name+'</span><span style="font-size:12px;color:#888;">'+item.time+'</span></div>';
     });
   });
-
   if(usedTeams.length>0){
     document.getElementById("used-teams-box").style.display="block";
     const uc=document.getElementById("used-teams-chips");uc.innerHTML="";
     usedTeams.forEach(tid=>{uc.innerHTML+='<span style="background:#222;border:1px solid #2E2E2E;border-radius:99px;padding:4px 10px;font-size:12px;color:#888;">'+getTeam(tid).name+'</span>';});
   }
-
   const isHost=currentLobby.host===currentUser.uid;
   const hc=document.getElementById("host-controls");hc.innerHTML="";
   if(!me||!me.alive){hc.innerHTML='<div style="background:#0d0d1a;border:1.5px solid rgba(100,100,255,0.3);border-radius:12px;padding:16px;text-align:center;color:#8888ff;font-weight:700;">MODE SPECTATEUR</div>';return;}
   if(isHost&&!closed)hc.innerHTML='<button class="btn btn-o" onclick="closeSelections()">FERMER LES SELECTIONS</button>';
   else if(isHost&&closed)hc.innerHTML='<button class="btn btn-g" onclick="resolveRound()">OBTENIR LES RESULTATS</button>';
 }
-
-window.selectPick=function(id){
-  const me=currentLobby.players[currentUser.uid];
-  if(!me||!me.alive||me.pick||currentLobby.status==="closed")return;
-  pendingPick=id;renderPicking();
-};
+window.selectPick=function(id){const me=currentLobby.players[currentUser.uid];if(!me||!me.alive||me.pick||currentLobby.status==="closed")return;pendingPick=id;renderPicking();};
 window.cancelPick=function(){pendingPick=null;renderPicking();};
 window.confirmPick=async function(){
   if(!pendingPick)return;
@@ -690,46 +609,33 @@ window.resolveRound=async function(){
   document.getElementById("modal-loading").classList.add("open");
   let apiResults={},matchResults={};
   try{
-    // ✅ leagueId=53 (Ligue 1 française), format réponse : response.matches[]
     const resp=await fetch(`https://free-api-live-football-data.p.rapidapi.com/football-get-all-matches-by-league?leagueid=${LIGUE1_ID}`,{
-      method:"GET",
-      headers:{
-        "x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com",
-        "x-rapidapi-key":RAPIDAPI_KEY
-      }
+      method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}
     });
     const data=await resp.json();
-    // L'API retourne { response: { matches: [...] } }
-    const matches=data?.response?.matches||data?.matches||data?.response||[];
-    const matchArray=Array.isArray(matches)?matches:[];
-
+    const rawMatches=data?.response?.matches||data?.matches||data?.response||[];
+    const matchArray=Array.isArray(rawMatches)?rawMatches:[];
     matchArray.forEach(match=>{
-      // Filtrer les matchs terminés
       const status=match.status?.short||match.status||"";
       if(status!=="FT"&&status!=="AET"&&status!=="PEN")return;
-      // Identifier la journée
       const roundStr=match.league?.round||match.round||"";
       const rn=parseInt(String(roundStr).replace(/\D/g,""));
       if(rn!==currentLobby.round)return;
-
       const hApiId=match.teams?.home?.id||match.homeTeam?.id;
       const aApiId=match.teams?.away?.id||match.awayTeam?.id;
       const hG=match.goals?.home??match.score?.home??null;
       const aG=match.goals?.away??match.score?.away??null;
       if(!hApiId||!aApiId||hG===null||aG===null)return;
-
       const ht=TEAMS.find(t=>t.apiId===hApiId);
       const at=TEAMS.find(t=>t.apiId===aApiId);
       if(!ht||!at)return;
-
       if(hG>aG){apiResults[ht.id]="win";apiResults[at.id]="loss";}
       else if(aG>hG){apiResults[at.id]="win";apiResults[ht.id]="loss";}
       else{apiResults[ht.id]="draw";apiResults[at.id]="draw";}
       matchResults[ht.id+"-"+at.id]={home:ht.id,away:at.id,homeGoals:hG,awayGoals:aG};
     });
-  } catch(e){showToast("API indisponible - simulation");}
+  }catch(e){showToast("API indisponible - simulation");}
   document.getElementById("modal-loading").classList.remove("open");
-
   const updates={matchResults};
   Object.values(currentLobby.players).forEach(p=>{
     if(!p.alive)return;
@@ -742,23 +648,13 @@ window.resolveRound=async function(){
     updates["players."+p.uid+".phrase"]=result==="win"?getPhrase(PHRASES_WIN):result==="draw"?getPhrase(PHRASES_DRAW):getPhrase(PHRASES_LOSS);
     if(survived)updates["players."+p.uid+".usedTeams"]=[...(p.usedTeams||[]),p.pick];
   });
-
-  const survivorsAfter=Object.values(currentLobby.players).filter(p=>{
-    if(!p.alive)return false;
-    if(!p.pick)return false;
-    return updates["players."+p.uid+".result"]==="win";
-  });
-
-  if(survivorsAfter.length===0){
-    updates.status="nobody";
-  } else if(survivorsAfter.length===1){
-    updates.status="finished";
-    const w=survivorsAfter[0];
+  const survivorsAfter=Object.values(currentLobby.players).filter(p=>p.alive&&p.pick&&updates["players."+p.uid+".result"]==="win");
+  if(survivorsAfter.length===0){updates.status="nobody";}
+  else if(survivorsAfter.length===1){
+    updates.status="finished";const w=survivorsAfter[0];
     updates["players."+w.uid+".points"]=(w.points||0)+1;
     getDoc(doc(db,"users",w.uid)).then(ud=>{if(ud.exists())updateDoc(doc(db,"users",w.uid),{points:(ud.data().points||0)+1});});
-  } else {
-    updates.status="roundEnd";
-  }
+  } else {updates.status="roundEnd";}
   await updateDoc(doc(db,"lobbies",currentLobby.code),updates);
 };
 
@@ -768,8 +664,7 @@ function renderResults(){
   document.getElementById("results-title").textContent="Resultats - Journee "+currentLobby.round;
   const rl=document.getElementById("results-list");rl.innerHTML="";
   Object.values(currentLobby.players).forEach(p=>{
-    const t=getTeam(p.pick);
-    const isWin=p.result==="win";
+    const t=getTeam(p.pick);const isWin=p.result==="win";
     rl.innerHTML+=`<div style="padding:12px 16px;border-bottom:1px solid #2E2E2E;"><div style="display:flex;align-items:center;gap:10px;"><div class="av">${avEl(p)}</div><div style="flex:1;"><div style="font-weight:600;">${p.pseudo}</div><div style="font-size:12px;color:#888;">${p.pick?t.name:"Pas de choix"}</div></div><span class="${isWin?"badge-g":"badge-r"}">${isWin?"GAGNE":"ELIMINE"}</span></div>${p.phrase?`<div class="${isWin?"phrase-win":"phrase-loss"}">${p.phrase}</div>`:''}</div>`;
   });
   const alive=Object.values(currentLobby.players).filter(p=>p.alive);
@@ -779,43 +674,38 @@ function renderResults(){
   document.getElementById("btn-next-round").style.display=isHost?"block":"none";
   document.getElementById("wait-next").textContent=isHost?"":"En attente de l'admin...";
 }
-
 window.nextRound=async function(){
   const updates={status:"picking",round:currentLobby.round+1,deadline:Date.now()+3600000,matchResults:{}};
   Object.values(currentLobby.players).forEach(p=>{updates["players."+p.uid+".pick"]=null;updates["players."+p.uid+".result"]=null;updates["players."+p.uid+".phrase"]=null;});
   await updateDoc(doc(db,"lobbies",currentLobby.code),updates);
 };
-
 function renderWinner(){
   showScreen("winner");
   const winner=Object.values(currentLobby.players).find(p=>p.alive)||Object.values(currentLobby.players)[0];
   document.getElementById("winner-name").textContent="🏆 "+(winner?winner.pseudo:"?")+" 🏆";
   document.getElementById("winner-phrase").textContent=getPhrase(PHRASES_WINNER);
-  let playersHtml='<p class="sec-label">RESULTATS DES JOUEURS</p><div class="card" style="margin-bottom:12px;">';
+  let ph='<p class="sec-label">RESULTATS DES JOUEURS</p><div class="card" style="margin-bottom:12px;">';
   Object.values(currentLobby.players).forEach(p=>{
-    const t=getTeam(p.pick);
-    const isWin=p.result==="win";
-    playersHtml+=`<div style="padding:12px 16px;border-bottom:1px solid #2E2E2E;"><div style="display:flex;align-items:center;gap:10px;"><div class="av">${avEl(p)}</div><div style="flex:1;"><div style="font-weight:600;">${p.pseudo}</div><div style="font-size:12px;color:#888;">${p.pick?t.name:"Pas de choix"}</div></div><span class="${isWin?"badge-g":"badge-r"}">${isWin?"GAGNE":"ELIMINE"}</span></div>${p.phrase?`<div class="${isWin?"phrase-win":"phrase-loss"}">${p.phrase}</div>`:''}</div>`;
+    const t=getTeam(p.pick);const isWin=p.result==="win";
+    ph+=`<div style="padding:12px 16px;border-bottom:1px solid #2E2E2E;"><div style="display:flex;align-items:center;gap:10px;"><div class="av">${avEl(p)}</div><div style="flex:1;"><div style="font-weight:600;">${p.pseudo}</div><div style="font-size:12px;color:#888;">${p.pick?t.name:"Pas de choix"}</div></div><span class="${isWin?"badge-g":"badge-r"}">${isWin?"GAGNE":"ELIMINE"}</span></div>${p.phrase?`<div class="${isWin?"phrase-win":"phrase-loss"}">${p.phrase}</div>`:''}</div>`;
   });
-  playersHtml+='</div>';
-  document.getElementById("winner-players-zone").innerHTML=playersHtml;
+  ph+='</div>';
+  document.getElementById("winner-players-zone").innerHTML=ph;
   document.getElementById("winner-scores-zone").innerHTML=scoresHtml(currentLobby.matchResults);
   document.getElementById("btn-replay-winner").style.display=currentLobby.host===currentUser.uid?"block":"none";
 }
-
 function renderNobody(){
   showScreen("nobody");
-  let playersHtml='<p class="sec-label">RESULTATS DES JOUEURS</p><div class="card" style="margin-bottom:12px;">';
+  let ph='<p class="sec-label">RESULTATS DES JOUEURS</p><div class="card" style="margin-bottom:12px;">';
   Object.values(currentLobby.players).forEach(p=>{
     const t=getTeam(p.pick);
-    playersHtml+=`<div style="padding:12px 16px;border-bottom:1px solid #2E2E2E;"><div style="display:flex;align-items:center;gap:10px;"><div class="av">${avEl(p)}</div><div style="flex:1;"><div style="font-weight:600;">${p.pseudo}</div><div style="font-size:12px;color:#888;">${p.pick?t.name:"Pas de choix"}</div></div><span class="badge-r">ELIMINE</span></div>${p.phrase?`<div class="phrase-loss">${p.phrase}</div>`:''}</div>`;
+    ph+=`<div style="padding:12px 16px;border-bottom:1px solid #2E2E2E;"><div style="display:flex;align-items:center;gap:10px;"><div class="av">${avEl(p)}</div><div style="flex:1;"><div style="font-weight:600;">${p.pseudo}</div><div style="font-size:12px;color:#888;">${p.pick?t.name:"Pas de choix"}</div></div><span class="badge-r">ELIMINE</span></div>${p.phrase?`<div class="phrase-loss">${p.phrase}</div>`:''}</div>`;
   });
-  playersHtml+='</div>';
-  document.getElementById("nobody-players-zone").innerHTML=playersHtml;
+  ph+='</div>';
+  document.getElementById("nobody-players-zone").innerHTML=ph;
   document.getElementById("nobody-scores-zone").innerHTML=scoresHtml(currentLobby.matchResults);
   document.getElementById("btn-replay-nobody").style.display=currentLobby.host===currentUser.uid?"block":"none";
 }
-
 window.replayGame=async function(){
   const updates={status:"waiting",round:CURRENT_ROUND,history:[],matchResults:{}};
   Object.values(currentLobby.players).forEach(p=>{updates["players."+p.uid+".alive"]=true;updates["players."+p.uid+".pick"]=null;updates["players."+p.uid+".result"]=null;updates["players."+p.uid+".usedTeams"]=[];updates["players."+p.uid+".phrase"]=null;});
@@ -826,13 +716,10 @@ window.replayGame=async function(){
 function renderResultats(){
   showScreen("resultats");
   const players=Object.values(currentLobby.players);
-  const alive=players.filter(p=>p.alive);
-  const elim=players.filter(p=>!p.alive);
-  const s=currentLobby.status;
+  const alive=players.filter(p=>p.alive),elim=players.filter(p=>!p.alive);
   let html="";
-  if(s==="waiting"){
-    html='<p style="color:#888;text-align:center;margin-top:40px;">La partie n\'a pas encore commence.</p>';
-  } else {
+  if(currentLobby.status==="waiting"){html='<p style="color:#888;text-align:center;margin-top:40px;">La partie n\'a pas encore commence.</p>';}
+  else{
     if(alive.length>0){
       html+=`<p class="sec-label" style="color:#39E979;">SURVIVANTS (${alive.length})</p><div class="card" style="margin-bottom:16px;">`;
       alive.forEach(p=>{html+=`<div class="row"><div style="width:8px;height:8px;border-radius:50%;background:#39E979;flex-shrink:0;"></div><div class="av">${avEl(p)}</div><span style="flex:1;font-weight:600;">${p.pseudo}</span>${p.result==="win"?'<span class="badge-g">GAGNE</span>':''}</div>`;});
@@ -848,7 +735,7 @@ function renderResultats(){
   document.getElementById("resultats-content").innerHTML=html;
 }
 
-// ── LIGUE 1 CLASSEMENT ────────────────────────────────────────────────────────
+// ── LIGUE 1 ───────────────────────────────────────────────────────────────────
 function renderLigue1(){
   showScreen("ligue1");
   const refreshBtn=document.getElementById("ligue1-refresh-btn");
@@ -872,120 +759,111 @@ window.refreshLigue1=async function(){
   const content=document.getElementById("ligue1-content");
   content.innerHTML='<div style="text-align:center;padding:40px;color:#888;">Chargement...</div>';
   try{
-    // ✅ leagueId=53 Ligue 1 française — format réponse : response.matches[]
     const resp=await fetch(`https://free-api-live-football-data.p.rapidapi.com/football-get-all-matches-by-league?leagueid=${LIGUE1_ID}`,{
-      method:"GET",
-      headers:{
-        "x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com",
-        "x-rapidapi-key":RAPIDAPI_KEY
-      }
+      method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}
     });
     const data=await resp.json();
 
-    // ✅ Adapter selon la structure réelle retournée par l'API
-    const rawMatches=data?.response?.matches||data?.matches||data?.response||[];
-    const matches=Array.isArray(rawMatches)?rawMatches:[];
-
-    if(!matches.length){
-      content.innerHTML=`<p style="color:#888;text-align:center;margin-top:40px;">Aucune donnee disponible.<br><small style="font-size:11px;color:#555;">${JSON.stringify(data).substring(0,200)}</small></p>`;
-      return;
+    // ── EXPLORATION STRUCTURE REPONSE ─────────────────────────────────────────
+    // On tente toutes les structures connues pour trouver le tableau de matchs
+    let matchArray=[];
+    if(Array.isArray(data))matchArray=data;
+    else if(Array.isArray(data?.response))matchArray=data.response;
+    else if(Array.isArray(data?.response?.matches))matchArray=data.response.matches;
+    else if(Array.isArray(data?.matches))matchArray=data.matches;
+    else if(Array.isArray(data?.data))matchArray=data.data;
+    else if(typeof data?.response==="object"&&data?.response!==null){
+      // Parfois c'est un objet indexé { "0": match, "1": match }
+      const vals=Object.values(data.response);
+      if(vals.length>0&&typeof vals[0]==="object")matchArray=vals;
     }
 
-    // Construire classement + forme depuis les matchs terminés
-    const teams={};
-    const teamForm={};
-    const teamNames={};
+    // ── DEBUG : afficher la structure si aucun match trouvé ──────────────────
+    if(matchArray.length===0){
+      const sample=JSON.stringify(data).substring(0,600);
+      content.innerHTML=`
+        <div style="background:#0a1a0a;border:1px solid #39E979;border-radius:10px;padding:12px;margin-bottom:12px;">
+          <div style="font-size:12px;color:#39E979;font-weight:700;margin-bottom:6px;">🔍 DEBUG — Envoie ça a Stev</div>
+          <div style="font-size:10px;color:#888;margin-bottom:6px;">Cles top-level : ${Object.keys(data||{}).join(", ")||"(vide)"}</div>
+          <div style="font-size:10px;color:#888;margin-bottom:6px;">Type response : ${typeof data?.response} — isArray : ${Array.isArray(data?.response)}</div>
+          <div class="debug-box">${sample}</div>
+          <button onclick="navigator.clipboard&&navigator.clipboard.writeText(document.querySelector('.debug-box').textContent).then(()=>{})" style="background:#39E979;color:#000;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;width:100%;">📋 Copier</button>
+        </div>`;
+      return;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
-    const finished=matches.filter(m=>{
-      const s=m.status?.short||m.status||"";
-      return s==="FT"||s==="AET"||s==="PEN";
+    // Construire classement depuis les matchs terminés
+    const teams={},teamForm={},teamNames={};
+
+    // Détecter le champ statut sur le 1er match
+    const s0=matchArray[0];
+    const getStatus=m=>m?.status?.short||m?.status?.status||m?.status||m?.fixture?.status?.short||"";
+    const getHomeId=m=>m?.teams?.home?.id||m?.homeTeam?.id||m?.home?.id||m?.home_team?.id;
+    const getAwayId=m=>m?.teams?.away?.id||m?.awayTeam?.id||m?.away?.id||m?.away_team?.id;
+    const getHomeName=m=>m?.teams?.home?.name||m?.homeTeam?.name||m?.home?.name||m?.home_team?.name||"?";
+    const getAwayName=m=>m?.teams?.away?.name||m?.awayTeam?.name||m?.away?.name||m?.away_team?.name||"?";
+    const getHomeGoals=m=>{const v=m?.goals?.home??m?.score?.home??m?.homeGoals??m?.home_score??m?.result?.split("-")?.[0];return v!==undefined&&v!==null?parseInt(v):null;};
+    const getAwayGoals=m=>{const v=m?.goals?.away??m?.score?.away??m?.awayGoals??m?.away_score??m?.result?.split("-")?.[1];return v!==undefined&&v!==null?parseInt(v):null;};
+
+    // Compter les statuts uniques pour debug si besoin
+    const statusCounts={};
+    matchArray.forEach(m=>{const s=getStatus(m);statusCounts[s]=(statusCounts[s]||0)+1;});
+
+    const finished=matchArray.filter(m=>{
+      const s=getStatus(m).toUpperCase();
+      return s==="FT"||s==="AET"||s==="PEN"||s==="FINISHED"||s==="FULL_TIME"||s==="COMPLETE";
     }).sort((a,b)=>{
-      const ta=a.fixture?.timestamp||a.timestamp||0;
-      const tb=b.fixture?.timestamp||b.timestamp||0;
+      const ta=a?.fixture?.timestamp||a?.timestamp||a?.date||0;
+      const tb=b?.fixture?.timestamp||b?.timestamp||b?.date||0;
       return ta-tb;
     });
 
-    finished.forEach(m=>{
-      const hId=m.teams?.home?.id||m.homeTeam?.id;
-      const aId=m.teams?.away?.id||m.awayTeam?.id;
-      const hName=m.teams?.home?.name||m.homeTeam?.name||"?";
-      const aName=m.teams?.away?.name||m.awayTeam?.name||"?";
-      const hG=m.goals?.home??m.score?.home??null;
-      const aG=m.goals?.away??m.score?.away??null;
-      if(!hId||!aId||hG===null||aG===null)return;
-
-      teamNames[hId]=hName;
-      teamNames[aId]=aName;
-
-      if(!teams[hId])teams[hId]={id:hId,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
-      if(!teams[aId])teams[aId]={id:aId,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
-      if(!teamForm[hId])teamForm[hId]=[];
-      if(!teamForm[aId])teamForm[aId]=[];
-
-      teams[hId].p++;teams[aId].p++;
-      teams[hId].gf+=hG;teams[hId].ga+=aG;
-      teams[aId].gf+=aG;teams[aId].ga+=hG;
-
-      if(hG>aG){
-        teams[hId].w++;teams[hId].pts+=3;teams[aId].l++;
-        teamForm[hId].push("W");teamForm[aId].push("L");
-      } else if(aG>hG){
-        teams[aId].w++;teams[aId].pts+=3;teams[hId].l++;
-        teamForm[aId].push("W");teamForm[hId].push("L");
-      } else {
-        teams[hId].d++;teams[hId].pts++;teams[aId].d++;teams[aId].pts++;
-        teamForm[hId].push("D");teamForm[aId].push("D");
-      }
-    });
-
-    const sorted=Object.values(teams).sort((a,b)=>{
-      if(b.pts!==a.pts)return b.pts-a.pts;
-      return (b.gf-b.ga)-(a.gf-a.ga);
-    });
-
-    if(!sorted.length){
-      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Aucun match termine trouve.</p>';
+    if(finished.length===0){
+      // Afficher les statuts disponibles pour debugger
+      content.innerHTML=`
+        <div style="background:#1a0a0a;border:1px solid #FF4444;border-radius:10px;padding:12px;margin-bottom:12px;">
+          <div style="font-size:12px;color:#FF4444;font-weight:700;margin-bottom:6px;">⚠️ ${matchArray.length} matchs recus — aucun "FT" trouve</div>
+          <div style="font-size:11px;color:#888;margin-bottom:4px;">Statuts presents :</div>
+          <div class="debug-box">${JSON.stringify(statusCounts,null,2)}</div>
+          <div style="font-size:11px;color:#888;margin-top:8px;margin-bottom:4px;">Exemple match[0] :</div>
+          <div class="debug-box">${JSON.stringify(matchArray[0],null,2).substring(0,400)}</div>
+          <button onclick="navigator.clipboard&&navigator.clipboard.writeText(JSON.stringify({statusCounts:${JSON.stringify(statusCounts)},match0:${JSON.stringify(matchArray[0])}}))" style="background:#FF4444;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;width:100%;">📋 Copier debug</button>
+        </div>`;
       return;
     }
 
-    let html='<div class="card">';
-    html+='<div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #2E2E2E;">'
-      +'<span style="width:24px;font-size:11px;color:#888;text-align:center;">#</span>'
-      +'<span style="flex:1;font-size:11px;color:#888;margin-left:8px;">EQUIPE</span>'
-      +'<span style="width:24px;font-size:11px;color:#888;text-align:center;">J</span>'
-      +'<span style="width:28px;font-size:11px;color:#888;text-align:center;">Pts</span>'
-      +'<span style="width:80px;font-size:11px;color:#888;text-align:center;">FORME</span>'
-      +'</div>';
-
-    sorted.forEach((t,i)=>{
-      const rank=i+1;
-      const name=teamNames[t.id]||"?";
-      // 5 derniers résultats (du + récent au + ancien)
-      const form=(teamForm[t.id]||[]).slice(-5).reverse();
-      let rankColor="#F2F2F2";
-      if(rank<=3)rankColor="#39E979";
-      else if(rank<=5)rankColor="#4A90E2";
-      else if(rank>=17)rankColor="#FF4444";
-
-      let formSquares='<div style="display:flex;gap:3px;justify-content:center;">';
-      for(let f=0;f<5;f++){
-        const r=form[f];
-        const bg=r==="W"?"#39E979":r==="D"?"#888":r==="L"?"#FF4444":"#2E2E2E";
-        const opacity=r?1:0.3;
-        formSquares+=`<div style="width:13px;height:13px;border-radius:3px;background:${bg};opacity:${opacity};"></div>`;
-      }
-      formSquares+='</div>';
-
-      html+=`<div style="display:flex;align-items:center;padding:9px 12px;border-bottom:1px solid #111;">`
-        +`<span style="width:24px;font-size:13px;font-weight:700;text-align:center;color:${rankColor};">${rank}</span>`
-        +`<span style="flex:1;font-size:13px;font-weight:600;margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span>`
-        +`<span style="width:24px;font-size:12px;color:#888;text-align:center;">${t.p}</span>`
-        +`<span style="width:28px;font-size:13px;font-weight:700;text-align:center;">${t.pts}</span>`
-        +`<div style="width:80px;">${formSquares}</div>`
-        +`</div>`;
+    finished.forEach(m=>{
+      const hId=getHomeId(m),aId=getAwayId(m);
+      const hName=getHomeName(m),aName=getAwayName(m);
+      const hG=getHomeGoals(m),aG=getAwayGoals(m);
+      if(!hId||!aId||hG===null||aG===null||isNaN(hG)||isNaN(aG))return;
+      teamNames[hId]=hName;teamNames[aId]=aName;
+      if(!teams[hId])teams[hId]={id:hId,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
+      if(!teams[aId])teams[aId]={id:aId,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
+      if(!teamForm[hId])teamForm[hId]=[];if(!teamForm[aId])teamForm[aId]=[];
+      teams[hId].p++;teams[aId].p++;
+      teams[hId].gf+=hG;teams[hId].ga+=aG;teams[aId].gf+=aG;teams[aId].ga+=hG;
+      if(hG>aG){teams[hId].w++;teams[hId].pts+=3;teams[aId].l++;teamForm[hId].push("W");teamForm[aId].push("L");}
+      else if(aG>hG){teams[aId].w++;teams[aId].pts+=3;teams[hId].l++;teamForm[aId].push("W");teamForm[hId].push("L");}
+      else{teams[hId].d++;teams[hId].pts++;teams[aId].d++;teams[aId].pts++;teamForm[hId].push("D");teamForm[aId].push("D");}
     });
 
+    const sorted=Object.values(teams).sort((a,b)=>b.pts!==a.pts?b.pts-a.pts:(b.gf-b.ga)-(a.gf-a.ga));
+
+    let html='<div class="card">';
+    html+='<div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #2E2E2E;"><span style="width:24px;font-size:11px;color:#888;text-align:center;">#</span><span style="flex:1;font-size:11px;color:#888;margin-left:8px;">EQUIPE</span><span style="width:24px;font-size:11px;color:#888;text-align:center;">J</span><span style="width:28px;font-size:11px;color:#888;text-align:center;">Pts</span><span style="width:80px;font-size:11px;color:#888;text-align:center;">FORME</span></div>';
+    sorted.forEach((t,i)=>{
+      const rank=i+1,name=teamNames[t.id]||"?";
+      const form=(teamForm[t.id]||[]).slice(-5).reverse();
+      const rankColor=rank<=3?"#39E979":rank<=5?"#4A90E2":rank>=17?"#FF4444":"#F2F2F2";
+      let formSquares='<div style="display:flex;gap:3px;justify-content:center;">';
+      for(let f=0;f<5;f++){const r=form[f];const bg=r==="W"?"#39E979":r==="D"?"#888":r==="L"?"#FF4444":"#2E2E2E";formSquares+=`<div style="width:13px;height:13px;border-radius:3px;background:${bg};opacity:${r?1:0.3};"></div>`;}
+      formSquares+='</div>';
+      html+=`<div style="display:flex;align-items:center;padding:9px 12px;border-bottom:1px solid #111;"><span style="width:24px;font-size:13px;font-weight:700;text-align:center;color:${rankColor};">${rank}</span><span style="flex:1;font-size:13px;font-weight:600;margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span><span style="width:24px;font-size:12px;color:#888;text-align:center;">${t.p}</span><span style="width:28px;font-size:13px;font-weight:700;text-align:center;">${t.pts}</span><div style="width:80px;">${formSquares}</div></div>`;
+    });
     html+='</div><p style="font-size:11px;color:#555;text-align:center;margin-top:8px;">🟢 Ligue des Champions &nbsp;🔵 Europa &nbsp;🔴 Relegation</p>';
+    html+=`<p style="font-size:10px;color:#333;text-align:center;margin-top:4px;">${finished.length} matchs termines — ${sorted.length} equipes</p>`;
 
     localStorage.setItem("ligue1Cache",html);
     localStorage.setItem("ligue1CacheTime",Date.now().toString());
@@ -993,8 +871,8 @@ window.refreshLigue1=async function(){
     const d=new Date();
     document.getElementById("ligue1-last-update").textContent="Mis a jour le "+d.toLocaleDateString("fr-FR")+" a "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
     showToast("Classement mis a jour !");
-  } catch(e){
-    content.innerHTML=`<p style="color:#888;text-align:center;margin-top:40px;">Erreur : ${e.message}</p>`;
+  }catch(e){
+    content.innerHTML=`<p style="color:#FF4444;text-align:center;margin-top:40px;">Erreur : ${e.message}</p>`;
   }
 };
 
@@ -1026,39 +904,19 @@ async function renderProfil(){
 
 window.requestNotifPermission=function(){
   if(!("Notification" in window))return showToast("Notifications non supportees");
-  Notification.requestPermission().then(p=>{
-    if(p==="granted"){showToast("Notifications activees !");scheduleNotif();}
-    else showToast("Notifications refusees");
-  });
+  Notification.requestPermission().then(p=>{if(p==="granted"){showToast("Notifications activees !");scheduleNotif();}else showToast("Notifications refusees");});
 };
-
 function scheduleNotif(){
   if(!currentLobby||Notification.permission!=="granted")return;
-  const deadline=currentLobby.deadline;
-  const now=Date.now();
-  const notif30=deadline-(30*60*1000);
-  if(notif30>now){
-    setTimeout(()=>{
-      new Notification("⚽ Survivor - T'as choisi ton equipe ?",{
-        body:"Le premier match commence dans 30 minutes ! Fonce valider ton choix.",
-        icon:"https://i.imgur.com/HSHTdzU.png"
-      });
-    },notif30-now);
-  }
+  const deadline=currentLobby.deadline,now=Date.now();
+  const n30=deadline-(30*60*1000);
+  if(n30>now)setTimeout(()=>new Notification("⚽ Survivor - T'as choisi ton equipe ?",{body:"Le premier match commence dans 30 minutes !",icon:"https://i.imgur.com/HSHTdzU.png"}),n30-now);
   if(currentUser&&currentUser.email===ADMIN_EMAIL){
-    const notif9=deadline-(9*60*1000);
-    if(notif9>now){
-      setTimeout(()=>{
-        new Notification("🔒 Survivor ADMIN - Ferme les selections !",{
-          body:"Le premier match commence dans 9 minutes ! Va fermer les selections.",
-          icon:"https://i.imgur.com/HSHTdzU.png"
-        });
-      },notif9-now);
-    }
+    const n9=deadline-(9*60*1000);
+    if(n9>now)setTimeout(()=>new Notification("🔒 Survivor ADMIN - Ferme les selections !",{body:"Le premier match commence dans 9 minutes !",icon:"https://i.imgur.com/HSHTdzU.png"}),n9-now);
   }
   showToast("Rappels programmes !");
 }
-
 </script>
 </div>
 </body>
