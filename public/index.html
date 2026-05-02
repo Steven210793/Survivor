@@ -855,11 +855,18 @@ window.refreshLigue1=async function(){
   content.innerHTML='<div style="text-align:center;padding:40px;color:#888;">Chargement...</div>';
   try{
     // On utilise uniquement les fixtures — 1 seule requete
-    const formResp=await fetch("https://free-api-live-football-data.p.rapidapi.com/football-get-all-fixtures-by-league-and-season?leagueId=61&season=2025",{method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}});
+    const formResp=await fetch("https://free-api-live-football-data.p.rapidapi.com/football-get-all-matches-by-leagueid?leagueid=61",{method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}});
     const formData=await formResp.json();
 
-    if(!formData||!formData.response||!formData.response.length){
-      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Donnees indisponibles.<br><small style="font-size:11px;">'+JSON.stringify(formData).substring(0,200)+'</small></p>';
+    if(!formData||(!formData.response&&!formData.data&&!formData.matches)){
+      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Donnees indisponibles.<br><small style="font-size:11px;">'+JSON.stringify(formData).substring(0,300)+'</small></p>';
+      return;
+    }
+
+    // Adapter selon le format retourne
+    const matches=formData.response||formData.data||formData.matches||[];
+    if(!matches.length){
+      content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Aucune donnee.<br><small>'+JSON.stringify(formData).substring(0,200)+'</small></p>';
       return;
     }
 
@@ -868,12 +875,22 @@ window.refreshLigue1=async function(){
     const teamForm={};
     const teamNames={};
 
-    const finished=formData.response.filter(m=>m.fixture?.status?.short==="FT").sort((a,b)=>a.fixture.timestamp-b.fixture.timestamp);
+    const finished=(matches).filter(m=>{
+      const status=m.fixture?.status?.short||m.status?.short||m.status||"";
+      return status==="FT"||status==="AET"||status==="PEN";
+    }).sort((a,b)=>{
+      const ta=a.fixture?.timestamp||a.timestamp||0;
+      const tb=b.fixture?.timestamp||b.timestamp||0;
+      return ta-tb;
+    });
 
     finished.forEach(m=>{
-      const hId=m.teams?.home?.id, aId=m.teams?.away?.id;
-      const hName=m.teams?.home?.name, aName=m.teams?.away?.name;
-      const hG=m.goals?.home, aG=m.goals?.away;
+      const hId=m.teams?.home?.id||m.homeTeam?.id||m.home_team?.id;
+      const aId=m.teams?.away?.id||m.awayTeam?.id||m.away_team?.id;
+      const hName=m.teams?.home?.name||m.homeTeam?.name||m.home_team?.name;
+      const aName=m.teams?.away?.name||m.awayTeam?.name||m.away_team?.name;
+      const hG=m.goals?.home??m.score?.home??m.homeScore??null;
+      const aG=m.goals?.away??m.score?.away??m.awayScore??null;
       if(!hId||!aId||hG===null||aG===null)return;
 
       teamNames[hId]=hName;
