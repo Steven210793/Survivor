@@ -153,7 +153,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 <!-- PICKING -->
 <div class="screen" id="screen-picking">
   <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;flex-shrink:0;">
-    <div style="flex:1;text-align:center;font-weight:700;" id="pick-round">Journee 34</div>
+    <div style="flex:1;text-align:center;font-weight:700;" id="pick-round">Journee 35</div>
     <button onclick="requestNotifPermission()" style="background:none;border:none;color:#FFD000;font-size:20px;cursor:pointer;">🔔</button>
     <button onclick="shareLigue()" style="background:none;border:none;color:#4A90E2;font-size:20px;cursor:pointer;">📤</button>
   </div>
@@ -336,94 +336,112 @@ const googleProvider = new GoogleAuthProvider();
 const ADMIN_EMAIL = "groliersteven@gmail.com";
 const RAPIDAPI_KEY = "39c5cc9625mshc2f52e154b3255fp11e5b9jsn0f4c49435a11";
 const APP_URL = "https://survivor-chi-ecru.vercel.app";
-const CURRENT_ROUND = 34;
 const LIGUE1_ID = 53;
-const AUTO_CLOSE_BEFORE_MS = 10 * 60 * 1000; // 10 min avant deadline
+const AUTO_CLOSE_BEFORE_MS = 10 * 60 * 1000;
 
-// ── Vérifie si le bouton "Obtenir les résultats" doit être visible ────────────
-// Règle : dimanche à partir de 23h45, ou lundi/mardi/mercredi toute la journée
-// (couvre aussi les journées avec matchs en semaine)
-function canShowResultsButton() {
-  const now = new Date();
-  const day = now.getDay(); // 0=dim, 1=lun, 2=mar, 3=mer, 4=jeu, 5=ven, 6=sam
-  const h = now.getHours();
-  const m = now.getMinutes();
-  const timeOk = h > 23 || (h === 23 && m >= 45); // >= 23h45
+// ── JOURNEES : numéro → dates + deadline + fixtures ───────────────────────────
+const ROUNDS = {
+  35: {
+    dates: ["20260508","20260509","20260510"],
+    deadline: new Date("2026-05-08T14:50:00").getTime(), // 10 min avant 15h vendredi
+    fixtures: [
+      // À compléter avec le vrai programme de la J35
+      {home:"psg",away:"mon", day:"Ven. 21:00"},
+      {home:"om", away:"ren", day:"Sam. 17:00"},
+      {home:"lil",away:"str", day:"Sam. 19:00"},
+      {home:"nic",away:"nan", day:"Sam. 21:05"},
+      {home:"oly",away:"len", day:"Dim. 15:00"},
+      {home:"aux",away:"mtz", day:"Dim. 17:15"},
+      {home:"hac",away:"ang", day:"Dim. 17:15"},
+      {home:"tls",away:"lor", day:"Dim. 20:45"},
+    ]
+  },
+  36: {
+    dates: ["20260517"],
+    deadline: new Date("2026-05-17T14:50:00").getTime(),
+    fixtures: [
+      // À compléter avec le vrai programme de la J36
+      {home:"psg",away:"ren", day:"Dim. 21:00"},
+      {home:"om", away:"lil", day:"Dim. 17:00"},
+      {home:"mon",away:"nic", day:"Dim. 17:00"},
+      {home:"len",away:"str", day:"Dim. 17:00"},
+      {home:"oly",away:"nan", day:"Dim. 17:00"},
+      {home:"tls",away:"aux", day:"Dim. 17:00"},
+      {home:"ang",away:"mtz", day:"Dim. 17:00"},
+      {home:"lor",away:"hac", day:"Dim. 17:00"},
+    ]
+  }
+};
 
-  // Dimanche 23h45 ou après → OK
-  if (day === 0 && timeOk) return true;
-  // Lundi ou mardi entier → OK (cas où l'admin ouvre l'app le lendemain)
-  if (day === 1 || day === 2) return true;
+// Journée courante au lancement
+const CURRENT_ROUND = 35;
 
+// ── Règle d'affichage du bouton résultats : dimanche 23h45+ ou lun/mar ────────
+function canShowResultsButton(){
+  const now=new Date(),day=now.getDay(),h=now.getHours(),m=now.getMinutes();
+  if(day===0&&(h>23||(h===23&&m>=45)))return true;
+  if(day===1||day===2)return true;
+  // Pour les journées avec matchs en semaine (vendredi) : jeudi 23h45+
+  if(day===5&&(h>23||(h===23&&m>=45)))return true; // sam après vendredi soir
+  if(day===6)return true; // dimanche entier si journée vendredi-samedi
   return false;
 }
 
-const PHRASES_WIN = ["Qualifie ! T'as le niveau, contrairement aux autres 😎","Ton equipe a assure... pour une fois 🙄","Encore en vie ! Profites-en ca va pas durer 😏","Quel choix de genie. On est impressionnes. Vraiment 👏","Survie confirmee. Les autres peuvent aller se coucher 🛏️"];
-const PHRASES_LOSS = ["Elimine. C'est beau d'avoir essaye au moins 🪦","T'as choisi cette equipe-la... avec tous les autres choix possibles... t'as choisi CELLE-LA 😭","T'aurais du lancer une piece, ca aurait ete plus efficace 🪙","On te l'avait dit. T'as pas ecoute. Voila 🤷","Rentre chez toi, c'est termine pour cette saison 👋"];
-const PHRASES_DRAW = ["Un nul... t'as survecu a quoi exactement ? A rien 😭","1-1. Pas de gagnant. Sauf que toi t'es elimine quand meme 🫠","Ton equipe a fait match nul. Bravo pour le demi-effort 😒","Un nul c'est pour les gens qui osent pas gagner 😂","Ni gagnant ni perdant... sauf toi, qui es perdant 💀"];
-const PHRASES_NO_PICK = ["T'as meme pas choisi d'equipe. Respect du niveau zero 🫥","Oublier de jouer c'est un talent rare... et pas utile 🤔","T'etais ou ? Peu importe, t'es elimine de toute facon 👋","La prochaine fois mets une alarme mon grand 📱","Elimine sans meme avoir essaye. C'est un exploit en soi 🏆"];
-const PHRASES_WINNER = ["Indestructible ! Personne a pu t'arreter !","LE survivant. Les autres cherchent encore comment c'est possible 😂","Champion ! Tout le monde peut aller s'entrainer, t'es trop fort !","Dernier survivant ! Legende vivante !","T'as gagne. Les autres vont faire semblant d'etre contents pour toi 😅","CHAAMPION MON FREREUUU ! 🏆🔥"];
+const PHRASES_WIN=["Qualifie ! T'as le niveau, contrairement aux autres 😎","Ton equipe a assure... pour une fois 🙄","Encore en vie ! Profites-en ca va pas durer 😏","Quel choix de genie. On est impressionnes. Vraiment 👏","Survie confirmee. Les autres peuvent aller se coucher 🛏️"];
+const PHRASES_LOSS=["Elimine. C'est beau d'avoir essaye au moins 🪦","T'as choisi cette equipe-la... avec tous les autres choix possibles... t'as choisi CELLE-LA 😭","T'aurais du lancer une piece, ca aurait ete plus efficace 🪙","On te l'avait dit. T'as pas ecoute. Voila 🤷","Rentre chez toi, c'est termine pour cette saison 👋"];
+const PHRASES_DRAW=["Un nul... t'as survecu a quoi exactement ? A rien 😭","1-1. Pas de gagnant. Sauf que toi t'es elimine quand meme 🫠","Ton equipe a fait match nul. Bravo pour le demi-effort 😒","Un nul c'est pour les gens qui osent pas gagner 😂","Ni gagnant ni perdant... sauf toi, qui es perdant 💀"];
+const PHRASES_NO_PICK=["T'as meme pas choisi d'equipe. Respect du niveau zero 🫥","Oublier de jouer c'est un talent rare... et pas utile 🤔","T'etais ou ? Peu importe, t'es elimine de toute facon 👋","La prochaine fois mets une alarme mon grand 📱","Elimine sans meme avoir essaye. C'est un exploit en soi 🏆"];
+const PHRASES_WINNER=["Indestructible ! Personne a pu t'arreter !","LE survivant. Les autres cherchent encore comment c'est possible 😂","Champion ! Tout le monde peut aller s'entrainer, t'es trop fort !","Dernier survivant ! Legende vivante !","T'as gagne. Les autres vont faire semblant d'etre contents pour toi 😅","CHAAMPION MON FREREUUU ! 🏆🔥"];
 
-const TEAMS = [
-  {id:"psg", name:"PSG",        fotmobName:"Paris"},
-  {id:"om",  name:"Marseille",  fotmobName:"Marseille"},
-  {id:"mon", name:"Monaco",     fotmobName:"Monaco"},
-  {id:"lil", name:"Lille",      fotmobName:"Lille"},
-  {id:"nic", name:"Nice",       fotmobName:"Nice"},
-  {id:"oly", name:"Lyon",       fotmobName:"Lyon"},
-  {id:"ren", name:"Rennes",     fotmobName:"Rennes"},
-  {id:"len", name:"Lens",       fotmobName:"Lens"},
-  {id:"str", name:"Strasbourg", fotmobName:"Strasbourg"},
-  {id:"nan", name:"Nantes",     fotmobName:"Nantes"},
-  {id:"tls", name:"Toulouse",   fotmobName:"Toulouse"},
-  {id:"aux", name:"Auxerre",    fotmobName:"Auxerre"},
-  {id:"ang", name:"Angers",     fotmobName:"Angers"},
-  {id:"hac", name:"Le Havre",   fotmobName:"Le Havre"},
-  {id:"mtz", name:"Metz",       fotmobName:"Metz"},
-  {id:"lor", name:"Lorient",    fotmobName:"Lorient"},
-  {id:"pfc", name:"Paris FC",   fotmobName:"Paris FC"},
-  {id:"bst", name:"Brest",      fotmobName:"Brest"},
+const TEAMS=[
+  {id:"psg",name:"PSG",        fotmobName:"Paris"},
+  {id:"om", name:"Marseille",  fotmobName:"Marseille"},
+  {id:"mon",name:"Monaco",     fotmobName:"Monaco"},
+  {id:"lil",name:"Lille",      fotmobName:"Lille"},
+  {id:"nic",name:"Nice",       fotmobName:"Nice"},
+  {id:"oly",name:"Lyon",       fotmobName:"Lyon"},
+  {id:"ren",name:"Rennes",     fotmobName:"Rennes"},
+  {id:"len",name:"Lens",       fotmobName:"Lens"},
+  {id:"str",name:"Strasbourg", fotmobName:"Strasbourg"},
+  {id:"nan",name:"Nantes",     fotmobName:"Nantes"},
+  {id:"tls",name:"Toulouse",   fotmobName:"Toulouse"},
+  {id:"aux",name:"Auxerre",    fotmobName:"Auxerre"},
+  {id:"ang",name:"Angers",     fotmobName:"Angers"},
+  {id:"hac",name:"Le Havre",   fotmobName:"Le Havre"},
+  {id:"mtz",name:"Metz",       fotmobName:"Metz"},
+  {id:"lor",name:"Lorient",    fotmobName:"Lorient"},
+  {id:"pfc",name:"Paris FC",   fotmobName:"Paris FC"},
+  {id:"bst",name:"Brest",      fotmobName:"Brest"},
 ];
 
-const FIXTURES = [
-  {home:"nan",away:"om", day:"Sam. 15:00"},
-  {home:"psg",away:"lor",day:"Sam. 17:00"},
-  {home:"mtz",away:"mon",day:"Sam. 19:00"},
-  {home:"nic",away:"len",day:"Sam. 21:05"},
-  {home:"lil",away:"hac",day:"Dim. 15:00"},
-  {home:"str",away:"tls",day:"Dim. 17:15"},
-  {home:"aux",away:"ang",day:"Dim. 17:15"},
-  {home:"oly",away:"ren",day:"Dim. 20:45"},
-];
-
-const fotmobIdMap={};
-function registerFotmobId(fid,name){
-  if(fotmobIdMap[fid])return;
-  const n=String(name||"").toLowerCase().trim();
-  const t=TEAMS.find(t=>{const fn=t.fotmobName.toLowerCase();return n===fn||n.includes(fn)||fn.includes(n);});
-  if(t)fotmobIdMap[fid]=t.id;
-}
 function getTeam(id){return TEAMS.find(t=>t.id===id)||{name:"?"};}
-function getTeamByFotmobId(fid){const tid=fotmobIdMap[fid];return tid?getTeam(tid):null;}
-function isMatchFinished(m){
-  if(m?.notStarted===true)return false;
-  const hS=m?.home?.score,aS=m?.away?.score;
-  if(hS===null||hS===undefined||aS===null||aS===undefined)return false;
-  const st=m?.status;
-  if(st&&typeof st==="object"){if(st.finished===true)return true;if(st.started===true&&st.ongoing===false)return true;}
-  return typeof hS==="number"&&typeof aS==="number";
-}
-function extractMatches(data){
-  if(Array.isArray(data))return data;
-  if(Array.isArray(data?.response))return data.response;
-  if(Array.isArray(data?.response?.matches))return data.response.matches;
-  if(Array.isArray(data?.matches))return data.matches;
-  if(Array.isArray(data?.data))return data.data;
-  if(data?.response&&typeof data.response==="object"&&!Array.isArray(data.response)){
-    const vals=Object.values(data.response);
-    if(vals.length>0&&typeof vals[0]==="object")return vals;
+function getFixtures(){return ROUNDS[currentLobby?.round]?.fixtures||[];}
+
+// ── Récupère les matchs Ligue 1 pour les dates de la journée ─────────────────
+async function fetchRoundMatches(round){
+  const roundData=ROUNDS[round];
+  if(!roundData){return[];}
+  const dates=roundData.dates;
+  const allMatches=[];
+  for(const date of dates){
+    try{
+      const resp=await fetch(
+        `https://free-api-live-football-data.p.rapidapi.com/football-get-matches-by-date-and-league?date=${date}`,
+        {method:"GET",headers:{
+          "x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com",
+          "x-rapidapi-key":RAPIDAPI_KEY
+        }}
+      );
+      const data=await resp.json();
+      // Structure : { response: [ { id, name, matches:[] }, ... ] }
+      const leagues=Array.isArray(data?.response)?data.response:[];
+      const ligue1=leagues.find(l=>l.id===LIGUE1_ID||l.primaryId===LIGUE1_ID);
+      if(ligue1?.matches){
+        allMatches.push(...ligue1.matches);
+      }
+    }catch(e){console.error("Fetch error for date",date,e);}
   }
-  return [];
+  return allMatches;
 }
 
 let currentUser=null,currentLobby=null,lobbyUnsub=null,timerInterval=null,autoCloseTimeout=null,authMode="login",pendingPick=null;
@@ -458,8 +476,7 @@ function scheduleAutoClose(lobby){
 async function triggerAutoClose(lobbyCode){
   try{
     const snap=await getDoc(doc(db,"lobbies",lobbyCode));
-    if(!snap.exists())return;
-    if(snap.data().status!=="picking")return;
+    if(!snap.exists()||snap.data().status!=="picking")return;
     await updateDoc(doc(db,"lobbies",lobbyCode),{status:"closed"});
     showToast("🔒 Selections fermees automatiquement !");
   }catch(e){}
@@ -475,7 +492,7 @@ onAuthStateChanged(auth,async(fu)=>{
       const lc=getLastCode();
       if(lc){try{const ld=await getDoc(doc(db,"lobbies",lc));if(ld.exists()){openLobby(lc);return;}}catch(e){}clearLastCode();}
       goHome();
-    } else {currentUser=null;showScreen("auth");}
+    }else{currentUser=null;showScreen("auth");}
   }catch(e){const el=document.getElementById("load-error");if(el){el.textContent="Erreur : "+e.message;el.style.display="block";}}
 });
 
@@ -499,13 +516,13 @@ window.doAuth=async function(){
       const {user}=await createUserWithEmailAndPassword(auth,email,pwd);
       await updateProfile(user,{displayName:pseudo});
       await setDoc(doc(db,"users",user.uid),{uid:user.uid,pseudo,email,photoURL:null,points:0,totalGames:0,totalWins:0,bestStreak:0,currentStreak:0});
-    } else {await signInWithEmailAndPassword(auth,email,pwd);}
+    }else{await signInWithEmailAndPassword(auth,email,pwd);}
   }catch(e){
     const m={"auth/email-already-in-use":"Email deja utilise.","auth/user-not-found":"Email inconnu.","auth/wrong-password":"Mot de passe incorrect.","auth/invalid-email":"Email invalide.","auth/weak-password":"Mot de passe trop court.","auth/invalid-credential":"Email ou mot de passe incorrect."};
     showErrAuth(m[e.code]||"Erreur de connexion.");
   }
 };
-function showErrAuth(msg){const el=document.getElementById("auth-err");el.textContent=msg;el.style.display="block";}
+function showErrAuth(msg){document.getElementById("auth-err").textContent=msg;document.getElementById("auth-err").style.display="block";}
 window.logout=async function(){
   if(lobbyUnsub){lobbyUnsub();lobbyUnsub=null;}
   if(autoCloseTimeout){clearTimeout(autoCloseTimeout);autoCloseTimeout=null;}
@@ -516,10 +533,11 @@ window.logout=async function(){
 // ── HOME ──────────────────────────────────────────────────────────────────────
 function goHome(){
   showScreen("home");document.getElementById("bottom-nav").style.display="none";
-  const zone=document.getElementById("create-btn-zone");
-  zone.innerHTML=currentUser&&currentUser.email===ADMIN_EMAIL?'<button class="btn btn-g" onclick="createLobby()">CREER UNE LIGUE</button><button class="btn btn-b" onclick="requestNotifPermission()" style="margin-bottom:10px;">🔔 Activer les rappels</button>':'';
+  document.getElementById("create-btn-zone").innerHTML=currentUser&&currentUser.email===ADMIN_EMAIL
+    ?'<button class="btn btn-g" onclick="createLobby()">CREER UNE LIGUE</button><button class="btn btn-b" onclick="requestNotifPermission()" style="margin-bottom:10px;">🔔 Activer les rappels</button>':'';
   const lc=getLastCode();
-  document.getElementById("recent-lobby-zone").innerHTML=lc?`<div class="recent-lobby-card" onclick="rejoinLobby('${lc}')"><span style="font-size:28px;">⚽</span><div><div style="font-weight:700;font-size:15px;">Rejoindre ma ligue</div><div style="font-size:12px;color:#888;margin-top:2px;">Code : ${lc}</div></div><span style="color:#39E979;font-size:20px;">→</span></div>`:'';
+  document.getElementById("recent-lobby-zone").innerHTML=lc
+    ?`<div class="recent-lobby-card" onclick="rejoinLobby('${lc}')"><span style="font-size:28px;">⚽</span><div><div style="font-weight:700;font-size:15px;">Rejoindre ma ligue</div><div style="font-size:12px;color:#888;margin-top:2px;">Code : ${lc}</div></div><span style="color:#39E979;font-size:20px;">→</span></div>`:'';
 }
 window.rejoinLobby=async function(code){
   try{const ld=await getDoc(doc(db,"lobbies",code));if(ld.exists())openLobby(code);else{clearLastCode();showToast("Ligue introuvable.");goHome();}}
@@ -530,7 +548,13 @@ window.rejoinLobby=async function(code){
 window.createLobby=async function(){
   if(!currentUser||currentUser.email!==ADMIN_EMAIL)return showToast("Acces refuse.");
   const code=genCode();
-  await setDoc(doc(db,"lobbies",code),{code,name:"Ligue de "+currentUser.pseudo,host:currentUser.uid,hostEmail:currentUser.email,status:"waiting",round:CURRENT_ROUND,deadline:new Date("2026-05-09T15:00:00").getTime(),players:{[currentUser.uid]:{uid:currentUser.uid,pseudo:currentUser.pseudo,photoURL:currentUser.photoURL||null,alive:true,pick:null,result:null,usedTeams:[],points:0,phrase:null}},matchResults:{},createdAt:Date.now()});
+  const roundData=ROUNDS[CURRENT_ROUND];
+  await setDoc(doc(db,"lobbies",code),{
+    code,name:"Ligue de "+currentUser.pseudo,host:currentUser.uid,hostEmail:currentUser.email,
+    status:"waiting",round:CURRENT_ROUND,deadline:roundData.deadline,
+    players:{[currentUser.uid]:{uid:currentUser.uid,pseudo:currentUser.pseudo,photoURL:currentUser.photoURL||null,alive:true,pick:null,result:null,usedTeams:[],points:0,phrase:null}},
+    matchResults:{},createdAt:Date.now()
+  });
   saveLastCode(code);openLobby(code);
 };
 window.joinLobby=async function(){
@@ -539,7 +563,8 @@ window.joinLobby=async function(){
   try{
     const ld=await getDoc(doc(db,"lobbies",code));
     if(!ld.exists()){errEl.textContent="Code introuvable.";errEl.style.display="block";return;}
-    if(!ld.data().players[currentUser.uid])await updateDoc(doc(db,"lobbies",code),{[`players.${currentUser.uid}`]:{uid:currentUser.uid,pseudo:currentUser.pseudo,photoURL:currentUser.photoURL||null,alive:true,pick:null,result:null,usedTeams:[],points:0,phrase:null}});
+    if(!ld.data().players[currentUser.uid])
+      await updateDoc(doc(db,"lobbies",code),{[`players.${currentUser.uid}`]:{uid:currentUser.uid,pseudo:currentUser.pseudo,photoURL:currentUser.photoURL||null,alive:true,pick:null,result:null,usedTeams:[],points:0,phrase:null}});
     saveLastCode(code);openLobby(code);
   }catch(e){errEl.textContent="Erreur : "+e.message;errEl.style.display="block";}
 };
@@ -602,7 +627,8 @@ function renderLobby(){
   document.getElementById("wait-host").style.display=isHost?"none":"block";
 }
 window.startGame=async function(){
-  await saveFs({status:"picking",deadline:new Date("2026-05-09T15:00:00").getTime()});
+  const roundData=ROUNDS[currentLobby.round]||ROUNDS[CURRENT_ROUND];
+  await saveFs({status:"picking",deadline:roundData.deadline});
   scheduleNotif();
 };
 
@@ -644,10 +670,11 @@ function renderPicking(){
       });
       othersZone.innerHTML=html+'</div></div>';
     }
-  } else {othersZone.innerHTML='';}
+  }else{othersZone.innerHTML='';}
 
+  const fixtures=getFixtures();
   const fl=document.getElementById("fixtures-list");fl.innerHTML="";
-  FIXTURES.forEach(fix=>{
+  fixtures.forEach(fix=>{
     [{id:fix.home,time:fix.day},{id:fix.away,time:"—"}].forEach(item=>{
       const t=getTeam(item.id);
       const sel=pendingPick===item.id,confirmed=myPick===item.id,used=usedTeams.includes(item.id);
@@ -666,20 +693,14 @@ function renderPicking(){
   }
 
   const hc=document.getElementById("host-controls");hc.innerHTML="";
-  if(!me||!me.alive){
-    hc.innerHTML='<div style="background:#0d0d1a;border:1.5px solid rgba(100,100,255,0.3);border-radius:12px;padding:16px;text-align:center;color:#8888ff;font-weight:700;">MODE SPECTATEUR</div>';
-    return;
-  }
+  if(!me||!me.alive){hc.innerHTML='<div style="background:#0d0d1a;border:1.5px solid rgba(100,100,255,0.3);border-radius:12px;padding:16px;text-align:center;color:#8888ff;font-weight:700;">MODE SPECTATEUR</div>';return;}
   if(isHost&&!closed){
     hc.innerHTML='<button class="btn btn-o" onclick="closeSelections()" style="opacity:0.5;font-size:13px;">🔒 Forcer la fermeture</button>';
-  } else if(isHost&&closed){
-    // ✅ Bouton résultats visible uniquement dimanche 23h45+ ou lundi/mardi
+  }else if(isHost&&closed){
     if(canShowResultsButton()){
       hc.innerHTML='<button class="btn btn-g" onclick="resolveRound()">🏆 OBTENIR LES RESULTATS</button>';
-    } else {
-      // Calculer quand le bouton apparaîtra (prochain dimanche 23h45)
-      const now=new Date();
-      const day=now.getDay();
+    }else{
+      const now=new Date(),day=now.getDay();
       const daysUntilSunday=day===0?0:(7-day);
       const nextSunday=new Date(now);
       nextSunday.setDate(now.getDate()+daysUntilSunday);
@@ -707,54 +728,85 @@ window.confirmPick=async function(){
 };
 window.closeSelections=async function(){await saveF("status","closed");};
 
-// ── RESOLVE ───────────────────────────────────────────────────────────────────
+// ── RESOLVE — filtre par date + leagueId 53 + status.finished ────────────────
 window.resolveRound=async function(){
   if(!currentUser||currentUser.email!==ADMIN_EMAIL)return showToast("Acces refuse.");
   document.getElementById("modal-loading").classList.add("open");
   let apiResults={},matchResults={};
   try{
-    const resp=await fetch(`https://free-api-live-football-data.p.rapidapi.com/football-get-all-matches-by-league?leagueid=${LIGUE1_ID}`,{
-      method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}
-    });
-    const data=await resp.json();
-    const matchArray=extractMatches(data);
-    matchArray.forEach(m=>{
-      if(m?.home?.id)registerFotmobId(String(m.home.id),m.home.name);
-      if(m?.away?.id)registerFotmobId(String(m.away.id),m.away.name);
-    });
-    matchArray.forEach(m=>{
-      if(!isMatchFinished(m))return;
-      const hId=String(m?.home?.id||""),aId=String(m?.away?.id||"");
-      const hG=m?.home?.score,aG=m?.away?.score;
-      if(!hId||!aId||hG===null||hG===undefined||aG===null||aG===undefined)return;
-      const ht=getTeamByFotmobId(hId),at=getTeamByFotmobId(aId);
+    const matches=await fetchRoundMatches(currentLobby.round);
+
+    if(matches.length===0){
+      showToast("Aucun match trouve pour cette journee !");
+      document.getElementById("modal-loading").classList.remove("open");
+      return;
+    }
+
+    matches.forEach(m=>{
+      // ✅ Filtre strict : match terminé uniquement
+      if(!m?.status?.finished)return;
+
+      const hName=String(m?.home?.name||"");
+      const aName=String(m?.away?.name||"");
+      const hG=m?.home?.score;
+      const aG=m?.away?.score;
+      if(hG===null||hG===undefined||aG===null||aG===undefined)return;
+
+      // Trouver nos équipes par nom
+      const ht=TEAMS.find(t=>{
+        const fn=t.fotmobName.toLowerCase();
+        const hn=hName.toLowerCase();
+        return hn===fn||hn.includes(fn)||fn.includes(hn);
+      });
+      const at=TEAMS.find(t=>{
+        const fn=t.fotmobName.toLowerCase();
+        const an=aName.toLowerCase();
+        return an===fn||an.includes(fn)||fn.includes(an);
+      });
       if(!ht||!at)return;
+
       if(hG>aG){apiResults[ht.id]="win";apiResults[at.id]="loss";}
       else if(aG>hG){apiResults[at.id]="win";apiResults[ht.id]="loss";}
       else{apiResults[ht.id]="draw";apiResults[at.id]="draw";}
       matchResults[ht.id+"-"+at.id]={home:ht.id,away:at.id,homeGoals:hG,awayGoals:aG};
     });
-  }catch(e){showToast("API indisponible - simulation");}
+  }catch(e){
+    showToast("Erreur API — simulation activee");
+    console.error(e);
+  }
   document.getElementById("modal-loading").classList.remove("open");
+
   const updates={matchResults};
   Object.values(currentLobby.players).forEach(p=>{
     if(!p.alive)return;
-    if(!p.pick){updates["players."+p.uid+".result"]="no_pick";updates["players."+p.uid+".alive"]=false;updates["players."+p.uid+".phrase"]=getPhrase(PHRASES_NO_PICK);return;}
-    let result=apiResults[p.pick];
-    if(!result){const r=Math.random();result=r<0.45?"win":r<0.7?"draw":"loss";}
+    if(!p.pick){
+      updates["players."+p.uid+".result"]="no_pick";
+      updates["players."+p.uid+".alive"]=false;
+      updates["players."+p.uid+".phrase"]=getPhrase(PHRASES_NO_PICK);
+      return;
+    }
+    const result=apiResults[p.pick];
+    if(!result){
+      // Equipe non trouvée dans l'API = pas de résultat = éliminé par sécurité
+      updates["players."+p.uid+".result"]="no_result";
+      updates["players."+p.uid+".alive"]=false;
+      updates["players."+p.uid+".phrase"]="Resultat introuvable pour ton equipe 🤷";
+      return;
+    }
     const survived=result==="win";
     updates["players."+p.uid+".result"]=result;
     updates["players."+p.uid+".alive"]=survived;
     updates["players."+p.uid+".phrase"]=result==="win"?getPhrase(PHRASES_WIN):result==="draw"?getPhrase(PHRASES_DRAW):getPhrase(PHRASES_LOSS);
     if(survived)updates["players."+p.uid+".usedTeams"]=[...(p.usedTeams||[]),p.pick];
   });
+
   const survivorsAfter=Object.values(currentLobby.players).filter(p=>p.alive&&p.pick&&updates["players."+p.uid+".result"]==="win");
   if(survivorsAfter.length===0){updates.status="nobody";}
   else if(survivorsAfter.length===1){
     updates.status="finished";const w=survivorsAfter[0];
     updates["players."+w.uid+".points"]=(w.points||0)+1;
     getDoc(doc(db,"users",w.uid)).then(ud=>{if(ud.exists())updateDoc(doc(db,"users",w.uid),{points:(ud.data().points||0)+1});});
-  } else {updates.status="roundEnd";}
+  }else{updates.status="roundEnd";}
   await updateDoc(doc(db,"lobbies",currentLobby.code),updates);
 };
 
@@ -775,8 +827,15 @@ function renderResults(){
   document.getElementById("wait-next").textContent=isHost?"":"En attente de l'admin...";
 }
 window.nextRound=async function(){
-  const updates={status:"picking",round:currentLobby.round+1,deadline:Date.now()+3600000,matchResults:{}};
-  Object.values(currentLobby.players).forEach(p=>{updates["players."+p.uid+".pick"]=null;updates["players."+p.uid+".result"]=null;updates["players."+p.uid+".phrase"]=null;});
+  const nextRound=currentLobby.round+1;
+  const nextRoundData=ROUNDS[nextRound];
+  if(!nextRoundData){showToast("Plus de journees configurees !");return;}
+  const updates={status:"picking",round:nextRound,deadline:nextRoundData.deadline,matchResults:{}};
+  Object.values(currentLobby.players).forEach(p=>{
+    updates["players."+p.uid+".pick"]=null;
+    updates["players."+p.uid+".result"]=null;
+    updates["players."+p.uid+".phrase"]=null;
+  });
   await updateDoc(doc(db,"lobbies",currentLobby.code),updates);
 };
 function renderWinner(){
@@ -807,8 +866,13 @@ function renderNobody(){
   document.getElementById("btn-replay-nobody").style.display=currentLobby.host===currentUser.uid?"block":"none";
 }
 window.replayGame=async function(){
-  const updates={status:"waiting",round:CURRENT_ROUND,history:[],matchResults:{}};
-  Object.values(currentLobby.players).forEach(p=>{updates["players."+p.uid+".alive"]=true;updates["players."+p.uid+".pick"]=null;updates["players."+p.uid+".result"]=null;updates["players."+p.uid+".usedTeams"]=[];updates["players."+p.uid+".phrase"]=null;});
+  const roundData=ROUNDS[CURRENT_ROUND];
+  const updates={status:"waiting",round:CURRENT_ROUND,history:[],matchResults:{},deadline:roundData.deadline};
+  Object.values(currentLobby.players).forEach(p=>{
+    updates["players."+p.uid+".alive"]=true;updates["players."+p.uid+".pick"]=null;
+    updates["players."+p.uid+".result"]=null;updates["players."+p.uid+".usedTeams"]=[];
+    updates["players."+p.uid+".phrase"]=null;
+  });
   await updateDoc(doc(db,"lobbies",currentLobby.code),updates);
 };
 
@@ -846,7 +910,7 @@ function renderLigue1(){
     document.getElementById("ligue1-content").innerHTML=cached;
     const d=new Date(parseInt(cachedTime));
     document.getElementById("ligue1-last-update").textContent="Mis a jour le "+d.toLocaleDateString("fr-FR")+" a "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
-  } else {
+  }else{
     document.getElementById("ligue1-content").innerHTML=currentUser&&currentUser.email===ADMIN_EMAIL
       ?'<p style="color:#888;text-align:center;margin-top:40px;">Clique sur Rafraichir pour charger le classement.</p>'
       :'<p style="color:#888;text-align:center;margin-top:40px;">Le classement sera disponible apres la mise a jour de l\'admin.</p>';
@@ -862,14 +926,16 @@ window.refreshLigue1=async function(){
       method:"GET",headers:{"x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY}
     });
     const data=await resp.json();
-    const matchArray=extractMatches(data);
-    if(matchArray.length===0){content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Aucune donnee recue.</p>';return;}
-    matchArray.forEach(m=>{
-      if(m?.home?.id)registerFotmobId(String(m.home.id),m.home.name);
-      if(m?.away?.id)registerFotmobId(String(m.away.id),m.away.name);
-    });
-    const finished=matchArray.filter(m=>isMatchFinished(m));
+    let matchArray=[];
+    if(Array.isArray(data))matchArray=data;
+    else if(Array.isArray(data?.response))matchArray=data.response;
+    else if(Array.isArray(data?.response?.matches))matchArray=data.response.matches;
+    else if(Array.isArray(data?.matches))matchArray=data.matches;
+    else if(data?.response&&typeof data.response==="object"){const vals=Object.values(data.response);if(vals.length>0&&typeof vals[0]==="object")matchArray=vals;}
+
+    const finished=matchArray.filter(m=>m?.status?.finished===true||m?.notStarted===false&&typeof m?.home?.score==="number");
     if(finished.length===0){content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Aucun match termine pour l\'instant.</p>';return;}
+
     const byName={},nameForm={};
     finished.forEach(m=>{
       const hName=String(m?.home?.name||"?"),aName=String(m?.away?.name||"?");
