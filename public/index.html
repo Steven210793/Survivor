@@ -153,7 +153,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 <!-- PICKING -->
 <div class="screen" id="screen-picking">
   <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;flex-shrink:0;">
-    <div style="flex:1;text-align:center;font-weight:700;" id="pick-round">Journee 35</div>
+    <div style="flex:1;text-align:center;font-weight:700;" id="pick-round">Journee 33</div>
     <button onclick="requestNotifPermission()" style="background:none;border:none;color:#FFD000;font-size:20px;cursor:pointer;">🔔</button>
     <button onclick="shareLigue()" style="background:none;border:none;color:#4A90E2;font-size:20px;cursor:pointer;">📤</button>
   </div>
@@ -337,53 +337,55 @@ const ADMIN_EMAIL = "groliersteven@gmail.com";
 const RAPIDAPI_KEY = "39c5cc9625mshc2f52e154b3255fp11e5b9jsn0f4c49435a11";
 const APP_URL = "https://survivor-chi-ecru.vercel.app";
 const LIGUE1_ID = 53;
-const AUTO_CLOSE_BEFORE_MS = 10 * 60 * 1000;
+const AUTO_CLOSE_BEFORE_MS = 10 * 60 * 1000; // 10 min avant le 1er match
 
-// ── JOURNEES : numéro → dates + deadline + fixtures ───────────────────────────
+// ── CONFIGURATION DES JOURNEES ────────────────────────────────────────────────
+// deadline = heure du 1er match de la journée (fermeture auto 10 min avant)
 const ROUNDS = {
-  35: {
-    dates: ["20260508","20260509","20260510"],
-    deadline: new Date("2026-05-08T14:50:00").getTime(), // 10 min avant 15h vendredi
+  33: {
+    // Ven. 8 mai 20h45 = 1er match → fermeture auto à 20h35
+    dates: ["20260508", "20260510"],
+    deadline: new Date("2026-05-08T20:45:00").getTime(),
     fixtures: [
-      // À compléter avec le vrai programme de la J35
-      {home:"psg",away:"mon", day:"Ven. 21:00"},
-      {home:"om", away:"ren", day:"Sam. 17:00"},
-      {home:"lil",away:"str", day:"Sam. 19:00"},
-      {home:"nic",away:"nan", day:"Sam. 21:05"},
-      {home:"oly",away:"len", day:"Dim. 15:00"},
-      {home:"aux",away:"mtz", day:"Dim. 17:15"},
-      {home:"hac",away:"ang", day:"Dim. 17:15"},
-      {home:"tls",away:"lor", day:"Dim. 20:45"},
+      {home:"len", away:"nan", day:"Ven. 20h45"},
+      {home:"psg", away:"bst", day:"Dim. 21h00"},
+      {home:"mon", away:"lil", day:"Dim. 21h00"},
+      {home:"tls", away:"oly", day:"Dim. 21h00"},
+      {home:"ren", away:"pfc", day:"Dim. 21h00"},
+      {home:"hac", away:"om",  day:"Dim. 21h00"},
+      {home:"ang", away:"str", day:"Dim. 21h00"},
+      {home:"mtz", away:"lor", day:"Dim. 21h00"},
+      {home:"aux", away:"nic", day:"Dim. 21h00"},
     ]
   },
-  36: {
+  34: {
+    // Dim. 17 mai 21h00 = seul et unique créneau
     dates: ["20260517"],
-    deadline: new Date("2026-05-17T14:50:00").getTime(),
+    deadline: new Date("2026-05-17T21:00:00").getTime(),
     fixtures: [
-      // À compléter avec le vrai programme de la J36
-      {home:"psg",away:"ren", day:"Dim. 21:00"},
-      {home:"om", away:"lil", day:"Dim. 17:00"},
-      {home:"mon",away:"nic", day:"Dim. 17:00"},
-      {home:"len",away:"str", day:"Dim. 17:00"},
-      {home:"oly",away:"nan", day:"Dim. 17:00"},
-      {home:"tls",away:"aux", day:"Dim. 17:00"},
-      {home:"ang",away:"mtz", day:"Dim. 17:00"},
-      {home:"lor",away:"hac", day:"Dim. 17:00"},
+      {home:"nan", away:"tls", day:"Dim. 21h00"},
+      {home:"lor", away:"hac", day:"Dim. 21h00"},
+      {home:"bst", away:"ang", day:"Dim. 21h00"},
+      {home:"lil", away:"aux", day:"Dim. 21h00"},
+      {home:"nic", away:"mtz", day:"Dim. 21h00"},
+      {home:"pfc", away:"psg", day:"Dim. 21h00"},
+      {home:"om",  away:"ren", day:"Dim. 21h00"},
+      {home:"str", away:"mon", day:"Dim. 21h00"},
+      {home:"oly", away:"len", day:"Dim. 21h00"},
     ]
   }
 };
 
-// Journée courante au lancement
-const CURRENT_ROUND = 35;
+const CURRENT_ROUND = 33; // Prochaine journée à jouer
 
-// ── Règle d'affichage du bouton résultats : dimanche 23h45+ ou lun/mar ────────
-function canShowResultsButton(){
-  const now=new Date(),day=now.getDay(),h=now.getHours(),m=now.getMinutes();
-  if(day===0&&(h>23||(h===23&&m>=45)))return true;
-  if(day===1||day===2)return true;
-  // Pour les journées avec matchs en semaine (vendredi) : jeudi 23h45+
-  if(day===5&&(h>23||(h===23&&m>=45)))return true; // sam après vendredi soir
-  if(day===6)return true; // dimanche entier si journée vendredi-samedi
+// ── Bouton résultats visible : dimanche 23h45+ ou lundi/mardi ────────────────
+function canShowResultsButton() {
+  const now = new Date(), day = now.getDay(), h = now.getHours(), m = now.getMinutes();
+  const after2345 = h > 23 || (h === 23 && m >= 45);
+  if (day === 0 && after2345) return true; // dimanche 23h45+
+  if (day === 1 || day === 2) return true;  // lundi ou mardi
+  // J33 commence un vendredi → on autorise aussi samedi entier + dimanche entier
+  if (day === 6) return true; // samedi (lendemain du vendredi)
   return false;
 }
 
@@ -417,13 +419,12 @@ const TEAMS=[
 function getTeam(id){return TEAMS.find(t=>t.id===id)||{name:"?"};}
 function getFixtures(){return ROUNDS[currentLobby?.round]?.fixtures||[];}
 
-// ── Récupère les matchs Ligue 1 pour les dates de la journée ─────────────────
+// ── Récupère les matchs Ligue 1 par date via l'API ────────────────────────────
 async function fetchRoundMatches(round){
   const roundData=ROUNDS[round];
-  if(!roundData){return[];}
-  const dates=roundData.dates;
+  if(!roundData)return[];
   const allMatches=[];
-  for(const date of dates){
+  for(const date of roundData.dates){
     try{
       const resp=await fetch(
         `https://free-api-live-football-data.p.rapidapi.com/football-get-matches-by-date-and-league?date=${date}`,
@@ -433,13 +434,13 @@ async function fetchRoundMatches(round){
         }}
       );
       const data=await resp.json();
-      // Structure : { response: [ { id, name, matches:[] }, ... ] }
+      // Structure : { response: [ {id, name, matches:[]}, ... ] }
       const leagues=Array.isArray(data?.response)?data.response:[];
-      const ligue1=leagues.find(l=>l.id===LIGUE1_ID||l.primaryId===LIGUE1_ID);
+      const ligue1=leagues.find(l=>Number(l.id)===LIGUE1_ID||Number(l.primaryId)===LIGUE1_ID);
       if(ligue1?.matches){
         allMatches.push(...ligue1.matches);
       }
-    }catch(e){console.error("Fetch error for date",date,e);}
+    }catch(e){console.error("Fetch error date",date,e);}
   }
   return allMatches;
 }
@@ -454,6 +455,7 @@ function avEl(u){if(u&&u.photoURL)return`<img src="${u.photoURL}" referrerpolicy
 function saveLastCode(c){try{localStorage.setItem("lastLobbyCode",c);}catch(e){}}
 function getLastCode(){try{return localStorage.getItem("lastLobbyCode");}catch(e){return null;}}
 function clearLastCode(){try{localStorage.removeItem("lastLobbyCode");}catch(e){}}
+
 function scoresHtml(matchResults){
   if(!matchResults||!Object.keys(matchResults).length)return'';
   let h='<p class="sec-label" style="margin-top:16px;">SCORES DE LA JOURNEE</p><div class="card">';
@@ -627,7 +629,7 @@ function renderLobby(){
   document.getElementById("wait-host").style.display=isHost?"none":"block";
 }
 window.startGame=async function(){
-  const roundData=ROUNDS[currentLobby.round]||ROUNDS[CURRENT_ROUND];
+  const roundData=ROUNDS[currentLobby.round];
   await saveFs({status:"picking",deadline:roundData.deadline});
   scheduleNotif();
 };
@@ -694,23 +696,25 @@ function renderPicking(){
 
   const hc=document.getElementById("host-controls");hc.innerHTML="";
   if(!me||!me.alive){hc.innerHTML='<div style="background:#0d0d1a;border:1.5px solid rgba(100,100,255,0.3);border-radius:12px;padding:16px;text-align:center;color:#8888ff;font-weight:700;">MODE SPECTATEUR</div>';return;}
+
   if(isHost&&!closed){
     hc.innerHTML='<button class="btn btn-o" onclick="closeSelections()" style="opacity:0.5;font-size:13px;">🔒 Forcer la fermeture</button>';
-  }else if(isHost&&closed){
+  } else if(isHost&&closed){
     if(canShowResultsButton()){
       hc.innerHTML='<button class="btn btn-g" onclick="resolveRound()">🏆 OBTENIR LES RESULTATS</button>';
-    }else{
+    } else {
+      // Calcul du prochain dimanche 23h45
       const now=new Date(),day=now.getDay();
-      const daysUntilSunday=day===0?0:(7-day);
-      const nextSunday=new Date(now);
-      nextSunday.setDate(now.getDate()+daysUntilSunday);
-      nextSunday.setHours(23,45,0,0);
-      const diff=nextSunday-now;
+      const daysUntil=day===0?0:(7-day);
+      const next=new Date(now);
+      next.setDate(now.getDate()+daysUntil);
+      next.setHours(23,45,0,0);
+      const diff=next-now;
       const hh=Math.floor(diff/3600000),mm=Math.floor((diff%3600000)/60000);
       hc.innerHTML=`<div style="background:#111;border:1px solid #2E2E2E;border-radius:12px;padding:14px 16px;text-align:center;">
         <div style="font-size:12px;color:#888;margin-bottom:4px;">RESULTATS DISPONIBLES DANS</div>
         <div style="font-size:22px;font-weight:900;color:#FFD000;">${hh}h ${mm}min</div>
-        <div style="font-size:11px;color:#555;margin-top:4px;">Dimanche 23h45 apres le dernier match</div>
+        <div style="font-size:11px;color:#555;margin-top:4px;">Apres le dernier match de la journee</div>
       </div>`;
     }
   }
@@ -735,45 +739,26 @@ window.resolveRound=async function(){
   let apiResults={},matchResults={};
   try{
     const matches=await fetchRoundMatches(currentLobby.round);
-
     if(matches.length===0){
-      showToast("Aucun match trouve pour cette journee !");
       document.getElementById("modal-loading").classList.remove("open");
+      showToast("Aucun match trouve pour cette journee !");
       return;
     }
-
     matches.forEach(m=>{
-      // ✅ Filtre strict : match terminé uniquement
-      if(!m?.status?.finished)return;
-
+      if(!m?.status?.finished)return; // ✅ uniquement les matchs terminés
       const hName=String(m?.home?.name||"");
       const aName=String(m?.away?.name||"");
-      const hG=m?.home?.score;
-      const aG=m?.away?.score;
+      const hG=m?.home?.score,aG=m?.away?.score;
       if(hG===null||hG===undefined||aG===null||aG===undefined)return;
-
-      // Trouver nos équipes par nom
-      const ht=TEAMS.find(t=>{
-        const fn=t.fotmobName.toLowerCase();
-        const hn=hName.toLowerCase();
-        return hn===fn||hn.includes(fn)||fn.includes(hn);
-      });
-      const at=TEAMS.find(t=>{
-        const fn=t.fotmobName.toLowerCase();
-        const an=aName.toLowerCase();
-        return an===fn||an.includes(fn)||fn.includes(an);
-      });
+      const ht=TEAMS.find(t=>{const fn=t.fotmobName.toLowerCase(),hn=hName.toLowerCase();return hn===fn||hn.includes(fn)||fn.includes(hn);});
+      const at=TEAMS.find(t=>{const fn=t.fotmobName.toLowerCase(),an=aName.toLowerCase();return an===fn||an.includes(fn)||fn.includes(an);});
       if(!ht||!at)return;
-
       if(hG>aG){apiResults[ht.id]="win";apiResults[at.id]="loss";}
       else if(aG>hG){apiResults[at.id]="win";apiResults[ht.id]="loss";}
       else{apiResults[ht.id]="draw";apiResults[at.id]="draw";}
       matchResults[ht.id+"-"+at.id]={home:ht.id,away:at.id,homeGoals:hG,awayGoals:aG};
     });
-  }catch(e){
-    showToast("Erreur API — simulation activee");
-    console.error(e);
-  }
+  }catch(e){console.error(e);}
   document.getElementById("modal-loading").classList.remove("open");
 
   const updates={matchResults};
@@ -787,8 +772,8 @@ window.resolveRound=async function(){
     }
     const result=apiResults[p.pick];
     if(!result){
-      // Equipe non trouvée dans l'API = pas de résultat = éliminé par sécurité
-      updates["players."+p.uid+".result"]="no_result";
+      // Résultat non trouvé = éliminé par sécurité
+      updates["players."+p.uid+".result"]="loss";
       updates["players."+p.uid+".alive"]=false;
       updates["players."+p.uid+".phrase"]="Resultat introuvable pour ton equipe 🤷";
       return;
@@ -826,11 +811,12 @@ function renderResults(){
   document.getElementById("btn-next-round").style.display=isHost?"block":"none";
   document.getElementById("wait-next").textContent=isHost?"":"En attente de l'admin...";
 }
+
 window.nextRound=async function(){
   const nextRound=currentLobby.round+1;
-  const nextRoundData=ROUNDS[nextRound];
-  if(!nextRoundData){showToast("Plus de journees configurees !");return;}
-  const updates={status:"picking",round:nextRound,deadline:nextRoundData.deadline,matchResults:{}};
+  const nextData=ROUNDS[nextRound];
+  if(!nextData){showToast("C'est la fin de la saison !");return;}
+  const updates={status:"picking",round:nextRound,deadline:nextData.deadline,matchResults:{}};
   Object.values(currentLobby.players).forEach(p=>{
     updates["players."+p.uid+".pick"]=null;
     updates["players."+p.uid+".result"]=null;
@@ -838,6 +824,7 @@ window.nextRound=async function(){
   });
   await updateDoc(doc(db,"lobbies",currentLobby.code),updates);
 };
+
 function renderWinner(){
   showScreen("winner");
   const winner=Object.values(currentLobby.players).find(p=>p.alive)||Object.values(currentLobby.players)[0];
@@ -932,10 +919,8 @@ window.refreshLigue1=async function(){
     else if(Array.isArray(data?.response?.matches))matchArray=data.response.matches;
     else if(Array.isArray(data?.matches))matchArray=data.matches;
     else if(data?.response&&typeof data.response==="object"){const vals=Object.values(data.response);if(vals.length>0&&typeof vals[0]==="object")matchArray=vals;}
-
-    const finished=matchArray.filter(m=>m?.status?.finished===true||m?.notStarted===false&&typeof m?.home?.score==="number");
+    const finished=matchArray.filter(m=>m?.status?.finished===true||(m?.notStarted===false&&typeof m?.home?.score==="number"));
     if(finished.length===0){content.innerHTML='<p style="color:#888;text-align:center;margin-top:40px;">Aucun match termine pour l\'instant.</p>';return;}
-
     const byName={},nameForm={};
     finished.forEach(m=>{
       const hName=String(m?.home?.name||"?"),aName=String(m?.away?.name||"?");
