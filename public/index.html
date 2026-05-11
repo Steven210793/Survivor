@@ -388,13 +388,12 @@ const ROUNDS = {
 
 const CURRENT_ROUND = 33;
 
-// ── Bouton résultats : samedi / dimanche 23h45+ / lundi / mardi ───────────────
 function canShowResultsButton(){
   const now=new Date(),day=now.getDay(),h=now.getHours(),m=now.getMinutes();
   const after2345=h>23||(h===23&&m>=45);
   if(day===0&&after2345)return true;
   if(day===1||day===2)return true;
-  if(day===6)return true; // samedi (pour J33 qui commence vendredi)
+  if(day===6)return true;
   return false;
 }
 
@@ -404,26 +403,36 @@ const PHRASES_DRAW=["Un nul... t'as survecu a quoi exactement ? A rien 😭","1-
 const PHRASES_NO_PICK=["T'as meme pas choisi d'equipe. Respect du niveau zero 🫥","Oublier de jouer c'est un talent rare... et pas utile 🤔","T'etais ou ? Peu importe, t'es elimine de toute facon 👋","La prochaine fois mets une alarme mon grand 📱","Elimine sans meme avoir essaye. C'est un exploit en soi 🏆"];
 const PHRASES_WINNER=["Indestructible ! Personne a pu t'arreter !","LE survivant. Les autres cherchent encore comment c'est possible 😂","Champion ! Tout le monde peut aller s'entrainer, t'es trop fort !","Dernier survivant ! Legende vivante !","T'as gagne. Les autres vont faire semblant d'etre contents pour toi 😅","CHAAMPION MON FREREUUU ! 🏆🔥"];
 
+// ── TEAMS avec variantes API ──────────────────────────────────────────────────
+// "apiVariants" = tous les noms possibles que l'API peut renvoyer pour cette équipe
 const TEAMS=[
-  {id:"psg",name:"PSG",        fotmobName:"Paris"},
-  {id:"om", name:"Marseille",  fotmobName:"Marseille"},
-  {id:"mon",name:"Monaco",     fotmobName:"Monaco"},
-  {id:"lil",name:"Lille",      fotmobName:"Lille"},
-  {id:"nic",name:"Nice",       fotmobName:"Nice"},
-  {id:"oly",name:"Lyon",       fotmobName:"Lyon"},
-  {id:"ren",name:"Rennes",     fotmobName:"Rennes"},
-  {id:"len",name:"Lens",       fotmobName:"Lens"},
-  {id:"str",name:"Strasbourg", fotmobName:"Strasbourg"},
-  {id:"nan",name:"Nantes",     fotmobName:"Nantes"},
-  {id:"tls",name:"Toulouse",   fotmobName:"Toulouse"},
-  {id:"aux",name:"Auxerre",    fotmobName:"Auxerre"},
-  {id:"ang",name:"Angers",     fotmobName:"Angers"},
-  {id:"hac",name:"Le Havre",   fotmobName:"Le Havre"},
-  {id:"mtz",name:"Metz",       fotmobName:"Metz"},
-  {id:"lor",name:"Lorient",    fotmobName:"Lorient"},
-  {id:"pfc",name:"Paris FC",   fotmobName:"Paris FC"},
-  {id:"bst",name:"Brest",      fotmobName:"Brest"},
+  {id:"psg", name:"PSG",        apiVariants:["paris saint-germain","psg","paris sg","paris saint germain"]},
+  {id:"om",  name:"Marseille",  apiVariants:["marseille","olympique de marseille","olympique marseille"]},
+  {id:"mon", name:"Monaco",     apiVariants:["monaco","as monaco"]},
+  {id:"lil", name:"Lille",      apiVariants:["lille","losc","losc lille"]},
+  {id:"nic", name:"Nice",       apiVariants:["nice","ogc nice"]},
+  {id:"oly", name:"Lyon",       apiVariants:["lyon","olympique lyonnais","olympique de lyon"]},
+  {id:"ren", name:"Rennes",     apiVariants:["rennes","stade rennais","stade rennais fc"]},
+  {id:"len", name:"Lens",       apiVariants:["lens","rc lens"]},
+  {id:"str", name:"Strasbourg", apiVariants:["strasbourg","rc strasbourg","rc strasbourg alsace"]},
+  {id:"nan", name:"Nantes",     apiVariants:["nantes","fc nantes"]},
+  {id:"tls", name:"Toulouse",   apiVariants:["toulouse","toulouse fc"]},
+  {id:"aux", name:"Auxerre",    apiVariants:["auxerre","aj auxerre"]},
+  {id:"ang", name:"Angers",     apiVariants:["angers","angers sco","sco angers"]},
+  {id:"hac", name:"Le Havre",   apiVariants:["le havre","le havre ac","havre ac"]},
+  {id:"mtz", name:"Metz",       apiVariants:["metz","fc metz"]},
+  {id:"lor", name:"Lorient",    apiVariants:["lorient","fc lorient"]},
+  {id:"pfc", name:"Paris FC",   apiVariants:["paris fc"]},
+  {id:"bst", name:"Brest",      apiVariants:["brest","stade brestois","stade brestois 29"]},
 ];
+
+// ── Fonction de matching robuste ──────────────────────────────────────────────
+// Cherche l'équipe dont une des variantes correspond EXACTEMENT au nom API
+function findTeamByApiName(apiName) {
+  if (!apiName) return null;
+  const normalized = apiName.toLowerCase().trim();
+  return TEAMS.find(t => t.apiVariants.includes(normalized)) || null;
+}
 
 function getTeam(id){return TEAMS.find(t=>t.id===id)||{name:"?"};}
 function getFixtures(){return ROUNDS[currentLobby?.round]?.fixtures||[];}
@@ -498,7 +507,6 @@ onAuthStateChanged(auth,async(fu)=>{
         try{
           const ld=await getDoc(doc(db,"lobbies",lc));
           if(ld.exists()){
-            // Si la ligue est terminée, ne pas la rejoindre
             if(ld.data().status==="terminated"){clearLastCode();goHome();return;}
             openLobby(lc);return;
           }
@@ -589,7 +597,6 @@ function openLobby(code){
   lobbyUnsub=onSnapshot(doc(db,"lobbies",code),snap=>{
     if(snap.exists()){
       currentLobby={id:snap.id,...snap.data()};
-      // ✅ Si la ligue est clôturée, éjecter tout le monde vers l'accueil
       if(currentLobby.status==="terminated"){
         if(lobbyUnsub){lobbyUnsub();lobbyUnsub=null;}
         if(autoCloseTimeout){clearTimeout(autoCloseTimeout);autoCloseTimeout=null;}
@@ -620,18 +627,12 @@ window.saveName=async function(){const n=document.getElementById("new-name-input
 window.shareLigue=function(){const msg="Rejoins ma ligue Survivor Ligue 1 !\nCode : "+currentLobby.code+"\n"+APP_URL;if(navigator.share)navigator.share({title:"Survivor Ligue 1",text:msg,url:APP_URL}).catch(()=>{});else{navigator.clipboard&&navigator.clipboard.writeText(msg);showToast("Lien copie !");}};
 window.copyCode=function(){if(navigator.clipboard)navigator.clipboard.writeText(currentLobby.code);showToast("Code copie !");};
 
-// ── CLOTURE LIGUE ─────────────────────────────────────────────────────────────
-window.ouvrirModalCloture=function(){
-  document.getElementById("modal-cloture").classList.add("open");
-};
+window.ouvrirModalCloture=function(){document.getElementById("modal-cloture").classList.add("open");};
 window.confirmerCloture=async function(){
   if(!currentUser||currentUser.email!==ADMIN_EMAIL)return;
   document.getElementById("modal-cloture").classList.remove("open");
-  try{
-    // Met status="terminated" → tous les joueurs connectés sont éjectés automatiquement
-    await updateDoc(doc(db,"lobbies",currentLobby.code),{status:"terminated"});
-    // L'onSnapshot va détecter "terminated" et éjecter l'admin aussi
-  }catch(e){showToast("Erreur : "+e.message);}
+  try{await updateDoc(doc(db,"lobbies",currentLobby.code),{status:"terminated"});}
+  catch(e){showToast("Erreur : "+e.message);}
 };
 
 // ── NAV ───────────────────────────────────────────────────────────────────────
@@ -767,34 +768,53 @@ window.confirmPick=async function(){
 };
 window.closeSelections=async function(){await saveF("status","closed");};
 
-// ── RESOLVE ───────────────────────────────────────────────────────────────────
+// ── RESOLVE — VERSION CORRIGEE ────────────────────────────────────────────────
 window.resolveRound=async function(){
   if(!currentUser||currentUser.email!==ADMIN_EMAIL)return showToast("Acces refuse.");
   document.getElementById("modal-loading").classList.add("open");
   let apiResults={},matchResults={};
   try{
     const matches=await fetchRoundMatches(currentLobby.round);
-    if(matches.length===0){document.getElementById("modal-loading").classList.remove("open");showToast("Aucun match trouve !");return;}
+    console.log("=== MATCHES API ===", matches.length, "matchs trouvés");
+
+    if(matches.length===0){
+      document.getElementById("modal-loading").classList.remove("open");
+      showToast("Aucun match trouve !");
+      return;
+    }
+
     matches.forEach(m=>{
       if(!m?.status?.finished)return;
-      const hName=String(m?.home?.name||""),aName=String(m?.away?.name||"");
-      const hG=m?.home?.score,aG=m?.away?.score;
+      const hName = String(m?.home?.name || "");
+      const aName = String(m?.away?.name || "");
+      const hG = m?.home?.score;
+      const aG = m?.away?.score;
       if(hG===null||hG===undefined||aG===null||aG===undefined)return;
-      const ht=TEAMS.find(t=>{const fn=t.fotmobName.toLowerCase(),hn=hName.toLowerCase();return hn===fn||hn.includes(fn)||fn.includes(hn);});
-      const at=TEAMS.find(t=>{const fn=t.fotmobName.toLowerCase(),an=aName.toLowerCase();return an===fn||an.includes(fn)||fn.includes(an);});
+
+      // ✅ Matching par variantes exactes — pas d'includes() ambigu
+      const ht = findTeamByApiName(hName);
+      const at = findTeamByApiName(aName);
+
+      console.log(`API: "${hName}" → ${ht?.id||'NON TROUVÉ'} | "${aName}" → ${at?.id||'NON TROUVÉ'} | Score: ${hG}-${aG}`);
+
       if(!ht||!at)return;
+
       if(hG>aG){apiResults[ht.id]="win";apiResults[at.id]="loss";}
       else if(aG>hG){apiResults[at.id]="win";apiResults[ht.id]="loss";}
       else{apiResults[ht.id]="draw";apiResults[at.id]="draw";}
       matchResults[ht.id+"-"+at.id]={home:ht.id,away:at.id,homeGoals:hG,awayGoals:aG};
     });
+
+    console.log("=== RÉSULTATS ===", apiResults);
   }catch(e){console.error(e);}
+
   document.getElementById("modal-loading").classList.remove("open");
   const updates={matchResults};
   Object.values(currentLobby.players).forEach(p=>{
     if(!p.alive)return;
     if(!p.pick){updates["players."+p.uid+".result"]="no_pick";updates["players."+p.uid+".alive"]=false;updates["players."+p.uid+".phrase"]=getPhrase(PHRASES_NO_PICK);return;}
     const result=apiResults[p.pick];
+    console.log(`Joueur ${p.pseudo} → pick=${p.pick} → result=${result}`);
     if(!result){updates["players."+p.uid+".result"]="loss";updates["players."+p.uid+".alive"]=false;updates["players."+p.uid+".phrase"]="Resultat introuvable 🤷";return;}
     const survived=result==="win";
     updates["players."+p.uid+".result"]=result;
@@ -975,17 +995,10 @@ async function renderProfil(){
   const tg=fu.totalGames||0,tw=fu.totalWins||0,wr=tg>0?Math.round((tw/tg)*100):0,pts=me?me.points||0:0;
   document.getElementById("stats-grid").innerHTML=`<div class="stat-card"><div class="stat-num">${pts}</div><div class="stat-label">Points totaux</div></div><div class="stat-card"><div class="stat-num">${wr}%</div><div class="stat-label">Taux de survie</div></div><div class="stat-card"><div class="stat-num">${fu.bestStreak||0}</div><div class="stat-label">Meilleure serie</div></div><div class="stat-card"><div class="stat-num">${fu.currentStreak||0}</div><div class="stat-label">Serie en cours</div></div>`;
   document.getElementById("profil-details").innerHTML=`<div class="row"><span style="flex:1;font-weight:600;">Parties jouees</span><span style="color:#888;">${tg}</span></div><div class="row"><span style="flex:1;font-weight:600;">Victoires</span><span style="color:#39E979;font-weight:700;">${tw}</span></div><div class="row"><span style="flex:1;font-weight:600;">Equipes utilisees</span><span style="color:#888;">${me?.usedTeams?.length||0}</span></div><div class="row" style="border-bottom:none;"><span style="flex:1;font-weight:600;">Statut</span><span class="${me?.alive?"badge-g":"badge-r"}">${me?.alive?"En vie":"Elimine"}</span></div>`;
-
-  // ✅ Bouton clôturer visible uniquement pour l'admin
   const clotureZone=document.getElementById("admin-cloture-zone");
   if(currentUser&&currentUser.email===ADMIN_EMAIL){
-    clotureZone.innerHTML=`
-      <button class="btn btn-danger" onclick="ouvrirModalCloture()" style="margin-bottom:10px;">
-        🔴 Cloturer la ligue
-      </button>`;
-  }else{
-    clotureZone.innerHTML="";
-  }
+    clotureZone.innerHTML=`<button class="btn btn-danger" onclick="ouvrirModalCloture()" style="margin-bottom:10px;">🔴 Cloturer la ligue</button>`;
+  }else{clotureZone.innerHTML="";}
 }
 
 window.requestNotifPermission=function(){
