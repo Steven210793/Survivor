@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Debug API</title>
+<style>
+body{background:#0D0D0D;color:#F2F2F2;font-family:system-ui,sans-serif;padding:20px;max-width:500px;margin:0 auto;}
+h2{color:#39E979;margin-bottom:16px;}
+.btn{background:#39E979;color:#000;border:none;border-radius:10px;padding:12px 20px;font-weight:700;font-size:15px;cursor:pointer;width:100%;margin-bottom:10px;}
+.card{background:#1A1A1A;border:1px solid #2E2E2E;border-radius:10px;padding:14px;margin-bottom:10px;}
+.label{font-size:11px;color:#888;letter-spacing:1px;font-weight:700;margin-bottom:8px;}
+.match{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #2E2E2E;font-size:14px;}
+.match:last-child{border-bottom:none;}
+.team{font-weight:700;color:#39E979;max-width:40%;text-align:center;}
+.score{color:#FFD000;font-weight:900;}
+.err{color:#FF4444;background:rgba(255,68,68,0.1);border-radius:8px;padding:10px;margin-top:8px;}
+select{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:10px;padding:10px 14px;color:#F2F2F2;font-size:15px;width:100%;margin-bottom:10px;outline:none;}
+</style>
+</head>
+<body>
+<h2>🔍 Debug API — Noms exacts</h2>
+<select id="date-select">
+  <option value="20260508">J33 — Vendredi 8 mai</option>
+  <option value="20260510">J33 — Dimanche 10 mai</option>
+  <option value="20260517">J34 — Dimanche 17 mai</option>
+</select>
+<button class="btn" onclick="fetchMatches()">📡 APPELER L'API</button>
+<div id="result"></div>
+<script>
+async function fetchMatches(){
+  const date=document.getElementById("date-select").value;
+  const res=document.getElementById("result");
+  res.innerHTML='<p style="color:#FFD000;padding:10px;">⏳ Chargement...</p>';
+  try{
+    const resp=await fetch(
+      `https://free-api-live-football-data.p.rapidapi.com/football-get-matches-by-date-and-league?date=${date}`,
+      {method:"GET",headers:{
+        "x-rapidapi-host":"free-api-live-football-data.p.rapidapi.com",
+        "x-rapidapi-key":"39c5cc9625mshc2f52e154b3255fp11e5b9jsn0f4c49435a11"
+      }}
+    );
+    const data=await resp.json();
+    const leagues=Array.isArray(data?.response)?data.response:[];
+    const l1=leagues.find(l=>Number(l.id)===53||Number(l.primaryId)===53);
+    if(!l1){
+      res.innerHTML=`<div class="err">❌ Ligue 1 non trouvée.<br>Leagues : ${leagues.map(l=>`id=${l.id} ${l.name||''}`).join(' / ')||'aucune'}</div>`;
+      return;
+    }
+    const matches=l1.matches||[];
+    if(!matches.length){res.innerHTML='<div class="err">⚠️ Aucun match pour cette date.</div>';return;}
+    let html=`<div class="card"><div class="label">✅ ${matches.length} MATCH(S) — LIGUE 1</div>`;
+    matches.forEach(m=>{
+      const hN=m?.home?.name||"?",aN=m?.away?.name||"?";
+      const hG=m?.home?.score,aG=m?.away?.score;
+      const fin=m?.status?.finished;
+      html+=`<div class="match"><span class="team">${hN}</span><span class="score">${fin?`${hG}-${aG}`:'⏳'}</span><span class="team">${aN}</span></div>`;
+    });
+    html+='</div>';
+    const names=[...new Set(matches.flatMap(m=>[m?.home?.name,m?.away?.name].filter(Boolean)))].sort();
+    html+=`<div class="card"><div class="label">📋 NOMS EXACTS À COPIER</div>`;
+    names.forEach(n=>{html+=`<div style="padding:6px 0;border-bottom:1px solid #2E2E2E;font-family:monospace;color:#39E979;">"${n}"</div>`;});
+    html+='</div>';
+    res.innerHTML=html;
+  }catch(e){
+    res.innerHTML=`<div class="err">❌ Erreur : ${e.message}</div>`;
+  }
+}
+</script>
+</body>
+</html>
