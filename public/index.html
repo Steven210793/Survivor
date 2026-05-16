@@ -154,7 +154,7 @@ input{background:#1A1A1A;border:1.5px solid #2E2E2E;border-radius:12px;padding:1
 <!-- PICKING -->
 <div class="screen" id="screen-picking">
   <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #2E2E2E;flex-shrink:0;">
-    <div style="flex:1;text-align:center;font-weight:700;" id="pick-round">Journee 33</div>
+    <div style="flex:1;text-align:center;font-weight:700;" id="pick-round">Journee 34</div>
     <button onclick="requestNotifPermission()" style="background:none;border:none;color:#FFD000;font-size:20px;cursor:pointer;">🔔</button>
     <button onclick="shareLigue()" style="background:none;border:none;color:#4A90E2;font-size:20px;cursor:pointer;">📤</button>
   </div>
@@ -386,7 +386,8 @@ const ROUNDS = {
   }
 };
 
-const CURRENT_ROUND = 33;
+// ✅ FIX : CURRENT_ROUND mis à 34
+const CURRENT_ROUND = 34;
 
 function canShowResultsButton(){
   const now=new Date(),day=now.getDay(),h=now.getHours(),m=now.getMinutes();
@@ -403,8 +404,6 @@ const PHRASES_DRAW=["Un nul... t'as survecu a quoi exactement ? A rien 😭","1-
 const PHRASES_NO_PICK=["T'as meme pas choisi d'equipe. Respect du niveau zero 🫥","Oublier de jouer c'est un talent rare... et pas utile 🤔","T'etais ou ? Peu importe, t'es elimine de toute facon 👋","La prochaine fois mets une alarme mon grand 📱","Elimine sans meme avoir essaye. C'est un exploit en soi 🏆"];
 const PHRASES_WINNER=["Indestructible ! Personne a pu t'arreter !","LE survivant. Les autres cherchent encore comment c'est possible 😂","Champion ! Tout le monde peut aller s'entrainer, t'es trop fort !","Dernier survivant ! Legende vivante !","T'as gagne. Les autres vont faire semblant d'etre contents pour toi 😅","CHAAMPION MON FREREUUU ! 🏆🔥"];
 
-// ── TEAMS avec variantes API ──────────────────────────────────────────────────
-// "apiVariants" = tous les noms possibles que l'API peut renvoyer pour cette équipe
 const TEAMS=[
   {id:"psg", name:"PSG",        apiVariants:["paris saint-germain","psg","paris sg","paris saint germain"]},
   {id:"om",  name:"Marseille",  apiVariants:["marseille","olympique de marseille","olympique marseille"]},
@@ -426,8 +425,6 @@ const TEAMS=[
   {id:"bst", name:"Brest",      apiVariants:["brest","stade brestois","stade brestois 29"]},
 ];
 
-// ── Fonction de matching robuste ──────────────────────────────────────────────
-// Cherche l'équipe dont une des variantes correspond EXACTEMENT au nom API
 function findTeamByApiName(apiName) {
   if (!apiName) return null;
   const normalized = apiName.toLowerCase().trim();
@@ -477,7 +474,6 @@ function scoresHtml(matchResults){
   return h+'</div>';
 }
 
-// ── AUTO-CLOSE ────────────────────────────────────────────────────────────────
 function scheduleAutoClose(lobby){
   if(autoCloseTimeout){clearTimeout(autoCloseTimeout);autoCloseTimeout=null;}
   if(lobby.status!=="picking")return;
@@ -495,7 +491,6 @@ async function triggerAutoClose(lobbyCode){
   }catch(e){}
 }
 
-// ── AUTH ──────────────────────────────────────────────────────────────────────
 onAuthStateChanged(auth,async(fu)=>{
   try{
     if(fu){
@@ -552,7 +547,6 @@ window.logout=async function(){
   document.getElementById("bottom-nav").style.display="none";
 };
 
-// ── HOME ──────────────────────────────────────────────────────────────────────
 function goHome(){
   showScreen("home");document.getElementById("bottom-nav").style.display="none";
   document.getElementById("create-btn-zone").innerHTML=currentUser&&currentUser.email===ADMIN_EMAIL
@@ -566,7 +560,6 @@ window.rejoinLobby=async function(code){
   catch(e){showToast("Erreur de connexion.");}
 };
 
-// ── LOBBY ─────────────────────────────────────────────────────────────────────
 window.createLobby=async function(){
   if(!currentUser||currentUser.email!==ADMIN_EMAIL)return showToast("Acces refuse.");
   const code=genCode();
@@ -635,7 +628,6 @@ window.confirmerCloture=async function(){
   catch(e){showToast("Erreur : "+e.message);}
 };
 
-// ── NAV ───────────────────────────────────────────────────────────────────────
 window.navTo=function(tab){
   document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
   document.getElementById("nav-"+tab).classList.add("active");
@@ -654,7 +646,6 @@ function renderAccueil(){
   else if(s==="nobody")renderNobody();
 }
 
-// ── LOBBY SCREEN ──────────────────────────────────────────────────────────────
 function renderLobby(){
   showScreen("lobby");
   const isHost=currentLobby.host===currentUser.uid;
@@ -674,7 +665,6 @@ window.startGame=async function(){
   scheduleNotif();
 };
 
-// ── PICKING SCREEN ────────────────────────────────────────────────────────────
 function renderPicking(){
   showScreen("picking");
   document.getElementById("pick-round").textContent="Journee "+currentLobby.round;
@@ -768,7 +758,6 @@ window.confirmPick=async function(){
 };
 window.closeSelections=async function(){await saveF("status","closed");};
 
-// ── RESOLVE — VERSION CORRIGEE ────────────────────────────────────────────────
 window.resolveRound=async function(){
   if(!currentUser||currentUser.email!==ADMIN_EMAIL)return showToast("Acces refuse.");
   document.getElementById("modal-loading").classList.add("open");
@@ -791,7 +780,6 @@ window.resolveRound=async function(){
       const aG = m?.away?.score;
       if(hG===null||hG===undefined||aG===null||aG===undefined)return;
 
-      // ✅ Matching par variantes exactes — pas d'includes() ambigu
       const ht = findTeamByApiName(hName);
       const at = findTeamByApiName(aName);
 
@@ -832,7 +820,6 @@ window.resolveRound=async function(){
   await updateDoc(doc(db,"lobbies",currentLobby.code),updates);
 };
 
-// ── RESULTS ───────────────────────────────────────────────────────────────────
 function renderResults(){
   showScreen("results");
   document.getElementById("results-title").textContent="Resultats - Journee "+currentLobby.round;
@@ -890,7 +877,6 @@ window.replayGame=async function(){
   await updateDoc(doc(db,"lobbies",currentLobby.code),updates);
 };
 
-// ── RESULTATS TAB ─────────────────────────────────────────────────────────────
 function renderResultats(){
   showScreen("resultats");
   const players=Object.values(currentLobby.players);
@@ -905,7 +891,6 @@ function renderResultats(){
   document.getElementById("resultats-content").innerHTML=html;
 }
 
-// ── LIGUE 1 ───────────────────────────────────────────────────────────────────
 function renderLigue1(){
   showScreen("ligue1");
   const refreshBtn=document.getElementById("ligue1-refresh-btn");
@@ -971,7 +956,6 @@ window.refreshLigue1=async function(){
   }catch(e){content.innerHTML=`<p style="color:#FF4444;text-align:center;margin-top:40px;">Erreur : ${e.message}</p>`;}
 };
 
-// ── CLASSEMENT TAB ────────────────────────────────────────────────────────────
 function renderClassement(){
   showScreen("classement");
   const sorted=Object.values(currentLobby.players).sort((a,b)=>(b.points||0)-(a.points||0));
@@ -982,7 +966,6 @@ function renderClassement(){
   });
 }
 
-// ── PROFIL ────────────────────────────────────────────────────────────────────
 async function renderProfil(){
   showScreen("profil");
   const me=currentLobby.players[currentUser.uid];
